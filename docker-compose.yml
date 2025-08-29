@@ -1,0 +1,27 @@
+version: "2"
+
+services:
+  mongodb:
+    build:
+      context: ./docker
+      dockerfile: Dockerfile-mongodb
+    restart: always
+    volumes:
+      - ./docker/db:/data/db
+    environment:
+      - AUTH=no
+
+  server:
+    build:
+      context: ./docker
+      dockerfile: Dockerfile-server
+    restart: always
+    volumes:
+      - ./:/sugarizer-server
+      - ../:/sugarizer-certificate
+      - ../sugarizer:/sugarizer-client
+    links:
+      - mongodb
+    ports:
+      - 8039:8039
+      - 8090:80

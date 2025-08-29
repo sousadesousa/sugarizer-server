@@ -1,0 +1,49 @@
+
+<nav class="navbar navbar-transparent navbar-absolute">
+    <div class="container-fluid">
+        <div class="navbar-header">
+            <button type="button" id="navbar-toggle" class="navbar-toggle" data-toggle="collapse">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <div class="navbar-brand" style="font-weight:500" data-l10n-id="<%= module %>"></div>
+        </div>
+        <div class="collapse navbar-collapse">
+            <div class="nav navbar-nav navbar-right">
+                <p class="custom-icon help-icon" id="navbar-help" onclick="launchTutorial()"></p>
+            </div>
+            <ul class="nav navbar-nav navbar-right">
+  							<li class="dropdown hide-mob-el">
+  								<a href="/dashboard/logout" class="dropdown-toggle" data-toggle="dropdown" title="<%= account.user.name %>">
+                                      <div class="color" id="navbar-xo-icon">
+                                        <div class="xo-icon" id="navbar-xo-subicon"></div>
+                                    </div>
+                                      <script>
+                                        new icon().load("/public/img/owner-icon.svg", (<%- account.user.color?JSON.stringify(account.user.color):"{}" %>), "navbar-xo-icon");
+                                      </script>
+                                      <p class="hidden-lg hidden-md" data-l10n-id="logout">Logout</p>
+                                </a>
+  								<ul class="dropdown-menu">
+                                    <%if (module == 'profile') { %>
+                                        <li class="active">
+                                    <% } else {%>
+                                        <li>
+                                    <% }%>
+                                    <a class="pointer" data-l10n-id="profile" onclick="jumpTo('/dashboard/profile')">Profile</a></li>
+  									<li><a href="/dashboard/logout" data-l10n-id="logout">Logout</a></li>
+  								</ul>
+  							</li>
+            </ul>
+            <div class="navbar-form navbar-right">
+                <select class="form-control lang-combo" id="languageSelection">
+                  <option data-l10n-id="english-nav" <% if(account.user.language == 'en' || (account.user.language != 'es' && account.user.language != 'fr' && account.user.language != 'hi')){ %>selected="selected"<% } %> value="en"></option>
+                  <option data-l10n-id="spanish-nav" <% if(account.user.language == 'es'){ %>selected="selected"<% } %> value="es"></option>
+                  <option data-l10n-id="french-nav" <% if(account.user.language == 'fr'){ %>selected="selected"<% } %> value="fr"></option>
+                  <option data-l10n-id="hindi-nav" <% if(account.user.language == 'hi'){ %>selected="selected"<% } %> value="hi"></option>
+                </select>
+            </div>
+        </div>
+    </div>
+</nav>
