@@ -85,6 +85,65 @@ describe('Users', function() {
 		}, 400);
 	});
 
+	describe('Authentication security', () => {
+		it('it should not accept a token with the key of another user', (done) => {
+
+			chai.request(server)
+				.get('/api/v1/users/' + fakeUser.admin1.user._id)
+				.set('x-access-token', fakeUser.teacher2.token)
+				.set('x-key', fakeUser.admin1.user._id)
+				.end((err, res) => {
+					res.should.have.status(401);
+					res.body.code.should.be.eql(5);
+					done();
+				});
+		});
+
+		it('it should not login with a regular expression as password', (done) => {
+
+			chai.request(server)
+				.post('/auth/login')
+				.send({
+					"user": JSON.stringify({"name": fakeUser.teacher2.user.name, "password": ".*", "role": "teacher"})
+				})
+				.end((err, res) => {
+					res.should.have.status(401);
+					res.body.code.should.be.eql(1);
+					done();
+				});
+		});
+
+		it('it should not login with a regular expression as name', (done) => {
+
+			chai.request(server)
+				.post('/auth/login')
+				.send({
+					"user": JSON.stringify({"name": ".*", "password": "bulbasaur", "role": "teacher"})
+				})
+				.end((err, res) => {
+					res.should.have.status(401);
+					res.body.code.should.be.eql(1);
+					done();
+				});
+		});
+
+		it('it should login with the right password and not return it', (done) => {
+
+			chai.request(server)
+				.post('/auth/login')
+				.send({
+					"user": JSON.stringify({"name": fakeUser.teacher2.user.name, "password": "bulbasaur", "role": "teacher"})
+				})
+				.end((err, res) => {
+					res.should.have.status(200);
+					res.body.should.have.property('token').not.eql(undefined);
+					res.body.user.should.have.property('_id').eql(fakeUser.teacher2.user._id);
+					res.body.user.should.not.have.property('password');
+					done();
+				});
+		});
+	});
+
 	describe('/POST users', () => {
 		it('it should add a student user', (done) => {
 
@@ -102,7 +161,7 @@ describe('Users', function() {
 					res.body.should.have.property('_id').not.eql(undefined);
 					res.body.should.have.property('name').eql("Sugarizer_1" + (timestamp.toString()));
 					res.body.should.have.property('role').eql('student');
-					res.body.should.have.property('password').eql("pass");
+					res.body.should.not.have.property('password');
 					res.body.should.have.property('tfa').eql(false);
 					res.body.should.have.property('color').not.eql(undefined);
 					res.body.should.have.property('language').eql("fr");
@@ -160,7 +219,7 @@ describe('Users', function() {
 					res.body.should.have.property('_id').not.eql(undefined);
 					res.body.should.have.property('name').eql("Sugarizer_2" + (timestamp.toString()));
 					res.body.should.have.property('role').eql('student');
-					res.body.should.have.property('password').eql("pass");
+					res.body.should.not.have.property('password');
 					res.body.should.have.property('tfa').eql(false);
 					res.body.should.have.property('color').not.eql(undefined);
 					res.body.should.have.property('language').eql("fr");
@@ -185,7 +244,7 @@ describe('Users', function() {
 					res.body.should.have.property('_id').not.eql(undefined);
 					res.body.should.have.property('name').eql("SugarizerTeach_1" + (timestamp.toString()));
 					res.body.should.have.property('role').eql('teacher');
-					res.body.should.have.property('password').eql("bulbasaur");
+					res.body.should.not.have.property('password');
 					res.body.should.have.property('tfa').eql(false);
 					res.body.should.have.property('color').not.eql(undefined);
 					res.body.should.have.property('language').eql("fr");
@@ -252,7 +311,7 @@ describe('Users', function() {
 							chai.request(server)
 								.post('/auth/login')
 								.send({
-									"user": JSON.stringify(fakeUser.teacher1)
+									"user": JSON.stringify({"name": fakeUser.teacher1.name, "password": "bulbasaur", "role": "teacher"})
 								})
 								.end((err, res) => {
 									fakeUser.teacher1 = res.body;
@@ -311,7 +370,7 @@ describe('Users', function() {
 						res.body.users[i].should.have.property('_id').not.eql(undefined);
 						res.body.users[i].should.have.property('name').not.eql(undefined);
 						res.body.users[i].should.have.property('role').eql('admin');
-						res.body.users[i].should.have.property('password').not.eql(undefined);
+						res.body.users[i].should.not.have.property('password');
 					}
 					done();
 				});
@@ -334,7 +393,7 @@ describe('Users', function() {
 						res.body.users[i].should.have.property('_id').not.eql(undefined);
 						res.body.users[i].should.have.property('name').not.eql(undefined);
 						res.body.users[i].should.have.property('role').eql('student');
-						res.body.users[i].should.have.property('password').not.eql(undefined);
+						res.body.users[i].should.not.have.property('password');
 						res.body.users[i].should.have.property('color').not.eql(undefined);
 						res.body.users[i].should.have.property('language').not.eql(undefined);
 						res.body.users[i].should.have.property('shared_journal').not.eql(undefined);
@@ -360,7 +419,7 @@ describe('Users', function() {
 						res.body.users[i].should.have.property('_id').not.eql(undefined);
 						res.body.users[i].should.have.property('name').not.eql(undefined);
 						res.body.users[i].should.have.property('role').eql('teacher');
-						res.body.users[i].should.have.property('password').not.eql(undefined);
+						res.body.users[i].should.not.have.property('password');
 						res.body.users[i].should.have.property('color').not.eql(undefined);
 						res.body.users[i].should.have.property('language').not.eql(undefined);
 						res.body.users[i].should.have.property('classrooms').be.an('array');
@@ -470,7 +529,7 @@ describe('Users', function() {
 					res.body.should.have.property('_id').eql(fakeUser.student1._id);
 					res.body.should.have.property('name').eql("Sugarizer_1" + (timestamp.toString()));
 					res.body.should.have.property('role').eql('student');
-					res.body.should.have.property('password').eql("pass");
+					res.body.should.not.have.property('password');
 					res.body.should.have.property('color').not.eql(undefined);
 					res.body.should.have.property('language').eql("fr");
 					res.body.should.have.property('shared_journal').not.eql(undefined);
@@ -491,7 +550,7 @@ describe('Users', function() {
 					res.body.should.have.property('_id').eql(fakeUser.student1._id);
 					res.body.should.have.property('name').eql("Sugarizer_1" + (timestamp.toString()));
 					res.body.should.have.property('role').eql('student');
-					res.body.should.have.property('password').eql("pass");
+					res.body.should.not.have.property('password');
 					res.body.should.have.property('color').not.eql(undefined);
 					res.body.should.have.property('language').eql("fr");
 					res.body.should.have.property('shared_journal').not.eql(undefined);

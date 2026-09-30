@@ -5,6 +5,10 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Added
+- `npm run migrate:hash-passwords` to hash passwords stored in clear
+- `npm run test:unit` for unit tests that don't need a database
+
 ### Changed
 - Requires Node.js 20+ and MongoDB 4.0+ (8.0 recommended), see [migration guide](docs/migrate.md)
 - MongoDB driver 6 (was 3.5, which cannot connect to MongoDB 8)
@@ -16,10 +20,16 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Session cookie is `HttpOnly`, `SameSite=Strict`, and `Secure` when HTTPS is on
 - Security headers on every response (`X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`, HSTS when HTTPS is on)
 - Failed logins and 2FA codes are limited per account and address (`login_attempts`, `login_block_time`)
+- Passwords are stored as scrypt hashes. Clear passwords are hashed on next login or by the migration script. Passwords are now case sensitive
+- Passwords and 2FA secrets are no longer returned by the API, so the CSV export no longer contains passwords
+- A blank password in the dashboard user and profile forms keeps the current password
+- Tokens are bound to the user they were issued to. Tokens issued before this change are handled as expired
 
 ### Security
 - Admin signup trusted the `X-Real-IP` and `X-Forwarded-For` headers, so anyone could create an admin account
 - Dashboard CSV import route did not check the session
+- A token could be used with the key of any other user, including an admin, to act as that user
+- Login accepted regular expressions as name and password (e.g. `.*`)
 
 ### Fixed
 - Admin signup from the server itself failed on Node 17+ where `localhost` resolves to `127.0.0.1`
