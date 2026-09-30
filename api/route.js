@@ -7,6 +7,7 @@ var activities = require('./controller/activities'),
 	auth = require('./controller/auth'),
 	stats = require('./controller/stats'),
 	validate = require('./middleware/validateRequest'),
+	limiter = require('./middleware/loginLimiter'),
 	common = require('../dashboard/helper/common'),
 	assignments = require('./controller/assignments');
 
@@ -29,10 +30,31 @@ module.exports = function (app, ini, db) {
 	assignments.init(ini, db);
 	auth.init(ini);
 
+	// Slow down password and 2FA code guessing
+	var loginLimiter = limiter({
+		max: ini.security.login_attempts,
+		window: ini.security.login_block_time,
+		key: function(req) {
+			try {
+				return String(JSON.parse(req.body.user).name).toLowerCase();
+			} catch (err) {
+				return '';
+			}
+		}
+	});
+	var verify2FALimiter = limiter({
+		max: ini.security.login_attempts,
+		window: ini.security.login_block_time,
+		countAll: true,
+		key: function(req) {
+			return String(req.user._id);
+		}
+	});
+
 	// Routes that can be accessed by any one
 	app.get('/api', common.getAPIInfo);
-	app.post('/auth/verify2FA', [validate(true)], auth.verify2FA);//validate(partialAccess): partialAccess is middleware boolean. See middleware/validateRequest.js for more info.
-	app.post('/auth/login', auth.login);
+	app.post('/auth/verify2FA', [validate(true), verify2FALimiter], auth.verify2FA);//validate(partialAccess): partialAccess is middleware boolean. See middleware/validateRequest.js for more info.
+	app.post('/auth/login', loginLimiter, auth.login);
 	app.post('/auth/signup', auth.checkAdminOrLocal, auth.signup);
 
 	// Register activities list API

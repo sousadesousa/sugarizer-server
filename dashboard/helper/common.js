@@ -100,6 +100,30 @@ exports.getServerIP = function() {
 	return addresses;
 };
 
+// Check if a request comes from the server itself.
+// Based on the socket address only: headers like X-Real-IP can be sent by anyone.
+// Behind a reverse proxy the socket address is the proxy, so any forwarded address must be local too.
+exports.isLocalRequest = function(req) {
+	var local = exports.getServerIP();
+	var socketAddress = (req.socket && req.socket.remoteAddress) || (req.connection && req.connection.remoteAddress);
+	if (local.indexOf(socketAddress) == -1) {
+		return false;
+	}
+	var forwarded = [];
+	if (req.headers['x-real-ip']) {
+		forwarded.push(req.headers['x-real-ip']);
+	}
+	if (req.headers['x-forwarded-for']) {
+		forwarded = forwarded.concat(req.headers['x-forwarded-for'].split(','));
+	}
+	for (var i = 0 ; i < forwarded.length ; i++) {
+		if (local.indexOf(forwarded[i].trim()) == -1) {
+			return false;
+		}
+	}
+	return true;
+};
+
 exports.getAPIUrl = function() {
 	return (ini.security.https ? 'https' : 'http' ) + "://localhost:" + ini.web.port + '/';
 };

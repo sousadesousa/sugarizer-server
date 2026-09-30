@@ -17,12 +17,28 @@ module.exports = function(app, ini) {
 		});
 	}
 
+	// security headers
+	app.disable('x-powered-by');
+	app.use(function(req, res, next) {
+		res.setHeader('X-Content-Type-Options', 'nosniff');
+		res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+		res.setHeader('Referrer-Policy', 'same-origin');
+		if (ini.security.https) {
+			res.setHeader('Strict-Transport-Security', 'max-age=15552000');
+		}
+		next();
+	});
+
 	// must use cookieParser before express Session
+	// session cookie is not readable from scripts and never sent on requests coming from other sites (CSRF)
 	app.use(cookieParser());
 	app.use(expressSession({
 		secret: ini.security.secret,
 		cookie: {
-			maxAge: parseInt(ini.security.max_age)
+			maxAge: parseInt(ini.security.max_age),
+			httpOnly: true,
+			sameSite: 'strict',
+			secure: !!ini.security.https
 		},
 		resave: true,
 		saveUninitialized: true

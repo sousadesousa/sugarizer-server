@@ -360,9 +360,7 @@ exports.checkAdminOrLocal = function(req, res, next) {
 			'code': 19
 		});
 	}
-	var ip = common.getClientIP(req);
-	var serverIp = common.getServerIP();
-	if (whishedRole == 'admin' && serverIp.indexOf(ip) == -1) {
+	if (whishedRole == 'admin' && !common.isLocalRequest(req)) {
 		return res.status(401).send({
 			'error': 'You don\'t have permission to perform this action',
 			'code': 19
