@@ -20,43 +20,39 @@ When used into Docker, two Docker containers are used:
 * A docker container named **mongodb** for MongoDB database
 * A docker container named **server** for node.js engine
 
-None of this containers use data inside the docker, it's just running engines. All data are retrieved from the host via volumes linked to containers.
+None of these containers store data inside the container: the database, the Sugarizer client and the certificates come from the host via volumes linked to containers.
 
 Here's the docker-compose file:
 
-	version: "2"
-	
 	services:
 	  mongodb:
-	    build:
-	      context: ./docker
-	      dockerfile: Dockerfile-mongodb
+	    image: mongo:8.0
 	    restart: always
 	    volumes:
 	      - ./docker/db:/data/db
-	    environment:
-	      - AUTH=no
-	
+	    healthcheck: ...
+
 	  server:
 	    build:
-	      context: ./docker
-	      dockerfile: Dockerfile-server
+	      context: .
+	      dockerfile: docker/Dockerfile
 	    restart: always
+	    depends_on:
+	      mongodb:
+	        condition: service_healthy
 	    volumes:
-	      - ./:/sugarizer-server
-	      - ../:/sugarizer-certificate
-	      - ../sugarizer:/sugarizer-client
-	    links:
-	      - mongodb
+	      - ../sugarizer:/sugarizer-client:ro
+	      - ../:/sugarizer-certificate:ro
 	    ports:
+	      - 8080:8080
 	      - 8039:8039
-	      - 8080:80
 
-We could see 4 volumes:
+The **server** image contains Sugarizer Server code and its production dependencies (see [docker/Dockerfile](../docker/Dockerfile)); it runs as a non-root user and is checked by a health check on the API. Rebuild it after an update with `docker compose up -d --build`.
+
+We could see 3 volumes:
 
 * `/data/db` - linked to the `./docker/db` directory of the host - where all the database contents are stored
 * `/sugarizer-client` - linked to the `../sugarizer` directory of the host - where node.js looks for Sugarizer code
-* `/sugarizer-server` - linked to the `.` directory of the host - where node.js looks for Sugarizer Server code
 * `/sugarizer-certificate` - linked to the `..` directory of the host - where Sugarizer Server looks for SSL certificate when need
 
 

@@ -12,12 +12,7 @@ To run Sugarizer Server using Docker and Docker Compose:
 
 	curl -fsSL https://get.docker.com/ | sh
 
-Install Docker Compose
-
-	curl -L "https://github.com/docker/compose/releases/download/1.8.1/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-	chmod +x /usr/local/bin/docker-compose
-
-To install Docker Compose on ARM architectures (e.g. for the Raspberry Pi 3), the link above will not work.  You need to use [arm-compose](https://github.com/hypriot/arm-compose) instead.
+This also installs the Docker Compose plugin (`docker compose`). The images used by Sugarizer Server work on x86-64 and 64-bit ARM (arm64, for example Raspberry Pi 4 or 5 with a 64-bit OS).
 
 You can find more details about the installation of **Docker** [here](https://docker.github.io/engine/installation/)
 
@@ -26,8 +21,7 @@ You can	find more details about	the installation of **Docker Compose** [here](ht
 After that, go to the Sugarizer Server folder and launch
 
 	cd sugarizer-server
-	sh generate-docker-compose.sh
-	docker-compose up -d
+	docker compose up -d
 
 Your Sugarizer server will start automatically and will be accessible on http://127.0.0.1:8080 and your public IP. The database will be persisted inside the folder docker/db.
 

@@ -15,6 +15,25 @@ mongodump --db sugarizer --out sugarizer-dump
 mongorestore --db sugarizer sugarizer-dump/sugarizer
 ```
 
+With Docker, the image is now built from `docker/Dockerfile` and `generate-docker-compose.sh` is gone. Before updating, dump the database from the running MongoDB container, then move the old database files aside:
+
+```
+docker compose exec mongodb mongodump --db sugarizer --out /data/db/dump
+docker compose down
+mv docker/db/dump ../sugarizer-dump
+mv docker/db ../sugarizer-db-old
+```
+
+Update Sugarizer Server (`git pull`), start the new containers, and restore the dump:
+
+```
+docker compose up -d --build
+docker compose cp ../sugarizer-dump mongodb:/tmp/dump
+docker compose exec mongodb mongorestore --db sugarizer /tmp/dump/sugarizer
+```
+
+The server now listens on port 8080 inside its container (it was 80) and runs as a non-root user; the published ports are unchanged.
+
 
 ## Migrate to 1.5.0
 Two new collections need to be added to the `[collections]` section of your `.ini` file:

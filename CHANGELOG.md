@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Updated dependencies: Express 4.21, express-session 1.18, EJS 3, ws 8, multer 2, superagent 10, async 3, csv-parser 3, ESLint 9; `validator` forced to 13.x under express-validator 5
 - Dropped unused `http` and `jquery-datetimepicker` packages; `body-parser` replaced by Express built-ins; `nyc` moved to dev dependencies
 - CI runs against MongoDB 8.0
+- Docker: official `node:22` and `mongo:8.0` images (amd64 and arm64) instead of generated templates, server code and production dependencies built into the image, non-root user, health checks, `docker compose up -d` without `generate-docker-compose.sh`; the server listens on 8080 inside its container
 
 ## [1.5.0] - 2023-02-15
 ### Added

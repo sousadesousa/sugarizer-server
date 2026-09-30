@@ -14,8 +14,7 @@ The easiest way to run Sugarizer Server is to use Docker. To do that, type comma
 	git clone https://github.com/llaske/sugarizer
 	git clone https://github.com/llaske/sugarizer-server
 	cd sugarizer-server
-	sh generate-docker-compose.sh
-	docker-compose up -d
+	docker compose up -d
 
 For other options to install Sugarizer Server on your computer, on the cloud or on a RaspberryPI, see [here](docs/install.md).
 
@@ -130,7 +129,7 @@ To login to the Dashboard the first time, you will have to create an admin accou
 
 	sh add-admin.sh admin password http://127.0.0.1:8080/auth/signup
 
-Note: For security reasons, the script should be launched from the local machine. On Docker, attach a new shell to the container and launch the script from this shell - in that case the port to use should be 80, not 8080.
+Note: For security reasons, the script should be launched from the local machine. On Docker, launch the script inside the container: `docker compose exec server sh add-admin.sh admin password http://127.0.0.1:8080/auth/signup`.
 
 Where **admin** is the login for the new admin account and **password** is the password.
 
@@ -283,7 +282,7 @@ Here's an example of output file:
     1,,5d30162ced7ee117b842ad4a,Lionel,admin,fr,#BCCDFF,#FF8F00,aaaa,
     1,Given password was invalid (Generated random password).,5d30162ced7ee117b842ad57,Nikhil,student,en,#D1A3FF,#AC32FF,l0dU,CM2
 
-Note: For security reason, the script should be launched from the local machine. On Docker, attach a new shell to the container and launch the script from this shell - in that case the port to use should be 80, not 8080.
+Note: For security reason, the script should be launched from the local machine. On Docker, launch the script inside the container: `docker compose exec server sh add-admin.sh admin password http://127.0.0.1:8080/auth/signup`.
 
 
 ## Running Server securely using SSL

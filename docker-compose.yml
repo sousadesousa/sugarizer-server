@@ -1,27 +1,31 @@
-version: "2"
+# Sugarizer Server with MongoDB
+# The Sugarizer client must be cloned next to this directory, in ../sugarizer
 
 services:
   mongodb:
-    build:
-      context: ./docker
-      dockerfile: Dockerfile-mongodb
+    image: mongo:8.0
     restart: always
     volumes:
       - ./docker/db:/data/db
-    environment:
-      - AUTH=no
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
 
   server:
     build:
-      context: ./docker
-      dockerfile: Dockerfile-server
+      context: .
+      dockerfile: docker/Dockerfile
     restart: always
+    depends_on:
+      mongodb:
+        condition: service_healthy
     volumes:
-      - ./:/sugarizer-server
-      - ../:/sugarizer-certificate
-      - ../sugarizer:/sugarizer-client
-    links:
-      - mongodb
+      - ../sugarizer:/sugarizer-client:ro
+      # optional certificates, used when https = true in env/docker.ini
+      - ../:/sugarizer-certificate:ro
     ports:
+      - 8080:8080
       - 8039:8039
-      - 8080:80
