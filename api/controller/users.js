@@ -1,6 +1,7 @@
 // User handling
 
 var mongo = require('mongodb'),
+	dbutil = require('./utils/db'),
 	journal = require('./journal'),
 	otplib = require('otplib');
 
@@ -90,20 +91,21 @@ exports.init = function(settings, database) {
  *    }
  **/
 exports.findById = function(req, res) {
-	if (!mongo.ObjectID.isValid(req.params.uid)) {
+	if (!mongo.ObjectId.isValid(req.params.uid)) {
 		res.status(401).send({
 			'error': 'Invalid user id',
 			'code': 18
 		});
 		return;
 	}
-	db.collection(usersCollection, function(err, collection) {
-		collection.findOne({
-			'_id': new mongo.ObjectID(req.params.uid)
-		}, function(err, item) {
+	{
+		const collection = db.collection(usersCollection);
+		dbutil.callback(collection.findOne({
+			'_id': new mongo.ObjectId(req.params.uid)
+		}), function(err, item) {
 			res.send(item);
 		});
-	});
+	}
 };
 
 // function to generate OTP Token for QR code.
@@ -116,7 +118,7 @@ function generateOTPToken(username, serviceName, secret){
 }
 
 exports.updateSecret = function(req, res){
-	if (!mongo.ObjectID.isValid(req.user._id)) {
+	if (!mongo.ObjectId.isValid(req.user._id)) {
 		res.status(401).send({
 			'error': 'Invalid user id',
 			'code': 8
@@ -127,25 +129,28 @@ exports.updateSecret = function(req, res){
 	var uid = req.user._id;
 
 	// Save unique secret in database.
-	db.collection(usersCollection, function(err, collection) {
-		collection.findOne({
-			_id: new mongo.ObjectID(uid),
-		}, function(err, user) {
+	{
+		const collection = db.collection(usersCollection);
+		dbutil.callback(collection.findOne({
+			_id: new mongo.ObjectId(uid),
+		}), function(err, user) {
 			// only update database with unique secret if tfa is false or not defined -- for existing users in databse.
 			if (user.tfa === false || typeof user.tfa === "undefined") {
 				var uniqueSecret = otplib.authenticator.generateSecret();
-				db.collection(usersCollection, function(err, collection) {
-					collection.findOneAndUpdate({
-						'_id': new mongo.ObjectID(uid)
+				{
+					const collection = db.collection(usersCollection);
+					dbutil.callback(collection.findOneAndUpdate({
+						'_id': new mongo.ObjectId(uid)
 					}, {
 						$set:
 						{
 							uniqueSecret: uniqueSecret
 						}
 					}, {
+						includeResultMetadata: true,
 						safe: true,
-						returnOriginal: false
-					}, function(err, result) {
+						returnDocument: 'after'
+					}), function(err, result) {
 						if (err) {
 							res.status(500).send({
 								'error': 'An error has occurred',
@@ -171,7 +176,7 @@ exports.updateSecret = function(req, res){
 							});
 						}
 					});
-				});
+				}
 			} else if (user.tfa === true) {
 				res.status(500).send({
 					'error': 'An error has occurred',
@@ -179,13 +184,13 @@ exports.updateSecret = function(req, res){
 				});
 			}
 		});
-	});
+	}
 
 };
 
 exports.verifyTOTP = function(req, res) {
 	//validate
-	if (!mongo.ObjectID.isValid(req.user._id)) {
+	if (!mongo.ObjectId.isValid(req.user._id)) {
 		res.status(401).send({
 			'error': 'Invalid user id',
 			'code': 8
@@ -205,10 +210,11 @@ exports.verifyTOTP = function(req, res) {
 
 	var uniqueToken = req.body.userToken;
 
-	db.collection(usersCollection, function(err, collection) {
-		collection.findOne({
-			_id: new mongo.ObjectID(uid),
-		}, function(err, user) {
+	{
+		const collection = db.collection(usersCollection);
+		dbutil.callback(collection.findOne({
+			_id: new mongo.ObjectId(uid),
+		}), function(err, user) {
 			var uniqueSecret = user.uniqueSecret;
 			if (!err) {
 				try {
@@ -220,18 +226,20 @@ exports.verifyTOTP = function(req, res) {
 					});
 				}
 				if(isValid === true) {
-					db.collection(usersCollection, function(err, collection) {
-						collection.findOneAndUpdate({
-							'_id': new mongo.ObjectID(uid)
+					{
+						const collection = db.collection(usersCollection);
+						dbutil.callback(collection.findOneAndUpdate({
+							'_id': new mongo.ObjectId(uid)
 						}, {
 							$set:
 							{
 								tfa: isValid
 							}
 						}, {
+							includeResultMetadata: true,
 							safe: true,
-							returnOriginal: false
-						}, function(err, result) {
+							returnDocument: 'after'
+						}), function(err, result) {
 							if (err) {
 								res.status(500).send({
 									'error': 'An error has occurred',
@@ -251,7 +259,7 @@ exports.verifyTOTP = function(req, res) {
 								}
 							}
 						});
-					});
+					}
 				} else {
 					res.status(401).send({
 						'error': 'Wrong TOTP!!',
@@ -266,13 +274,13 @@ exports.verifyTOTP = function(req, res) {
 				});
 			}
 		});
-	});
+	}
 
 };
 
 exports.disable2FA = function(req, res) {
 	//validate
-	if (!mongo.ObjectID.isValid(req.user._id)) {
+	if (!mongo.ObjectId.isValid(req.user._id)) {
 		res.status(401).send({
 			'error': 'Invalid user id',
 			'code': 8
@@ -283,9 +291,10 @@ exports.disable2FA = function(req, res) {
 	var uid = req.user._id;
 
 	//disable TOTP
-	db.collection(usersCollection, function(err, collection) {
-		collection.findOneAndUpdate({
-			'_id': new mongo.ObjectID(uid)
+	{
+		const collection = db.collection(usersCollection);
+		dbutil.callback(collection.findOneAndUpdate({
+			'_id': new mongo.ObjectId(uid)
 		}, {
 			$set:
 				{
@@ -293,9 +302,10 @@ exports.disable2FA = function(req, res) {
 					uniqueSecret: undefined
 				}
 		}, {
+			includeResultMetadata: true,
 			safe: true,
-			returnOriginal: false
-		}, function(err, result) {
+			returnDocument: 'after'
+		}), function(err, result) {
 			if (err) {
 				res.status(500).send({
 					'error': 'An error has occurred',
@@ -315,7 +325,7 @@ exports.disable2FA = function(req, res) {
 				}
 			}
 		});
-	});
+	}
 };
 
 /**
@@ -407,26 +417,27 @@ exports.findAll = function(req, res) {
 			});
 			query['_id'] = {
 				$in: allowedUsers.map(function(id) {
-					return new mongo.ObjectID(id);
+					return new mongo.ObjectId(id);
 				})
 			};
 		} else {
 			query['_id'] = {
 				$in: req.user.students.map(function(id) {
-					return new mongo.ObjectID(id);
+					return new mongo.ObjectId(id);
 				})
 			};
 		}
-		query['_id']['$in'].push(new mongo.ObjectID(req.user._id));
+		query['_id']['$in'].push(new mongo.ObjectId(req.user._id));
 	} else {
 		query = addQuery('classid', req.query, query);
 	}
 
 	// add filter and pagination
-	db.collection(usersCollection, function(err, collection) {
+	{
+		const collection = db.collection(usersCollection);
 
 		//count data
-		collection.countDocuments(query, function(err, count) {
+		dbutil.callback(collection.countDocuments(query), function(err, count) {
 
 			//define var
 			var params = JSON.parse(JSON.stringify(req.query));
@@ -452,7 +463,7 @@ exports.findAll = function(req, res) {
 				res.send(data);
 			});
 		});
-	});
+	}
 };
 
 //form query params
@@ -472,7 +483,8 @@ function formPaginatedUrl(route, params, offset, limit) {
 exports.getAllUsers = function(query, options, callback) {
 
 	//get data
-	db.collection(usersCollection, function(err, collection) {
+	{
+		const collection = db.collection(usersCollection);
 		var conf = [
 			{
 				$match: query
@@ -521,15 +533,15 @@ exports.getAllUsers = function(query, options, callback) {
 			}
 		}
 
-		collection.aggregate(conf, function(err, users) {
+		dbutil.cursor(collection.aggregate(conf), function(err, users) {
 			if (options.skip) users.skip(options.skip);
 			if (options.limit) users.limit(options.limit);
 			//return
-			users.toArray(function(err, usersList) {
+			dbutil.callback(users.toArray(), function(err, usersList) {
 				callback(usersList);
 			});
 		});
-	});
+	}
 };
 
 function getOptions(req, count, def_sort) {
@@ -570,7 +582,7 @@ function addQuery(filter, params, query, default_val) {
 		} else if (filter == 'classid') {
 			query['_id'] = {
 				$in: params[filter].split(',').map(function(id) {
-					return new mongo.ObjectID(id);
+					return new mongo.ObjectId(id);
 				})
 			};
 		} else if (filter == 'role') {
@@ -711,20 +723,21 @@ exports.addUser = function(req, res) {
 			//create user based on role
 			if (user.role == 'admin') {
 				delete user.classrooms;
-				db.collection(usersCollection, function(err, collection) {
-					collection.insertOne(user, {
+				{
+					const collection = db.collection(usersCollection);
+					dbutil.callback(collection.insertOne(user, {
 						safe: true
-					}, function(err, result) {
+					}), function(err) {
 						if (err) {
 							res.status(500).send({
 								'error': 'An error has occurred',
 								'code': 10
 							});
 						} else {
-							res.send(result.ops[0]);
+							res.send(user);
 						}
 					});
-				});
+				}
 			} else {
 				//for student
 				if (user.role != 'teacher') {
@@ -732,26 +745,27 @@ exports.addUser = function(req, res) {
 				} else if (!user.classrooms) {
 					user.classrooms = [];
 				}
-				db.collection(usersCollection, function(err, collection) {
+				{
+					const collection = db.collection(usersCollection);
 					// Create a new journal
-					journal.createJournal(function(err, result) {
+					journal.createJournal(function(err, privateJournal) {
 						// add journal to the new user
-						user.private_journal = result.ops[0]._id;
+						user.private_journal = privateJournal._id;
 						user.shared_journal = journal.getShared()._id;
-						collection.insertOne(user, {
+						dbutil.callback(collection.insertOne(user, {
 							safe: true
-						}, function(err, result) {
+						}), function(err) {
 							if (err) {
 								res.status(500).send({
 									'error': 'An error has occurred',
 									'code': 10
 								});
 							} else {
-								res.send(result.ops[0]);
+								res.send(user);
 							}
 						});
 					});
-				});
+				}
 			}
 
 		} else {
@@ -820,7 +834,7 @@ exports.addUser = function(req, res) {
  *    }
  **/
 exports.updateUser = function(req, res) {
-	if (!mongo.ObjectID.isValid(req.params.uid)) {
+	if (!mongo.ObjectId.isValid(req.params.uid)) {
 		res.status(401).send({
 			'error': 'Invalid user id',
 			'code': 18
@@ -846,7 +860,7 @@ exports.updateUser = function(req, res) {
 		//check for unique user name validation
 		exports.getAllUsers({
 			'_id': {
-				$ne: new mongo.ObjectID(uid)
+				$ne: new mongo.ObjectId(uid)
 			},
 			'name': new RegExp("^" + user.name + "$", "i")
 		}, {}, function(item) {
@@ -869,28 +883,30 @@ exports.updateUser = function(req, res) {
 
 //private function to update user
 function updateUser(uid, user, res) {
-	db.collection(usersCollection, function(err, collection) {
-		collection.updateOne({
-			'_id': new mongo.ObjectID(uid)
+	{
+		const collection = db.collection(usersCollection);
+		dbutil.callback(collection.updateOne({
+			'_id': new mongo.ObjectId(uid)
 		}, {
 			$set: user
 		}, {
 			safe: true
-		}, function(err, result) {
+		}), function(err, result) {
 			if (err) {
 				res.status(500).send({
 					'error': 'An error has occurred',
 					'code': 10
 				});
 			} else {
-				if (result && result.result && result.result.n == 1) {
-					db.collection(usersCollection, function(err, collection) {
-						collection.findOne({
-							'_id': new mongo.ObjectID(uid)
-						}, function(err, user) {
+				if (dbutil.affected(result) == 1) {
+					{
+						const collection = db.collection(usersCollection);
+						dbutil.callback(collection.findOne({
+							'_id': new mongo.ObjectId(uid)
+						}), function(err, user) {
 							res.send(user);
 						});
-					});
+					}
 				} else {
 					res.status(401).send({
 						'error': 'Inexisting user id',
@@ -899,7 +915,7 @@ function updateUser(uid, user, res) {
 				}
 			}
 		});
-	});
+	}
 }
 
 /**
@@ -919,7 +935,7 @@ function updateUser(uid, user, res) {
  *     }
  **/
 exports.removeUser = function(req, res) {
-	if (!mongo.ObjectID.isValid(req.params.uid)) {
+	if (!mongo.ObjectId.isValid(req.params.uid)) {
 		res.status(401).send({
 			'error': 'Invalid user id',
 			'code': 18
@@ -929,10 +945,11 @@ exports.removeUser = function(req, res) {
 
 	//delete user from db
 	var uid = req.params.uid;
-	db.collection(usersCollection, function(err, collection) {
-		collection.findOneAndDelete({
-			'_id': new mongo.ObjectID(uid)
-		}, function(err, user) {
+	{
+		const collection = db.collection(usersCollection);
+		dbutil.callback(collection.findOneAndDelete({
+			'_id': new mongo.ObjectId(uid)
+		}, {includeResultMetadata: true}), function(err, user) {
 			if (err) {
 				res.status(500).send({
 					'error': 'An error has occurred',
@@ -941,12 +958,13 @@ exports.removeUser = function(req, res) {
 			} else {
 				if (user && user.ok && user.value) {
 					// Remove user charts
-					db.collection(chartsCollection, function(err, collection) {
-						collection.deleteMany({
-							user_id: new mongo.ObjectID(uid)
+					{
+						const collection = db.collection(chartsCollection);
+						dbutil.callback(collection.deleteMany({
+							user_id: new mongo.ObjectId(uid)
 						}, {
 							safe: true
-						},
+						}),
 						function(err) {
 							if (err) {
 								res.status(500).send({
@@ -955,73 +973,76 @@ exports.removeUser = function(req, res) {
 								});
 							} else {
 								// Remove user form classroom
-								db.collection(classroomsCollection, function(err, collection) {
-									collection.updateMany({},
+								{
+									const collection = db.collection(classroomsCollection);
+									dbutil.callback(collection.updateMany({},
 										{
 											$pull: { students: uid }
 										}, {
 											safe: true
-										},
-										function(err) {
-											if (err) {
-												res.status(500).send({
-													error: "An error has occurred",
-													code: 10
-												});
-											} else {
-												if (user.value.private_journal) {
-													db.collection(journalCollection, function(err, collection) {
-														collection.findOneAndDelete({
-															_id: new mongo.ObjectID(user.value.private_journal)
-														}, {
-															safe: true
-														},
-														function(err, result) {
-															if (err) {
-																return res.status(500).send({
-																	'error': 'An error has occurred',
-																	'code': 10
-																});
-															} else {
-																if (result && result.value && result.ok && typeof result.value.content == 'object') {
-																	var cont = [];
-																	for (var i=0; i<result.value.content.length; i++) {
-																		if (result.value.content[i] && mongo.ObjectID.isValid(result.value.content[i].text)) {
-																			cont.push(result.value.content[i].text);
-																		}
+										}),
+									function(err) {
+										if (err) {
+											res.status(500).send({
+												error: "An error has occurred",
+												code: 10
+											});
+										} else {
+											if (user.value.private_journal) {
+												{
+													const collection = db.collection(journalCollection);
+													dbutil.callback(collection.findOneAndDelete({
+														_id: new mongo.ObjectId(user.value.private_journal)
+													}, {
+														includeResultMetadata: true,
+														safe: true
+													}),
+													function(err, result) {
+														if (err) {
+															return res.status(500).send({
+																'error': 'An error has occurred',
+																'code': 10
+															});
+														} else {
+															if (result && result.value && result.ok && typeof result.value.content == 'object') {
+																var cont = [];
+																for (var i=0; i<result.value.content.length; i++) {
+																	if (result.value.content[i] && mongo.ObjectId.isValid(result.value.content[i].text)) {
+																		cont.push(result.value.content[i].text);
 																	}
-																	var deleteCount = 0;
-																	for (var i=0; i < cont.length; i++) {
-																		gridfsbucket.delete(cont[i], function() {
-																			deleteCount++;
-																			if (deleteCount == cont.length) return res.send({
-																				'user_id': uid
-																			});
+																}
+																var deleteCount = 0;
+																for (var i=0; i < cont.length; i++) {
+																	dbutil.callback(gridfsbucket.delete(cont[i]), function() {
+																		deleteCount++;
+																		if (deleteCount == cont.length) return res.send({
+																			'user_id': uid
 																		});
-																	}
-																	if (cont.length == 0) return res.send({
-																		'user_id': uid
-																	});
-																} else {
-																	return res.send({
-																		'user_id': uid
 																	});
 																}
+																if (cont.length == 0) return res.send({
+																	'user_id': uid
+																});
+															} else {
+																return res.send({
+																	'user_id': uid
+																});
 															}
-														});
-													});
-												} else {
-													return res.send({
-														'user_id': uid
+														}
 													});
 												}
+											} else {
+												return res.send({
+													'user_id': uid
+												});
 											}
 										}
+									}
 									);
-								});
+								}
 							}
 						});
-					});
+					}
 				} else {
 					res.status(401).send({
 						'error': 'Inexisting user id',
@@ -1030,23 +1051,24 @@ exports.removeUser = function(req, res) {
 				}
 			}
 		});
-	});
+	}
 };
 
 //update user's time stamp
 exports.updateUserTimestamp = function(uid, callback) {
 
-	db.collection(usersCollection, function(err, collection) {
-		collection.updateOne({
-			'_id': new mongo.ObjectID(uid)
+	{
+		const collection = db.collection(usersCollection);
+		dbutil.callback(collection.updateOne({
+			'_id': new mongo.ObjectId(uid)
 		}, {
 			$set: {
 				timestamp: +new Date()
 			}
 		}, {
 			safe: true
-		}, function(err) {
+		}), function(err) {
 			callback(err);
 		});
-	});
+	}
 };

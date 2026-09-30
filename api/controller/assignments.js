@@ -1,6 +1,7 @@
 //assignments handling 
 
 var mongo = require('mongodb');
+var dbutil = require('./utils/db');
 var journal = require('./journal');
 var common = require('./utils/common');
 
@@ -86,23 +87,18 @@ exports.addAssignment = function (req, res) {
 	assignment.isAssigned = false;
 
 	//add assignment to database with unique name
-	db.collection(assignmentCollection, function (err, collection) {
-		if (err) {
-			return res.status(500).send({
-				'error': "An error has occurred",
-				'code': 10
-			});
-		}
-		collection.insertOne(assignment, { safe: true }, function (err, result) {
+	{
+		const collection = db.collection(assignmentCollection);
+		dbutil.callback(collection.insertOne(assignment, { safe: true }), function (err) {
 			if (err) {
 				return res.status(500).send({
 					'error': "An error has occurred",
 					'code': 10
 				});
 			}
-			return res.status(200).send(result.ops[0]);
+			return res.status(200).send(assignment);
 		});
-	});
+	}
 };
 
 /**
@@ -191,9 +187,10 @@ exports.findAll = function (req, res) {
 	query = addQuery("isAssigned", req.query, query);
 	query = addQuery("terminated", req.query, query);
 	query = addQuery("created_by", req.query, query);
-	db.collection(assignmentCollection, function (err, collection) {
+	{
+		const collection = db.collection(assignmentCollection);
 		//count
-		collection.countDocuments(query, function (err, count) {
+		dbutil.callback(collection.countDocuments(query), function (err, count) {
 			var params = JSON.parse(JSON.stringify(req.query));
 			var route = req.route.path;
 			var options = getOptions(req, count, "-timestamp");
@@ -236,7 +233,7 @@ exports.findAll = function (req, res) {
 				conf[2]["$sort"] = sortItem;
 			}
 			//find
-			collection.aggregate(conf, function(err, assignments) {
+			dbutil.cursor(collection.aggregate(conf), function(err, assignments) {
 				if (err) {
 					return res.status(500).send({
 						'error': "An error has occurred",
@@ -249,16 +246,17 @@ exports.findAll = function (req, res) {
 				if (options.limit) {
 					assignments.limit(options.limit);
 				}
-				assignments.toArray(function (err, items) {
+				dbutil.callback(assignments.toArray(), function (err, items) {
 					//find journal entries bt _id and objectId with aggregate
-					db.collection(journalCollection, function (err, collection) {
+					{
+						const collection = db.collection(journalCollection);
 						if (err) {
 							return res.status(500).send({
 								'error': "An error has occurred",
 								'code': 10
 							});
 						}
-						collection.find({
+						dbutil.callback(collection.find({
 							'_id': {
 								$in: items.map(function (item) {
 									return item.journal_id;
@@ -270,7 +268,7 @@ exports.findAll = function (req, res) {
 								'content.metadata': 1,
 								'content.text': 1,
 							}
-						}).toArray(function (err, journals) {
+						}).toArray(), function (err, journals) {
 							if (err) {
 								return res.status(500).send({
 									'error': "An error has occurred",
@@ -299,11 +297,11 @@ exports.findAll = function (req, res) {
 							});
 							return res.status(200).send(data);
 						});
-					});
+					}
 				});
 			});
 		});
-	});
+	}
 };
 
 /**
@@ -410,7 +408,7 @@ exports.findAll = function (req, res) {
 exports.findAllDeliveries = function (req, res) {
 	var assignmentId = req.params.assignmentId;
 	//validate
-	if (!mongo.ObjectID.isValid(assignmentId)) {
+	if (!mongo.ObjectId.isValid(assignmentId)) {
 		return res.status(401).send({
 			'error': "Invalid assignment id",
 			'code': 35
@@ -420,14 +418,15 @@ exports.findAllDeliveries = function (req, res) {
 	var query = {"metadata.assignmentId": assignmentId};
 	query = addQuery("buddy_name", req.query, query);
 	query = addQuery("Delivered", req.query, query);
-	db.collection(journalCollection, function (err, collection) {
+	{
+		const collection = db.collection(journalCollection);
 		//count
-		collection.countDocuments(query, function (err, count) {
+		dbutil.callback(collection.countDocuments(query), function (err, count) {
 			var params = JSON.parse(JSON.stringify(req.query));
 			var route = req.route.path;
 			var options = getOptions(req, count, "+buddy_name");
 			//find all entries which matches with assignment id using aggregation
-			collection.aggregate([
+			dbutil.cursor(collection.aggregate([
 				{
 					$match: {content: {$elemMatch: query}},
 				},
@@ -448,7 +447,7 @@ exports.findAllDeliveries = function (req, res) {
 						"content.metadata.buddy_name": 1
 					}
 				}
-			], function(err, deliveries) {
+			]), function(err, deliveries) {
 				if (err) {
 					return res.status(500).send({
 						'error': "An error has occurred",
@@ -463,7 +462,7 @@ exports.findAllDeliveries = function (req, res) {
 					if (options.limit) {
 						deliveries.limit(options.limit);
 					}
-					deliveries.toArray(function (err, items) {
+					dbutil.callback(deliveries.toArray(), function (err, items) {
 						options.total = length;
 						var data = {
 							'deliveries': items,
@@ -481,7 +480,7 @@ exports.findAllDeliveries = function (req, res) {
 				});
 			});
 		});
-	});
+	}
 };
 
 /**
@@ -592,14 +591,15 @@ exports.findAllDeliveries = function (req, res) {
 exports.findById = function (req, res) {
 	var assignmentId = req.params.assignmentId;
 	//validate
-	if (!mongo.ObjectID.isValid(assignmentId)) {
+	if (!mongo.ObjectId.isValid(assignmentId)) {
 		return res.status(401).send({
 			'error': "Invalid assignment id",
 			'code': 35
 		});
 	}
-	db.collection(assignmentCollection, function (err, collection) {
-		collection.findOne({ _id: new mongo.ObjectID(assignmentId) }, function (err, assignment) {
+	{
+		const collection = db.collection(assignmentCollection);
+		dbutil.callback(collection.findOne({ _id: new mongo.ObjectId(assignmentId) }), function (err, assignment) {
 			if (err) {
 				return res.status(500).send({
 					'error': "An error has occurred",
@@ -613,22 +613,23 @@ exports.findById = function (req, res) {
 				});
 			}
 			//find classrooms
-			db.collection(classroomCollection, function (err, collection) {
+			{
+				const collection = db.collection(classroomCollection);
 				if (err) {
 					return res.status(500).send({
 						'error': "An error has occurred",
 						'code': 10
 					});
 				}
-				collection.find(
+				dbutil.callback(collection.find(
 					{
 						_id: {
 							$in: assignment.classrooms.map(function (classroom) {
-								return new mongo.ObjectID(classroom);
+								return new mongo.ObjectId(classroom);
 							})
 						}
 					}
-				).toArray(function (err, classrooms) {
+				).toArray(), function (err, classrooms) {
 					if (err) {
 						return res.status(500).send({
 							'error': "An error has occurred",
@@ -642,16 +643,17 @@ exports.findById = function (req, res) {
 							}
 						});
 					});
-					db.collection(journalCollection, function (err, collection) {
+					{
+						const collection = db.collection(journalCollection);
 						if (err) {
 							return res.status(500).send({
 								'error': "An error has occurred",
 								'code': 10
 							});
 						}
-						collection.find(
+						dbutil.callback(collection.find(
 							{
-								_id: new mongo.ObjectID(assignment.journal_id)
+								_id: new mongo.ObjectId(assignment.journal_id)
 							},
 							{
 								$project: {
@@ -660,7 +662,7 @@ exports.findById = function (req, res) {
 									'content.text': 1,
 								}
 							}
-						).toArray(function (err, journals) {
+						).toArray(), function (err, journals) {
 							if (err) {
 								return res.status(500).send({
 									'error': "An error has occurred",
@@ -676,11 +678,11 @@ exports.findById = function (req, res) {
 							});
 							return res.status(200).send(assignment);
 						});
-					});
+					}
 				});
-			});
+			}
 		});
-	});
+	}
 };
 
 /** 
@@ -705,15 +707,16 @@ exports.findById = function (req, res) {
 //launch Assignment
 exports.launchAssignment = function (req, res) {
 	//validate
-	if (!mongo.ObjectID.isValid(req.params.assignmentId)) {
+	if (!mongo.ObjectId.isValid(req.params.assignmentId)) {
 		return res.status(401).send({
 			'error': "Invalid assignment id",
 			'code': 35
 		});
 	}
 	//find assignment by id
-	db.collection(assignmentCollection, function (err, collection) {
-		collection.findOne({ _id: new mongo.ObjectID(req.params.assignmentId) }, function (err, assignment) {
+	{
+		const collection = db.collection(assignmentCollection);
+		dbutil.callback(collection.findOne({ _id: new mongo.ObjectId(req.params.assignmentId) }), function (err, assignment) {
 			if (err) {
 				return res.status(400).send({
 					'error': 'Inexisting assignment id',
@@ -757,17 +760,18 @@ exports.launchAssignment = function (req, res) {
 					uniqueStudentsSet = new Set([...uniqueStudentsSet].map(o => JSON.parse(o)));
 					//convert set to array
 					uniqueStudents = Array.from(uniqueStudentsSet);
-					db.collection(journalCollection, function (err, collection) {
+					{
+						const collection = db.collection(journalCollection);
 						if (err) {
 							return res.status(500).send({
 								'error': "An error has occurred",
 								'code': 10
 							});
 						} else {
-							collection.aggregate([
+							dbutil.callback(collection.aggregate([
 								{
 									$match: {
-										'_id': new mongo.ObjectID(req.user.private_journal),
+										'_id': new mongo.ObjectId(req.user.private_journal),
 										"content.objectId": assignment.assignedWork
 									}
 								},
@@ -783,7 +787,7 @@ exports.launchAssignment = function (req, res) {
 										}
 									}
 								},
-							]).toArray(function (err, entry) {
+							]).toArray(), function (err, entry) {
 								if (err) {
 									return res.status(500).send({
 										'error': "An error has occurred",
@@ -832,7 +836,7 @@ exports.launchAssignment = function (req, res) {
 								}
 							});
 						}
-					});
+					}
 				}).catch(function () {
 					return res.status(500).send({
 						error: "An error has occurred",
@@ -841,17 +845,18 @@ exports.launchAssignment = function (req, res) {
 				});
 			}
 		});
-	});
+	}
 };
 
 //private function to update entries
 function updateEntries(entryDoc, uniqueStudents) {
 	return new Promise(function (resolve, reject) {
-		if (mongo.ObjectID.isValid(entryDoc.text)) {
-			db.collection(CHUNKS_COLL, function (err, collection) {
-				collection.find({
-					files_id: new mongo.ObjectID(entryDoc.text)
-				}).toArray(function (err, chunks) {
+		if (mongo.ObjectId.isValid(entryDoc.text)) {
+			{
+				const collection = db.collection(CHUNKS_COLL);
+				dbutil.callback(collection.find({
+					files_id: new mongo.ObjectId(entryDoc.text)
+				}).toArray(), function (err, chunks) {
 					if (err) {
 						reject(err);
 					}
@@ -861,36 +866,37 @@ function updateEntries(entryDoc, uniqueStudents) {
 							journal.copyEntry(entryDoc, chunks, uniqueStudents[i]).then(function (result) {
 								var copy = result.copy;
 								var student = result.student;
-								db.collection(journalCollection, function (err, collection) {
+								{
+									const collection = db.collection(journalCollection);
 									if (err) {
 										reject(err);
 									} else {
-										collection.updateOne(
+										dbutil.callback(collection.updateOne(
 											{
-												_id: new mongo.ObjectID(student.journal)
+												_id: new mongo.ObjectId(student.journal)
 											},
 											{
 												$push:
 												{
 													"content": copy
 												}
-											}, function (err) {
-												counter++;
-												if (err) {
-													reject(err);
-												} else {
-													if (counter == uniqueStudents.length) return resolve({content: entryDoc, count: counter});
-												}
-											});
+											}), function (err) {
+											counter++;
+											if (err) {
+												reject(err);
+											} else {
+												if (counter == uniqueStudents.length) return resolve({content: entryDoc, count: counter});
+											}
+										});
 									}
-								});
+								}
 							}).catch(function (err) {
 								reject(err);
 							});
 						}
 					}
 				});
-			});
+			}
 		}
 	});
 }
@@ -913,37 +919,38 @@ function updateEntries(entryDoc, uniqueStudents) {
  **/
 exports.removeAssignment = function (req, res) {
 	//validate
-	if (!mongo.ObjectID.isValid(req.params.assignmentId)) {
+	if (!mongo.ObjectId.isValid(req.params.assignmentId)) {
 		return res.status(401).send({
 			'error': "Invalid assignment id",
 			'code': 35
 		});
 	}
-	db.collection(assignmentCollection, function (err, collection) {
-		collection.deleteOne(
+	{
+		const collection = db.collection(assignmentCollection);
+		dbutil.callback(collection.deleteOne(
 			{
-				_id: new mongo.ObjectID(req.params.assignmentId)
-			},
-			function (err, result) {
-				if (err) {
-					return res.status(500).send({
-						error: "An error has occurred",
-						code: 10
+				_id: new mongo.ObjectId(req.params.assignmentId)
+			}),
+		function (err, result) {
+			if (err) {
+				return res.status(500).send({
+					error: "An error has occurred",
+					code: 10
+				});
+			} else {
+				if (dbutil.affected(result) == 1) {
+					return res.status(200).send({
+						id: req.params.assignmentId
 					});
 				} else {
-					if (result && result.result && result.result.n == 1) {
-						return res.status(200).send({
-							id: req.params.assignmentId
-						});
-					} else {
-						return res.status(401).send({
-							error: "Inexisting assignment id",
-							code: 40
-						});
-					}
+					return res.status(401).send({
+						error: "Inexisting assignment id",
+						code: 40
+					});
 				}
-			});
-	});
+			}
+		});
+	}
 };
 
 //api doc for update Assignment
@@ -967,7 +974,7 @@ exports.removeAssignment = function (req, res) {
 // update assignment
 exports.updateAssignment = function (req, res) {
 	//validate
-	if (!mongo.ObjectID.isValid(req.params.assignmentId)) {
+	if (!mongo.ObjectId.isValid(req.params.assignmentId)) {
 		return res.status(401).send({
 			'error': "Invalid assignment id",
 			'code': 35
@@ -978,37 +985,38 @@ exports.updateAssignment = function (req, res) {
 	//add timestamp
 	assignment.timestamp = +new Date();
 	//find assignment by id
-	db.collection(assignmentCollection, function (err, collection) {
-		collection.updateOne(
+	{
+		const collection = db.collection(assignmentCollection);
+		dbutil.callback(collection.updateOne(
 			{
-				_id: new mongo.ObjectID(req.params.assignmentId)
+				_id: new mongo.ObjectId(req.params.assignmentId)
 			},
 			{
 				$set: assignment
 			},
 			{
 				safe: true,
-			},
-			function (err, result) {
-				if (err) {
-					return res.status(500).send({
-						'error': "An error has occurred",
-						'code': 10
+			}),
+		function (err, result) {
+			if (err) {
+				return res.status(500).send({
+					'error': "An error has occurred",
+					'code': 10
+				});
+			} else {
+				if (dbutil.affected(result) == 1) {
+					return res.send({
+						id: assignmentId
 					});
 				} else {
-					if (result && result.result && result.result.n == 1) {
-						return res.send({
-							id: assignmentId
-						});
-					} else {
-						return res.status(401).send({
-							'error': "Inexisting assignment id",
-							'code': 40
-						});
-					}
+					return res.status(401).send({
+						'error': "Inexisting assignment id",
+						'code': 40
+					});
 				}
-			});
-	});
+			}
+		});
+	}
 };
 
 //private function for filtering and sorting
@@ -1090,7 +1098,7 @@ function addQuery(filter, params, query, default_val) {
 			}
 		} else if (filter == "created_by") {
 			query["created_by"] = {
-				$eq: new mongo.ObjectID(params[filter])
+				$eq: new mongo.ObjectId(params[filter])
 			};
 		} else {
 			query[filter] = {
@@ -1133,7 +1141,7 @@ function addQuery(filter, params, query, default_val) {
 //update comment 
 exports.updateComment = function (req, res) {
 	//validate
-	if (!req.query.oid || !mongo.ObjectID.isValid(req.params.assignmentId)) {
+	if (!req.query.oid || !mongo.ObjectId.isValid(req.params.assignmentId)) {
 		return res.status(401).send({
 			'error': "Invalid assignment id",
 			'code': 35
@@ -1142,8 +1150,9 @@ exports.updateComment = function (req, res) {
 	var assignmentId = req.params.assignmentId;
 	var comment = JSON.parse(req.body.comment);
 	var objectId = req.query.oid;
-	db.collection(journalCollection, function (err, collection) {
-		collection.findOneAndUpdate(
+	{
+		const collection = db.collection(journalCollection);
+		dbutil.callback(collection.findOneAndUpdate(
 			{
 				'content.objectId': objectId,
 				'content.metadata.assignmentId': assignmentId,
@@ -1154,39 +1163,41 @@ exports.updateComment = function (req, res) {
 				}
 			},
 			{
+				includeResultMetadata: true,
 				safe: true,
 				arrayFilters: [{
 					'elem.objectId': objectId
 
 				}]
-			},
-			function (err) {
-				if (err) {
-					return res.status(401).send({
-						'error': "An error has occurred",
-						'code': 10
-					});
-				}
-				else {
-					return res.status(200).send({
-						comment: comment.comment
-					});
-				}
-			});
-	});
+			}),
+		function (err) {
+			if (err) {
+				return res.status(401).send({
+					'error': "An error has occurred",
+					'code': 10
+				});
+			}
+			else {
+				return res.status(200).send({
+					comment: comment.comment
+				});
+			}
+		});
+	}
 };
 
 //update status
 function updateStatus(assignmentId, status, objectId, callback) {
 	//validate
-	if (!mongo.ObjectID.isValid(assignmentId)) {
+	if (!mongo.ObjectId.isValid(assignmentId)) {
 		callback();
 	}
 	if (status == "Assigned") {
-		db.collection(assignmentCollection, function (err, collection) {
-			collection.findOneAndUpdate(
+		{
+			const collection = db.collection(assignmentCollection);
+			dbutil.callback(collection.findOneAndUpdate(
 				{
-					'_id': new mongo.ObjectID(assignmentId)
+					'_id': new mongo.ObjectId(assignmentId)
 				},
 				{
 					$set: {
@@ -1194,20 +1205,22 @@ function updateStatus(assignmentId, status, objectId, callback) {
 					}
 				},
 				{
+					includeResultMetadata: true,
 					safe: true,
-				},
-				function (err, result) {
-					if (err) {
-						callback(err);
-					} else {
-						callback(result);
-					}
-				});
-		});
+				}),
+			function (err, result) {
+				if (err) {
+					callback(err);
+				} else {
+					callback(result);
+				}
+			});
+		}
 	}
 	if (status == "Delivered") {
-		db.collection(journalCollection, function (err, collection) {
-			collection.findOneAndUpdate(
+		{
+			const collection = db.collection(journalCollection);
+			dbutil.callback(collection.findOneAndUpdate(
 				{
 					'content.objectId': objectId,
 					'content.metadata.assignmentId': assignmentId,
@@ -1218,19 +1231,20 @@ function updateStatus(assignmentId, status, objectId, callback) {
 					}
 				},
 				{
+					includeResultMetadata: true,
 					safe: true,
 					arrayFilters: [{
 						'elem.objectId': objectId
 					}]
-				},
-				function (err, result) {
-					if (err) {
-						callback(err);
-					} else {
-						callback(result);
-					}
-				});
-		});
+				}),
+			function (err, result) {
+				if (err) {
+					callback(err);
+				} else {
+					callback(result);
+				}
+			});
+		}
 	}
 }
 
@@ -1323,7 +1337,7 @@ function updateStatus(assignmentId, status, objectId, callback) {
  **/
 exports.returnAssignment = function (req, res) {
 	//validate
-	if (!req.query.oid || !mongo.ObjectID.isValid(req.params.assignmentId)) {
+	if (!req.query.oid || !mongo.ObjectId.isValid(req.params.assignmentId)) {
 		return res.status(401).send({
 			'error': "Invalid assignment id",
 			'code': 35
@@ -1331,8 +1345,9 @@ exports.returnAssignment = function (req, res) {
 	}
 	var assignmentId = req.params.assignmentId;
 	var objectId = req.query.oid;
-	db.collection(journalCollection, function (err, collection) {
-		collection.findOneAndUpdate(
+	{
+		const collection = db.collection(journalCollection);
+		dbutil.callback(collection.findOneAndUpdate(
 			{
 				'content.objectId': objectId,
 				'content.metadata.assignmentId': assignmentId,
@@ -1343,22 +1358,23 @@ exports.returnAssignment = function (req, res) {
 				}
 			},
 			{
+				includeResultMetadata: true,
 				safe: true,
 				arrayFilters: [{
 					'elem.objectId': objectId
 				}]
-			},
-			function (err, result) {
-				if (err) {
-					return res.status(500).send({
-						error: "An error has occurred",
-						code: 10
-					});
-				} else {
-					return res.send(result);
-				}
-			});
-	});
+			}),
+		function (err, result) {
+			if (err) {
+				return res.status(500).send({
+					error: "An error has occurred",
+					code: 10
+				});
+			} else {
+				return res.send(result);
+			}
+		});
+	}
 };
 
 /** 
@@ -1451,7 +1467,7 @@ exports.returnAssignment = function (req, res) {
 // submit assignment 
 exports.submitAssignment = function (req, res) {
 	//validate
-	if (!req.query.oid || !mongo.ObjectID.isValid(req.params.assignmentId)) {
+	if (!req.query.oid || !mongo.ObjectId.isValid(req.params.assignmentId)) {
 		return res.status(401).send({
 			'error': "Invalid assignment id",
 			'code': 35
@@ -1470,11 +1486,12 @@ exports.submitAssignment = function (req, res) {
 			});
 		}
 	});
-	db.collection(journalCollection, function (err, collection) {
+	{
+		const collection = db.collection(journalCollection);
 		//date in unix timestamp format
 		var date = new Date().getTime();
 
-		collection.findOneAndUpdate(
+		dbutil.callback(collection.findOneAndUpdate(
 			{
 				'content.objectId': objectId,
 				'content.metadata.assignmentId': assignmentId,
@@ -1487,20 +1504,21 @@ exports.submitAssignment = function (req, res) {
 				}
 			},
 			{
+				includeResultMetadata: true,
 				safe: true,
 				arrayFilters: [{
 					'elem.objectId': objectId
 				}]
-			},
-			function (err, result) {
-				if (err) {
-					return res.status(500).send({
-						error: "An error has occurred",
-						code: 10
-					});
-				} else {
-					return res.send(result);
-				}
-			});
-	});
+			}),
+		function (err, result) {
+			if (err) {
+				return res.status(500).send({
+					error: "An error has occurred",
+					code: 10
+				});
+			} else {
+				return res.send(result);
+			}
+		});
+	}
 };

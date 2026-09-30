@@ -13,7 +13,8 @@
         "SharedArrayBuffer": "readonly"
     },
     "parserOptions": {
-        "ecmaVersion": 5
+        "ecmaVersion": 5,
+        "sourceType": "script"
     },
     "rules": {
         "indent": [
@@ -34,7 +35,8 @@
         ],
         "no-mixed-spaces-and-tabs": "error",
         "no-console": 0,
-        "no-redeclare": "off"
+        "no-redeclare": "off",
+        "no-unused-vars": ["error", {"caughtErrors": "none"}]
     },
     "overrides": [
         {
@@ -100,7 +102,7 @@
             }
         },
         {
-            "files": ["sugarizer.js", "config/**/*.js", "api/**/*.js", "dashboard/controller/**/*.js", "dashboard/helper/**/*.js", "scripts/**/*.js"],
+            "files": ["sugarizer.js", "eslint.config.js", "config/**/*.js", "api/**/*.js", "dashboard/controller/**/*.js", "dashboard/helper/**/*.js", "scripts/**/*.js"],
             "parserOptions": {
                 "ecmaVersion": 2018
             },

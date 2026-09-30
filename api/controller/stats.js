@@ -1,6 +1,7 @@
 // stats handling
 
 var common = require('../../dashboard/helper/common');
+var dbutil = require('./utils/db');
 
 var isActive = true;
 
@@ -82,10 +83,11 @@ exports.addStats = function(req, res) {
 	} else {
 		stats.user_ip = common.getClientIP(req);
 	}
-	db.collection(statsCollection, function(err, collection) {
-		collection.insertMany(stats, {
+	{
+		const collection = db.collection(statsCollection);
+		dbutil.callback(collection.insertMany(stats, {
 			safe: true
-		}, function(err, result) {
+		}), function(err, result) {
 			if (err) {
 				res.status(500).send({
 					'error': 'An error has occurred',
@@ -95,7 +97,7 @@ exports.addStats = function(req, res) {
 				res.send(result);
 			}
 		});
-	});
+	}
 };
 
 
@@ -137,10 +139,11 @@ exports.deleteStats = function(req, res) {
 		}
 	}
 
-	db.collection(statsCollection, function(err, collection) {
-		collection.deleteOne({
+	{
+		const collection = db.collection(statsCollection);
+		dbutil.callback(collection.deleteOne({
 			'user_id': req.query.uid
-		}, function(err) {
+		}), function(err) {
 			if (err) {
 				res.status(500).send({
 					'error': 'An error has occurred',
@@ -152,7 +155,7 @@ exports.deleteStats = function(req, res) {
 				});
 			}
 		});
-	});
+	}
 };
 
 /**
@@ -213,11 +216,12 @@ exports.findAll = function(req, res) {
 	var options = getOptions(req, '+timestamp');
 
 	//get data
-	db.collection(statsCollection, function(err, collection) {
-		collection.find(query, options).toArray(function(err, data) {
+	{
+		const collection = db.collection(statsCollection);
+		dbutil.callback(collection.find(query, options).toArray(), function(err, data) {
 			res.send(data);
 		});
-	});
+	}
 };
 
 function getOptions(req, def_sort) {

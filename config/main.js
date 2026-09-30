@@ -1,5 +1,4 @@
 var express = require('express'),
-	bodyParser = require('body-parser'),
 	expressSession = require('express-session'),
 	cookieParser = require('cookie-parser'),
 	logger = require('morgan'),
@@ -30,11 +29,11 @@ module.exports = function(app, ini) {
 	}));
 
 	//include body parser
-	app.use(bodyParser.urlencoded({
+	app.use(express.urlencoded({
 		limit: '256mb',
 		extended: false
 	}));
-	app.use(bodyParser.json({
+	app.use(express.json({
 		limit: '256mb',
 		type: 'application/json'
 	}));

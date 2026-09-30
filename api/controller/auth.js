@@ -147,7 +147,7 @@ exports.verify2FA = function(req, res) {
 
 	//find user by user id.
 	users.getAllUsers({
-		_id: new mongo.ObjectID(uid),
+		_id: new mongo.ObjectId(uid),
 		verified: {
 			$ne: false
 		}
@@ -287,7 +287,7 @@ exports.validateUser = function(uid, callback) {
 
 	//parse response
 	users.getAllUsers({
-		'_id': new mongo.ObjectID(uid)
+		'_id': new mongo.ObjectId(uid)
 	}, {}, function(users) {
 		if (users.length > 0) {
 			callback(users[0]);

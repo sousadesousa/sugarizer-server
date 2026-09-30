@@ -36,11 +36,11 @@ Your Sugarizer server will start automatically and will be accessible on http://
 To run Sugarizer Server **without Docker**, follow the step behind. Commands are shown from a new Debian Linux machine and could be different for other Linux distribution or for an already installed machine:
 
 
-**Install Node.js**: Install Node.js (6+) and npm to manage packages. See [here](http://nodejs.org/ "here") more information.
+**Install Node.js**: Install Node.js (20+) and npm to manage packages. See [here](http://nodejs.org/ "here") more information.
 
     sudo apt-get install nodejs
 
-**Install MongoDB**: Install MongoDB (3.2+). Don't forget to create a /data/db directory to store databases. See [here](http://www.mongodb.org/ "here") more information.
+**Install MongoDB**: Install MongoDB (4.0+, 8.0 recommended). Don't forget to create a /data/db directory to store databases. See [here](http://www.mongodb.org/ "here") more information.
 
     sudo apt-get install mongodb
     sudo mkdir -p /data/db
@@ -96,7 +96,7 @@ To run Sugarizer Server **without Docker**, follow the step behind. Commands are
 
 *To install MongoDB, run the following command in your macOS Terminal application.*
 
-        brew install mongodb-community@6.0
+        brew install mongodb-community@8.0
 
 *After downloading Mongo, data directory is where the Mongo data files will live. You can visit the default directory using the below commands in your terminal.*
 

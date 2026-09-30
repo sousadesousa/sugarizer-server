@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+### Changed
+- Requires Node.js 20+ and MongoDB 4.0+ (8.0 recommended), see [migration guide](docs/migrate.md)
+- MongoDB driver 6 (was 3.5, which cannot connect to MongoDB 8)
+- Updated dependencies: Express 4.21, express-session 1.18, EJS 3, ws 8, multer 2, superagent 10, async 3, csv-parser 3, ESLint 9; `validator` forced to 13.x under express-validator 5
+- Dropped unused `http` and `jquery-datetimepicker` packages; `body-parser` replaced by Express built-ins; `nyc` moved to dev dependencies
+- CI runs against MongoDB 8.0
+
 ## [1.5.0] - 2023-02-15
 ### Added
 - Assignments feature: API and Dashboard

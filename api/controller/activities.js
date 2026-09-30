@@ -3,6 +3,7 @@
 var fs = require('fs'),
 	path = require('path'),
 	ini = require('ini');
+var dbutil = require('./utils/db');
 
 var db;
 var activitiesCollection;
@@ -235,40 +236,42 @@ exports.findById = function(req, res) {
 
 // Store activities in database
 function storeActivities(activitiesList) {
-	db.collection(activitiesCollection, function(err, collection) {
-		collection.replaceOne(
+	{
+		const collection = db.collection(activitiesCollection);
+		dbutil.callback(collection.replaceOne(
 			{},
 			{
 				activities: activitiesList
 			},
 			{
 				upsert: true
-			},
-			function(err) {
-				if (err) {
-					console.log(err);
-					return;
-				}
+			}),
+		function(err) {
+			if (err) {
+				console.log(err);
+				return;
 			}
+		}
 		);
-	});
+	}
 }
 
 // Load activities in database
 function loadActivities(callback) {
-	db.collection(activitiesCollection, function(err, collection) {
-		collection.findOne(
-			{},
-			function(err, activities) {
-				if (err) {
-					console.log(err);
-					callback(null);
-					return;
-				}
-				callback(activities?activities.activities:null);
+	{
+		const collection = db.collection(activitiesCollection);
+		dbutil.callback(collection.findOne(
+			{}),
+		function(err, activities) {
+			if (err) {
+				console.log(err);
+				callback(null);
+				return;
 			}
+			callback(activities?activities.activities:null);
+		}
 		);
-	});
+	}
 }
 
 // Merge activities list
