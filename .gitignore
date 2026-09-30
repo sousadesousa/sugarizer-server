@@ -14,3 +14,6 @@ build/
 tmp/
 
 .nyc_output/
+
+# generated token signing secret
+env/secret.key

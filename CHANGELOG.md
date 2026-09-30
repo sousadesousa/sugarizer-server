@@ -4,6 +4,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+### Changed
+- The token signing secret is generated on first launch (`env/secret.key`) or read from `SUGARIZER_SECRET`; the old default secret is ignored
+- Session cookie is `HttpOnly`, `SameSite=Strict`, and `Secure` when HTTPS is on
+- Security headers on every response (`X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`, HSTS when HTTPS is on)
+- Failed logins and 2FA codes are limited per account and address (`login_attempts`, `login_block_time`)
+
+### Security
+- Admin signup trusted the `X-Real-IP` and `X-Forwarded-For` headers, so anyone could create an admin account
+- Dashboard CSV import route did not check the session
+
+### Fixed
+- Admin signup from the server itself failed on Node 17+ where `localhost` resolves to `127.0.0.1`
+
 ## [1.5.0] - 2023-02-15
 ### Added
 - Assignments feature: API and Dashboard
