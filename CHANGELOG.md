@@ -4,6 +4,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+### Added
+- `npm run migrate:hash-passwords` to hash passwords stored in clear
+- `npm run test:unit` for unit tests that don't need a database
+
+### Changed
+- Passwords are stored as scrypt hashes. Clear passwords are hashed on next login or by the migration script. Passwords are now case sensitive
+- Passwords and 2FA secrets are no longer returned by the API, so the CSV export no longer contains passwords
+- A blank password in the dashboard user and profile forms keeps the current password
+- Tokens are bound to the user they were issued to. Tokens issued before this change are handled as expired
+
+### Security
+- A token could be used with the key of any other user, including an admin, to act as that user
+- Login accepted regular expressions as name and password (e.g. `.*`)
+
 ## [1.5.0] - 2023-02-15
 ### Added
 - Assignments feature: API and Dashboard

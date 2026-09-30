@@ -2,7 +2,8 @@
 
 var mongo = require('mongodb'),
 	journal = require('./journal'),
-	otplib = require('otplib');
+	otplib = require('otplib'),
+	passwords = require('./utils/password');
 
 var db;
 
@@ -101,7 +102,7 @@ exports.findById = function(req, res) {
 		collection.findOne({
 			'_id': new mongo.ObjectID(req.params.uid)
 		}, function(err, item) {
-			res.send(item);
+			res.send(removeSecrets(item));
 		});
 	});
 };
@@ -483,7 +484,6 @@ exports.getAllUsers = function(query, options, callback) {
 					language: 1,
 					role: 1,
 					color: 1,
-					password: 1,
 					options: 1,
 					created_time: 1,
 					timestamp: 1,
@@ -505,6 +505,10 @@ exports.getAllUsers = function(query, options, callback) {
 
 		if (options.enableSecret == true) {
 			conf[1]["$project"]["uniqueSecret"] = 1;
+		}
+
+		if (options.enablePassword == true) {
+			conf[1]["$project"]["password"] = 1;
 		}
 
 		if (typeof options.sort == 'object' && options.sort.length > 0 && options.sort[0] && options.sort[0].length >=2) {
@@ -705,55 +709,21 @@ exports.addUser = function(req, res) {
 
 	//check if user already exist
 	exports.getAllUsers({
-		'name': new RegExp("^" + user.name + "$", "i")
+		'name': new RegExp("^" + passwords.escapeRegex(user.name) + "$", "i")
 	}, {}, function(item) {
 		if (item.length == 0) {
-			//create user based on role
-			if (user.role == 'admin') {
-				delete user.classrooms;
-				db.collection(usersCollection, function(err, collection) {
-					collection.insertOne(user, {
-						safe: true
-					}, function(err, result) {
-						if (err) {
-							res.status(500).send({
-								'error': 'An error has occurred',
-								'code': 10
-							});
-						} else {
-							res.send(result.ops[0]);
-						}
+			//store only a hash of the password
+			passwords.hash(user.password, function(err, hash) {
+				if (err) {
+					res.status(500).send({
+						'error': 'An error has occurred',
+						'code': 10
 					});
-				});
-			} else {
-				//for student
-				if (user.role != 'teacher') {
-					delete user.classrooms;
-				} else if (!user.classrooms) {
-					user.classrooms = [];
+					return;
 				}
-				db.collection(usersCollection, function(err, collection) {
-					// Create a new journal
-					journal.createJournal(function(err, result) {
-						// add journal to the new user
-						user.private_journal = result.ops[0]._id;
-						user.shared_journal = journal.getShared()._id;
-						collection.insertOne(user, {
-							safe: true
-						}, function(err, result) {
-							if (err) {
-								res.status(500).send({
-									'error': 'An error has occurred',
-									'code': 10
-								});
-							} else {
-								res.send(result.ops[0]);
-							}
-						});
-					});
-				});
-			}
-
+				user.password = hash;
+				insertUser(user, res);
+			});
 		} else {
 			res.status(401).send({
 				'error': 'User with same name already exist',
@@ -762,6 +732,55 @@ exports.addUser = function(req, res) {
 		}
 	});
 };
+
+//private function to insert user
+function insertUser(user, res) {
+	//create user based on role
+	if (user.role == 'admin') {
+		delete user.classrooms;
+		db.collection(usersCollection, function(err, collection) {
+			collection.insertOne(user, {
+				safe: true
+			}, function(err, result) {
+				if (err) {
+					res.status(500).send({
+						'error': 'An error has occurred',
+						'code': 10
+					});
+				} else {
+					res.send(removeSecrets(result.ops[0]));
+				}
+			});
+		});
+	} else {
+		//for student
+		if (user.role != 'teacher') {
+			delete user.classrooms;
+		} else if (!user.classrooms) {
+			user.classrooms = [];
+		}
+		db.collection(usersCollection, function(err, collection) {
+			// Create a new journal
+			journal.createJournal(function(err, result) {
+				// add journal to the new user
+				user.private_journal = result.ops[0]._id;
+				user.shared_journal = journal.getShared()._id;
+				collection.insertOne(user, {
+					safe: true
+				}, function(err, result) {
+					if (err) {
+						res.status(500).send({
+							'error': 'An error has occurred',
+							'code': 10
+						});
+					} else {
+						res.send(removeSecrets(result.ops[0]));
+					}
+				});
+			});
+		});
+	}
+}
 
 /**
  * @api {put} api/v1/users/:uid Update user
@@ -848,7 +867,7 @@ exports.updateUser = function(req, res) {
 			'_id': {
 				$ne: new mongo.ObjectID(uid)
 			},
-			'name': new RegExp("^" + user.name + "$", "i")
+			'name': new RegExp("^" + passwords.escapeRegex(user.name) + "$", "i")
 		}, {}, function(item) {
 			if (item.length == 0) {
 
@@ -867,8 +886,27 @@ exports.updateUser = function(req, res) {
 	}
 };
 
-//private function to update user
+//private function to update user, store only a hash of a new password
 function updateUser(uid, user, res) {
+	if (typeof user.password === 'undefined' || user.password === null || user.password === '') {
+		delete user.password;
+		return saveUser(uid, user, res);
+	}
+	passwords.hash(user.password, function(err, hash) {
+		if (err) {
+			res.status(500).send({
+				'error': 'An error has occurred',
+				'code': 10
+			});
+			return;
+		}
+		user.password = hash;
+		saveUser(uid, user, res);
+	});
+}
+
+//private function to save user
+function saveUser(uid, user, res) {
 	db.collection(usersCollection, function(err, collection) {
 		collection.updateOne({
 			'_id': new mongo.ObjectID(uid)
@@ -888,7 +926,7 @@ function updateUser(uid, user, res) {
 						collection.findOne({
 							'_id': new mongo.ObjectID(uid)
 						}, function(err, user) {
-							res.send(user);
+							res.send(removeSecrets(user));
 						});
 					});
 				} else {
@@ -1032,6 +1070,38 @@ exports.removeUser = function(req, res) {
 		});
 	});
 };
+
+//replace a legacy clear password by its hash
+exports.rehashPassword = function(uid, password, callback) {
+	passwords.hash(password, function(err, hash) {
+		if (err) {
+			if (callback) callback(err);
+			return;
+		}
+		db.collection(usersCollection, function(err, collection) {
+			collection.updateOne({
+				'_id': new mongo.ObjectID(uid)
+			}, {
+				$set: {
+					password: hash
+				}
+			}, {
+				safe: true
+			}, function(err) {
+				if (callback) callback(err);
+			});
+		});
+	});
+};
+
+//private function to remove password and 2FA secret from a user sent to client
+function removeSecrets(user) {
+	if (user) {
+		delete user.password;
+		delete user.uniqueSecret;
+	}
+	return user;
+}
 
 //update user's time stamp
 exports.updateUserTimestamp = function(uid, callback) {

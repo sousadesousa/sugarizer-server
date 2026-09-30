@@ -50,11 +50,13 @@
 	},
 	"scripts": {
 		"test": "mocha api/test/ --timeout 20000 --exit",
+		"test:unit": "mocha api/test/unit/ --timeout 20000 --exit",
 		"coverage": "nyc --exclude 'dashboard/**' mocha api/test/ --timeout 20000 --exit",
 		"docs": "apidoc -i api/controller -i dashboard/helper -o docs/www/",
 		"start": "nodemon sugarizer.js",
 		"start:watch": "nodemon sugarizer.js",
 		"seed:users-csv": "node scripts/seed_users.js",
+		"migrate:hash-passwords": "node scripts/hash_passwords.js",
 		"lint": "eslint .; exit 0"
 	}
 }
