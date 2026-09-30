@@ -16,6 +16,8 @@ The easiest way to run Sugarizer Server is to use Docker. To do that, type comma
 	cd sugarizer-server
 	docker compose up -d
 
+To keep users logged in when the containers are recreated (for example after an upgrade), give the server a fixed secret in a `.env` file next to `docker-compose.yml`, for example with `echo "SUGARIZER_SECRET=$(openssl rand -base64 48)" > .env`.
+
 For other options to install Sugarizer Server on your computer, on the cloud or on a RaspberryPI, see [here](docs/install.md).
 
 If you want to upgrade from a previous Sugarizer Server version, please have a look on the [Migration guide](docs/migrate.md).

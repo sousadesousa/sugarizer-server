@@ -22,6 +22,10 @@ services:
     depends_on:
       mongodb:
         condition: service_healthy
+    environment:
+      # secret used to sign tokens and sessions: set it (in a .env file next to this one)
+      # to keep users logged in when the container is recreated
+      - SUGARIZER_SECRET=${SUGARIZER_SECRET:-}
     volumes:
       - ../sugarizer:/sugarizer-client:ro
       # optional certificates, used when https = true in env/docker.ini
