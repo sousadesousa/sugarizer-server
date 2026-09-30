@@ -311,7 +311,7 @@ describe('Users', function() {
 							chai.request(server)
 								.post('/auth/login')
 								.send({
-									"user": JSON.stringify(fakeUser.teacher1)
+									"user": JSON.stringify({"name": fakeUser.teacher1.name, "password": "bulbasaur", "role": "teacher"})
 								})
 								.end((err, res) => {
 									fakeUser.teacher1 = res.body;
