@@ -2,8 +2,7 @@
 var superagent = require('superagent'),
 	moment = require('moment'),
 	common = require('../../helper/common'),
-	xocolors = require('../../helper/xocolors'),
-	emoji = require('../../public/js/emoji');
+	xocolors = require('../../helper/xocolors');
 
 var assignment = require('./index');
 
@@ -44,9 +43,7 @@ module.exports = function addComment(req, res) {
 					}
 				});
 		} else {
-			req.flash('error', {
-				msg: common.l10n.get('ErrorCode' + response.body.code)
-			});
+			req.flash('errors', errors);
 			return res.redirect('/dashboard/assignments/deliveries/' + req.params.assignmentId);
 		}
 	} else {

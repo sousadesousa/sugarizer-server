@@ -8,12 +8,10 @@ var db;
 var activitiesCollection;
 
 // Load into memory the content of activities directory
-var settingsData;
 exports.load = function(settings, database) {
 
 	// Get settings
 	var activitiesFromDir = [];
-	settingsData = settings;
 	db = database;
 	activitiesCollection = settings.collections.activities;
 	var activitiesDirName = settings.activities.activities_directory_name;
@@ -246,7 +244,7 @@ function storeActivities(activitiesList) {
 			{
 				upsert: true
 			},
-			function(err, result) {
+			function(err) {
 				if (err) {
 					console.log(err);
 					return;

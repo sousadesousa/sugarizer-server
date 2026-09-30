@@ -96,6 +96,7 @@ exports.getServerIP = function() {
 	}
 	addresses.push("::1");
 	addresses.push("::ffff:127.0.0.1");
+	addresses.push("127.0.0.1");
 	return addresses;
 };
 

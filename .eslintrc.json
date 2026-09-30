@@ -98,6 +98,16 @@
                 "node": true,
                 "es6": true
             }
+        },
+        {
+            "files": ["sugarizer.js", "config/**/*.js", "api/**/*.js", "dashboard/controller/**/*.js", "dashboard/helper/**/*.js", "scripts/**/*.js"],
+            "parserOptions": {
+                "ecmaVersion": 2018
+            },
+            "env": {
+                "node": true,
+                "es6": true
+            }
         }
     ]
 }

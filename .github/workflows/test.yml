@@ -1,0 +1,35 @@
+name: Tests
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    services:
+      mongodb:
+        image: mongo:4.4
+        ports:
+          - 27017:27017
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Get the Sugarizer client next to the server (settings use ../sugarizer)
+        run: git clone --depth 1 https://github.com/${{ github.repository_owner }}/sugarizer ../sugarizer
+      - name: Install dependencies
+        run: npm ci
+      - name: Lint
+        run: npm run lint
+      - name: Unit tests
+        run: npm run test:unit --if-present
+      - name: API tests
+        run: npm test
+      - name: Audit production dependencies
+        # reported, not blocking: known issues are fixed by the dependency upgrade
+        continue-on-error: true
+        run: npm audit --omit=dev --audit-level=high

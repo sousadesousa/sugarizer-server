@@ -871,9 +871,9 @@ function updateEntries(entryDoc, uniqueStudents) {
 											},
 											{
 												$push:
-                                                {
-                                                	"content": copy
-                                                }
+												{
+													"content": copy
+												}
 											}, function (err) {
 												counter++;
 												if (err) {
@@ -1160,7 +1160,7 @@ exports.updateComment = function (req, res) {
 
 				}]
 			},
-			function (err, result) {
+			function (err) {
 				if (err) {
 					return res.status(401).send({
 						'error': "An error has occurred",
