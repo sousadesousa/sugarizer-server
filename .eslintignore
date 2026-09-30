@@ -21,3 +21,4 @@ api/controller/utils/qrCodeUtil.js
 docs/
 
 build/
+dashboard/public/js/jquery.datetimepicker.full.js

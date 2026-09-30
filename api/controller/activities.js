@@ -52,7 +52,7 @@ exports.load = function(settings, database) {
 				// Store activities
 				storeActivities(merged);
 			});
-		}
+		};
 		files.forEach(function(file) {
 			// If it's not the template directory
 			if (file != templateDirName) {
@@ -232,7 +232,7 @@ exports.findById = function(req, res) {
 			}
 		}
 		res.send();
-	})
+	});
 };
 
 // Store activities in database
@@ -264,7 +264,7 @@ function loadActivities(callback) {
 			function(err, activities) {
 				if (err) {
 					console.log(err);
-					callback(null)
+					callback(null);
 					return;
 				}
 				callback(activities?activities.activities:null);
