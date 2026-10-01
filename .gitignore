@@ -14,3 +14,6 @@ build/
 tmp/
 
 .nyc_output/
+
+# written by FerretDB when run from this folder
+state.json
