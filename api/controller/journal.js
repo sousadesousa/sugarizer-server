@@ -1,5 +1,6 @@
 // Journal handling
 var mongo = require('mongodb'),
+	dbutil = require('./utils/db'),
 	users = require("./users"),
 	streamifier = require('streamifier'),
 	fs = require('fs'),
@@ -66,20 +67,24 @@ exports.init = function(settings, database) {
 	journalCollection = settings.collections.journal;
 
 	db = database;
-	db.collection(journalCollection, function(err, collection) {
+	{
+		const collection = db.collection(journalCollection);
 		// Get the shared journal collection
-		collection.findOne({
+		dbutil.callback(collection.findOne({
 			'shared': true
-		}, function(err, item) {
+		}), function(err, item) {
 			// Not found, create one
 			if (!err && item == null) {
-				collection.insertOne({
+				var sharedJournal = {
 					content: [],
 					shared: true
-				}, {
+				};
+				dbutil.callback(collection.insertOne(sharedJournal, {
 					safe: true
-				}, function(err, result) {
-					shared = result.ops[0];
+				}), function(err) {
+					if (!err) {
+						shared = sharedJournal;
+					}
 				});
 			}
 
@@ -88,7 +93,7 @@ exports.init = function(settings, database) {
 				shared = item;
 			}
 		});
-	});
+	}
 
 	var bucket = 'textBucket';
 	gridfsbucket = new mongo.GridFSBucket(db,{
@@ -142,14 +147,18 @@ exports.getShared = function() {
 
 // Create a new journal
 exports.createJournal = function(callback) {
-	db.collection(journalCollection, function(err, collection) {
-		collection.insertOne({
+	{
+		const collection = db.collection(journalCollection);
+		var journal = {
 			content: [],
 			shared: false
-		}, {
+		};
+		dbutil.callback(collection.insertOne(journal, {
 			safe: true
-		}, callback);
-	});
+		}), function(err) {
+			callback(err, journal);
+		});
+	}
 };
 
 /**
@@ -197,8 +206,8 @@ exports.findAll = function(req, res) {
 	if (req.user.role == 'student') {
 		options._id = {
 			$in: [
-				new mongo.ObjectID(req.user.private_journal),
-				new mongo.ObjectID(req.user.shared_journal)
+				new mongo.ObjectId(req.user.private_journal),
+				new mongo.ObjectId(req.user.shared_journal)
 			]
 		};
 	}
@@ -209,7 +218,7 @@ exports.findAll = function(req, res) {
 			role: 'student',
 			_id: {
 				$in: req.user.students.map(function(id) {
-					return new mongo.ObjectID(id);
+					return new mongo.ObjectId(id);
 				})
 			}
 		}, {}, function(users) {
@@ -228,8 +237,9 @@ exports.findAll = function(req, res) {
 			options['_id'] = {
 				$in: journalList
 			};
-			db.collection(journalCollection, function(err, collection) {
-				collection.find(options).toArray(function(err, items) {
+			{
+				const collection = db.collection(journalCollection);
+				dbutil.callback(collection.find(options).toArray(), function(err, items) {
 
 					//count
 					for (var i=0; i<items.length; i++) {
@@ -250,12 +260,13 @@ exports.findAll = function(req, res) {
 					//return
 					res.send(items);
 				});
-			});
+			}
 		});
 	} else {
 		//get data
-		db.collection(journalCollection, function(err, collection) {
-			collection.find(options).toArray(function(err, items) {
+		{
+			const collection = db.collection(journalCollection);
+			dbutil.callback(collection.find(options).toArray(), function(err, items) {
 
 				//count
 				for (var i = 0; i < items.length; i++) {
@@ -266,7 +277,7 @@ exports.findAll = function(req, res) {
 				//return
 				res.send(items);
 			});
-		});
+		}
 	}
 };
 
@@ -274,14 +285,14 @@ exports.findAll = function(req, res) {
 
 // Add a new journal
 exports.addJournal = function(req, res) {
-	exports.createJournal(function(err, result) {
+	exports.createJournal(function(err, journal) {
 		if (err) {
 			res.status(500).send({
 				'error': 'An error has occurred',
 				'code': 10
 			});
 		} else {
-			res.send(result.ops[0]);
+			res.send(journal);
 		}
 	});
 };
@@ -383,7 +394,7 @@ exports.addJournal = function(req, res) {
 exports.findJournalContent = function(req, res) {
 
 	//validate journal  id
-	if (!mongo.ObjectID.isValid(req.params.jid)) {
+	if (!mongo.ObjectId.isValid(req.params.jid)) {
 		res.status(401).send({
 			'error': 'Invalid journal id',
 			'code': 11
@@ -395,9 +406,10 @@ exports.findJournalContent = function(req, res) {
 	var options = getOptions(req);
 
 	//get data
-	db.collection(journalCollection, function(err, collection) {
-		collection.aggregate(options, function(err, cursor) {
-			cursor.toArray(function(err, items) {
+	{
+		const collection = db.collection(journalCollection);
+		dbutil.cursor(collection.aggregate(options), function(err, cursor) {
+			dbutil.callback(cursor.toArray(), function(err, items) {
 
 				//check for errors
 				if (err) {
@@ -420,11 +432,12 @@ exports.findJournalContent = function(req, res) {
 				var reqCount = 0, resCount = 0;
 
 				for (var i=0; i<items.length; i++) {
-					if (items[i] && items[i].text && mongo.ObjectID.isValid(items[i].text)) {
+					if (items[i] && items[i].text && mongo.ObjectId.isValid(items[i].text)) {
 						reqCount++;
-						db.collection(CHUNKS_COLL, function(err, collection) {
+						{
+							const collection = db.collection(CHUNKS_COLL);
 							var ind = i;
-							collection.find({ files_id: items[i].text }).toArray(function(error, docs) {
+							dbutil.callback(collection.find({ files_id: items[i].text }).toArray(), function(error, docs) {
 								items[ind].text = "";
 								if (error || (docs && docs.length == 0)) {
 									resCount++;
@@ -461,7 +474,7 @@ exports.findJournalContent = function(req, res) {
 									return res.status(500).send({'error': 'Invalid text value', 'code': 12});
 								}
 							});
-						});
+						}
 					}
 				}
 
@@ -486,7 +499,7 @@ exports.findJournalContent = function(req, res) {
 				}
 			});
 		});
-	});
+	}
 };
 
 //form query params
@@ -508,7 +521,7 @@ function getOptions(req) {
 	//form object with journal id
 	var options = [{
 		$match: {
-			'_id': new mongo.ObjectID(req.params.jid)
+			'_id': new mongo.ObjectId(req.params.jid)
 		}
 	}];
 
@@ -695,7 +708,7 @@ function getOptions(req) {
  **/
 exports.addEntryInJournal = function(req, res) {
 	// Get parameter
-	if (!mongo.ObjectID.isValid(req.params.jid) || !req.body.journal) {
+	if (!mongo.ObjectId.isValid(req.params.jid) || !req.body.journal) {
 		res.status(401).send({
 			'error': 'Invalid journal id or entry',
 			'code': 12
@@ -707,18 +720,19 @@ exports.addEntryInJournal = function(req, res) {
 
 	// Look for existing entry with the same objectId
 	var filter = {
-		'_id': new mongo.ObjectID(jid),
+		'_id': new mongo.ObjectId(jid),
 		'content.objectId': journal.objectId
 	};
-	db.collection(journalCollection, function(err, collection) {
-		collection.findOne(filter, function(err, item) {
+	{
+		const collection = db.collection(journalCollection);
+		dbutil.callback(collection.findOne(filter), function(err, item) {
 			if (item == null) {
 				// Add a new entry
 				if (journal.text) {
 					var text = journal.text;
 					var utftext = _toUTF8(journal.text);
 					var isUtf16 = (journal.text.length != utftext.length);
-					var filename = mongo.ObjectId();
+					var filename = new mongo.ObjectId();
 					var textContent = JSON.stringify({
 						text_type: typeof journal.text,
 						text: isUtf16 ? utftext : journal.text,
@@ -733,8 +747,8 @@ exports.addEntryInJournal = function(req, res) {
 								'code': 10
 							});
 						})
-						.on('finish', function (uploadStr) {
-							journal.text = uploadStr._id;
+						.on('finish', function () {
+							journal.text = filename;
 							updateJournal(req, res, journal, text);
 						});
 				} else {
@@ -746,7 +760,7 @@ exports.addEntryInJournal = function(req, res) {
 				exports.updateEntryInJournal(req, res);
 			}
 		});
-	});
+	}
 };
 
 function updateJournal(req, res, journal, text) {
@@ -757,19 +771,20 @@ function updateJournal(req, res, journal, text) {
 			content: journal
 		}
 	};
-	db.collection(journalCollection, function(err, collection) {
-		collection.updateOne({
-			'_id': new mongo.ObjectID(jid)
+	{
+		const collection = db.collection(journalCollection);
+		dbutil.callback(collection.updateOne({
+			'_id': new mongo.ObjectId(jid)
 		}, newcontent, {
 			safe: true
-		}, function(err, result) {
+		}), function(err, result) {
 			if (err) {
 				return res.status(500).send({
 					'error': 'An error has occurred',
 					'code': 10
 				});
 			} else {
-				if (result && result.result && result.result.n == 1) {
+				if (dbutil.affected(result) == 1) {
 					journal.text = text;
 					return res.send(journal);
 				} else {
@@ -780,7 +795,7 @@ function updateJournal(req, res, journal, text) {
 				}
 			}
 		});
-	});
+	}
 }
 
 /**
@@ -838,7 +853,7 @@ function updateJournal(req, res, journal, text) {
  *    }
  **/
 exports.updateEntryInJournal = function(req, res) {
-	if (!mongo.ObjectID.isValid(req.params.jid) || !req.query.oid) {
+	if (!mongo.ObjectId.isValid(req.params.jid) || !req.query.oid) {
 		res.status(401).send({
 			'error': 'Invalid journal or object id',
 			'code': 13
@@ -856,13 +871,15 @@ exports.updateEntryInJournal = function(req, res) {
 			}
 		}
 	};
-	db.collection(journalCollection, function(err, collection) {
-		collection.findOneAndUpdate({
-			'_id': new mongo.ObjectID(jid)
+	{
+		const collection = db.collection(journalCollection);
+		dbutil.callback(collection.findOneAndUpdate({
+			'_id': new mongo.ObjectId(jid)
 		}, deletecontent, {
+			includeResultMetadata: true,
 			safe: true,
 			returnNewDocument: false
-		}, function(err, doc) {
+		}), function(err, doc) {
 			if (err) {
 				return res.status(500).send({
 					'error': 'An error has occurred',
@@ -871,13 +888,13 @@ exports.updateEntryInJournal = function(req, res) {
 			} else if (doc && doc.value && typeof doc.value.content == 'object') {
 				var cont = [];
 				for (var i=0; i<doc.value.content.length; i++) {
-					if (doc.value.content[i] && doc.value.content[i].objectId == oid && mongo.ObjectID.isValid(doc.value.content[i].text)) {
+					if (doc.value.content[i] && doc.value.content[i].objectId == oid && mongo.ObjectId.isValid(doc.value.content[i].text)) {
 						cont.push(doc.value.content[i].text);
 					}
 				}
 				var deleteCount = 0;
 				for (var i=0; i < cont.length; i++) {
-					gridfsbucket.delete(cont[i], function() {
+					dbutil.callback(gridfsbucket.delete(cont[i]), function() {
 						deleteCount++;
 						if (deleteCount == cont.length) exports.addEntryInJournal(req, res);
 					});
@@ -888,7 +905,7 @@ exports.updateEntryInJournal = function(req, res) {
 				exports.addEntryInJournal(req, res);
 			}
 		});
-	});
+	}
 };
 
 /**
@@ -925,7 +942,7 @@ exports.updateEntryInJournal = function(req, res) {
  *     }
  **/
 exports.removeInJournal = function(req, res) {
-	if (!mongo.ObjectID.isValid(req.params.jid)) {
+	if (!mongo.ObjectId.isValid(req.params.jid)) {
 		res.status(401).send({
 			'error': 'Invalid journal id',
 			'code': 11
@@ -938,10 +955,11 @@ exports.removeInJournal = function(req, res) {
 
 	//whether or partial is deleted!
 	if (type == 'full') {
-		db.collection(journalCollection, function(err, collection) {
-			collection.findOneAndDelete({
-				'_id': new mongo.ObjectID(jid)
-			}, function(err, result) {
+		{
+			const collection = db.collection(journalCollection);
+			dbutil.callback(collection.findOneAndDelete({
+				'_id': new mongo.ObjectId(jid)
+			}, {includeResultMetadata: true}), function(err, result) {
 				if (err) {
 					return res.status(500).send({
 						'error': 'An error has occurred',
@@ -952,13 +970,13 @@ exports.removeInJournal = function(req, res) {
 						if (typeof result.value.content == 'object') {
 							var cont = [];
 							for (var i=0; i<result.value.content.length; i++) {
-								if (result.value.content[i] && mongo.ObjectID.isValid(result.value.content[i].text)) {
+								if (result.value.content[i] && mongo.ObjectId.isValid(result.value.content[i].text)) {
 									cont.push(result.value.content[i].text);
 								}
 							}
 							var deleteCount = 0;
 							for (var i=0; i < cont.length; i++) {
-								gridfsbucket.delete(cont[i], function() {
+								dbutil.callback(gridfsbucket.delete(cont[i]), function() {
 									deleteCount++;
 									if (deleteCount == cont.length) return res.send({
 										'jid': jid
@@ -981,12 +999,13 @@ exports.removeInJournal = function(req, res) {
 					}
 				}
 			});
-		});
+		}
 	} else {
 		if (oid) {
-			db.collection(journalCollection, function(err, collection) {
-				collection.findOneAndUpdate({
-					'_id': new mongo.ObjectID(jid)
+			{
+				const collection = db.collection(journalCollection);
+				dbutil.callback(collection.findOneAndUpdate({
+					'_id': new mongo.ObjectId(jid)
 				}, {
 					$pull: {
 						content: {
@@ -994,8 +1013,9 @@ exports.removeInJournal = function(req, res) {
 						}
 					}
 				}, {
+					includeResultMetadata: true,
 					safe: true
-				}, function(err, result) {
+				}), function(err, result) {
 					if (err) {
 						return res.status(500).send({
 							'error': 'An error has occurred',
@@ -1006,13 +1026,13 @@ exports.removeInJournal = function(req, res) {
 							if (typeof result.value.content == 'object') {
 								var cont = [];
 								for (var i=0; i<result.value.content.length; i++) {
-									if (result.value.content[i] && result.value.content[i].objectId == oid && mongo.ObjectID.isValid(result.value.content[i].text)) {
+									if (result.value.content[i] && result.value.content[i].objectId == oid && mongo.ObjectId.isValid(result.value.content[i].text)) {
 										cont.push(result.value.content[i].text);
 									}
 								}
 								var deleteCount = 0;
 								for (var i=0; i < cont.length; i++) {
-									gridfsbucket.delete(cont[i], function() {
+									dbutil.callback(gridfsbucket.delete(cont[i]), function() {
 										deleteCount++;
 										if (deleteCount == cont.length) return res.send({
 											'objectId': oid
@@ -1036,7 +1056,7 @@ exports.removeInJournal = function(req, res) {
 
 					}
 				});
-			});
+			}
 		} else {
 			return res.status(401).send({
 				'error': 'Invalid Object ID',
@@ -1161,7 +1181,7 @@ exports.findAllEntries = function(req, res) {
 			role: 'student',
 			_id: {
 				$in: req.user.students.map(function(id) {
-					return new mongo.ObjectID(id);
+					return new mongo.ObjectId(id);
 				})
 			}
 		}, {}, function(users) {
@@ -1180,8 +1200,9 @@ exports.findAllEntries = function(req, res) {
 			options['_id'] = {
 				$in: journalList
 			};
-			db.collection(journalCollection, function(err, collection) {
-				collection.find(options).toArray(function(err, items) {
+			{
+				const collection = db.collection(journalCollection);
+				dbutil.callback(collection.find(options).toArray(), function(err, items) {
 					//check for errors
 					if (err) {
 						return res.status(500).send({
@@ -1204,12 +1225,13 @@ exports.findAllEntries = function(req, res) {
 					}
 					return res.send(items);
 				});
-			});
+			}
 		});
 	} else {
 		//get data
-		db.collection(journalCollection, function(err, collection) {
-			collection.find(options).toArray(function(err, items) {
+		{
+			const collection = db.collection(journalCollection);
+			dbutil.callback(collection.find(options).toArray(), function(err, items) {
 				//check for errors
 				if (err) {
 					return res.status(500).send({
@@ -1232,7 +1254,7 @@ exports.findAllEntries = function(req, res) {
 				// Return
 				return res.send(items);
 			});
-		});
+		}
 	}
 };
 
@@ -1253,7 +1275,7 @@ exports.copyEntry = function (initialDoc, chunks, uniqueStudents) {
 
 		var utftext = _toUTF8(entryDoc.text);
 		var isUtf16 = (entryDoc.text.length != utftext.length);
-		var filename = mongo.ObjectId();
+		var filename = new mongo.ObjectId();
 		var textContent = JSON.stringify({
 			text_type: typeof entryDoc.text,
 			text: isUtf16 ? utftext : entryDoc.text,
@@ -1264,8 +1286,8 @@ exports.copyEntry = function (initialDoc, chunks, uniqueStudents) {
 			.pipe(gridfsbucket.openUploadStreamWithId(filename, filename.toString()))
 			.on('error', function () {
 				reject(new Error("Failed to write journal entry"));
-			}).on('finish', function (uploadStr) {
-				entryDoc.text = uploadStr._id;
+			}).on('finish', function () {
+				entryDoc.text = filename;
 				entryDoc.metadata.user_id = uniqueStudents._id;
 				entryDoc.metadata.buddy_name = uniqueStudents.name;
 				var objectId = common.createUUID();

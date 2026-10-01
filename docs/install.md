@@ -12,12 +12,7 @@ To run Sugarizer Server using Docker and Docker Compose:
 
 	curl -fsSL https://get.docker.com/ | sh
 
-Install Docker Compose
-
-	curl -L "https://github.com/docker/compose/releases/download/1.8.1/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-	chmod +x /usr/local/bin/docker-compose
-
-To install Docker Compose on ARM architectures (e.g. for the Raspberry Pi 3), the link above will not work.  You need to use [arm-compose](https://github.com/hypriot/arm-compose) instead.
+This also installs the Docker Compose plugin (`docker compose`). The images used by Sugarizer Server work on x86-64 and 64-bit ARM (arm64, for example Raspberry Pi 4 or 5 with a 64-bit OS).
 
 You can find more details about the installation of **Docker** [here](https://docker.github.io/engine/installation/)
 
@@ -26,8 +21,7 @@ You can	find more details about	the installation of **Docker Compose** [here](ht
 After that, go to the Sugarizer Server folder and launch
 
 	cd sugarizer-server
-	sh generate-docker-compose.sh
-	docker-compose up -d
+	docker compose up -d
 
 Your Sugarizer server will start automatically and will be accessible on http://127.0.0.1:8080 and your public IP. The database will be persisted inside the folder docker/db.
 
@@ -36,11 +30,11 @@ Your Sugarizer server will start automatically and will be accessible on http://
 To run Sugarizer Server **without Docker**, follow the step behind. Commands are shown from a new Debian Linux machine and could be different for other Linux distribution or for an already installed machine:
 
 
-**Install Node.js**: Install Node.js (6+) and npm to manage packages. See [here](http://nodejs.org/ "here") more information.
+**Install Node.js**: Install Node.js (20+) and npm to manage packages. See [here](http://nodejs.org/ "here") more information.
 
     sudo apt-get install nodejs
 
-**Install MongoDB**: Install MongoDB (3.2+). Don't forget to create a /data/db directory to store databases. See [here](http://www.mongodb.org/ "here") more information.
+**Install MongoDB**: Install MongoDB (4.0+, 8.0 recommended). Don't forget to create a /data/db directory to store databases. See [here](http://www.mongodb.org/ "here") more information.
 
     sudo apt-get install mongodb
     sudo mkdir -p /data/db
@@ -96,7 +90,7 @@ To run Sugarizer Server **without Docker**, follow the step behind. Commands are
 
 *To install MongoDB, run the following command in your macOS Terminal application.*
 
-        brew install mongodb-community@6.0
+        brew install mongodb-community@8.0
 
 *After downloading Mongo, data directory is where the Mongo data files will live. You can visit the default directory using the below commands in your terminal.*
 

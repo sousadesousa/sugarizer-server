@@ -18,9 +18,9 @@ var fake = {
     'classroom3': '{"name":"group_a_' + (timestamp.toString()) + '","color":{"stroke":"#FF0000","fill":"#0000FF"},"students":[]}',
     'teacher1': '{"name":"SugarizerTeach_1' + (timestamp.toString()) + '","color":{"stroke":"#FF0000","fill":"#0000FF"},"role":"teacher","password":"bulbasaur","language":"fr"}',
     'teacher2': '{"name":"SugarizerTeach_2' + (timestamp.toString()) + '","color":{"stroke":"#FF0000","fill":"#0000FF"},"role":"teacher","password":"bulbasaur","language":"fr"}',
-    'assignment1': '{"name":"assignment_1' + (timestamp.toString()) + '", "assignedWork":"ffffffff-ffff-ffff-ffff-fffffffffff1", "color":{"stroke":"#FF0000","fill":"#0000FF"},"instructions":"Draw a bulbasaur","lateTurnIn":"false","classrooms":[], "dueDate":"' + ((timestamp+10000).toString()) + '"}',
-    'assignment2': '{"name":"assignment_2' + (timestamp.toString()) + '", "assignedWork":"ffffffff-ffff-ffff-ffff-fffffffffff1", "color":{"stroke":"#FF0000","fill":"#0000FF"},"instructions":"Draw a pikachu","lateTurnIn":"true","classrooms":[], "dueDate":"' + ((timestamp+10000).toString()) + '"}',
-    'assignment3': '{"name":"assignment_1' + (timestamp.toString()) + '", "assignedWork":"ffffffff-ffff-ffff-ffff-fffffffffff1", "color":{"stroke":"#FF0000","fill":"#0000FF"},"instructions":"Draw a bulbasaur","lateTurnIn":"false","classrooms":[], "dueDate":"' + ((timestamp+10000).toString()) + '"}',
+    'assignment1': '{"name":"assignment_1' + (timestamp.toString()) + '", "assignedWork":"ffffffff-ffff-ffff-ffff-fffffffffff1", "color":{"stroke":"#FF0000","fill":"#0000FF"},"instructions":"Draw a bulbasaur","lateTurnIn":"false","classrooms":[], "dueDate":"' + ((timestamp+3600000).toString()) + '"}',
+    'assignment2': '{"name":"assignment_2' + (timestamp.toString()) + '", "assignedWork":"ffffffff-ffff-ffff-ffff-fffffffffff1", "color":{"stroke":"#FF0000","fill":"#0000FF"},"instructions":"Draw a pikachu","lateTurnIn":"true","classrooms":[], "dueDate":"' + ((timestamp+3600000).toString()) + '"}',
+    'assignment3': '{"name":"assignment_1' + (timestamp.toString()) + '", "assignedWork":"ffffffff-ffff-ffff-ffff-fffffffffff1", "color":{"stroke":"#FF0000","fill":"#0000FF"},"instructions":"Draw a bulbasaur","lateTurnIn":"false","classrooms":[], "dueDate":"' + ((timestamp+3600000).toString()) + '"}',
     'delivery1': '{}',
 };
 
@@ -109,7 +109,7 @@ describe('Assignments', () => {
                                 });
                         });
                 });
-        }, 300)
+        }, 300);
     });
 
     before((done) => {
@@ -190,7 +190,7 @@ describe('Assignments', () => {
                     res.body.should.have.property('instructions').eql("Draw a bulbasaur");
                     done();
                 });
-        })
+        });
     });
 
     //get assignment ---GET/:id---
@@ -478,7 +478,7 @@ describe('Assignments', () => {
                     res.body.should.have.property('comment').eql("comment_");
                     done();
                 });
-        })
+        });
     });
 
     // submit assignment ---PUT/:id/submit---

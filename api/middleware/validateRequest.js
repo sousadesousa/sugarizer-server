@@ -23,6 +23,22 @@ module.exports = function (partialAccess) {
 					});
 				}
 
+				// Tokens issued before tokens were bound to a user are handled as expired, to force a new login
+				if (!decoded.uid) {
+					return res.status(400).send({
+						'error': "Token Expired",
+						'code': 3
+					});
+				}
+
+				// The token must have been issued to the user given as key
+				if (decoded.uid !== String(key)) {
+					return res.status(401).send({
+						'error': "Invalid Token or Key",
+						'code': 5
+					});
+				}
+
 				if (partialAccess === false && decoded.partial === true) {
 					return res.status(401).send({
 						'error': "Unauthorized request, user not fully verified",

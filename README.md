@@ -4,7 +4,7 @@
 
 [Sugarizer](https://github.com/llaske/sugarizer) is the open source learning platform based on Sugar that began in the famous One Laptop Per Child project.
 
-Sugarizer Server allows the deployment of Sugarizer on a local server, for example on a school server, so expose locally Sugarizer as a Web Application. Sugarizer Server can also be used to provide collaboration features for Sugarizer Application on the network. Sugarizer Server could be deployed in a Docker container or on any computer with Node.js 10+ and MongoDB 3.2+.
+Sugarizer Server allows the deployment of Sugarizer on a local server, for example on a school server, so expose locally Sugarizer as a Web Application. Sugarizer Server can also be used to provide collaboration features for Sugarizer Application on the network. Sugarizer Server could be deployed in a Docker container or on any computer with Node.js 20+ and MongoDB 4.0+ (8.0 recommended).
 
 
 ## Running Sugarizer Server
@@ -14,8 +14,9 @@ The easiest way to run Sugarizer Server is to use Docker. To do that, type comma
 	git clone https://github.com/llaske/sugarizer
 	git clone https://github.com/llaske/sugarizer-server
 	cd sugarizer-server
-	sh generate-docker-compose.sh
-	docker-compose up -d
+	docker compose up -d
+
+To keep users logged in when the containers are recreated (for example after an upgrade), give the server a fixed secret in a `.env` file next to `docker-compose.yml`, for example with `echo "SUGARIZER_SECRET=$(openssl rand -base64 48)" > .env`.
 
 For other options to install Sugarizer Server on your computer, on the cloud or on a RaspberryPI, see [here](docs/install.md).
 
@@ -45,13 +46,15 @@ Following is the typical content of Sugarizer Server settings file:
 	min_password_size = 4
 	max_age = 172800000
 	max_age_TFA = 180000
+	login_attempts = 10
+	login_block_time = 900000
 	https = false
 	certificate_file = ../server.crt
 	key_file = ../server.key
 	strict_ssl = false
 	no_signup_mode = false
 	service_name = Sugarizer Server
-	secret = super.sugarizer.server.key
+	secret =
 
 	[privacy]
 	consent_need = false
@@ -98,7 +101,8 @@ The **[web]** section describes the settings of the node.js process. By default,
 The **[security]** section regroup security settings. `min_password_size` is the minimum number of characters for the password. `max_age` is the expiration time in milliseconds of a session with the client. At the expiration of the session, the client should re-enter its password. Default time is 172800000 (48 hours). Similarly, `max_age_TFA` is is the expiration time in milliseconds of a session with the client. At the expiration of the session, the client should re-enter its password. The default time is 180000 (30 mins).Parameters `https`, `certificate_file`, `key_file` and `strict_ssl` are explain above.
 It `no_signup_mode` is true, account creation is allowed only by an administrator or a teacher (no direct sign-up allowed by a student).
 The `service_name` is the issuer parameter, a string value indicating the provider or service this account is associated with, URL-encoded according to [RFC 3986](http://tools.ietf.org/html/rfc3986).
-The `secret` is the JWT Secret which is used to encrypt JSON Web Token. It should be replaced with a unique value to keep the SSP Server secure.
+The `secret` is the secret used to sign JSON Web Tokens and dashboard sessions. Leave it empty to let the server generate a random secret on first launch and store it in `env/secret.key` (keep that file private, and keep it when you upgrade or tokens will expire). You can also give the secret in the `SUGARIZER_SECRET` environment variable, which takes precedence over the settings file. The old default value `super.sugarizer.server.key` is ignored.
+`login_attempts` is the number of failed logins (or 2FA codes) allowed for an account from the same address before it is blocked for `login_block_time` milliseconds (default 10 attempts, 15 minutes).
 
 The **[privacy]** section describe privacy settings. When `consent_need` is set to true, the Sugarizer client will ask a consent to user before they will be allowed to do their first connection to the server. `policy` is the URL that Sugarizer client shown in consent pop-up displayed to user.
 
@@ -130,7 +134,7 @@ To login to the Dashboard the first time, you will have to create an admin accou
 
 	sh add-admin.sh admin password http://127.0.0.1:8080/auth/signup
 
-Note: For security reasons, the script should be launched from the local machine. On Docker, attach a new shell to the container and launch the script from this shell - in that case the port to use should be 80, not 8080.
+Note: For security reasons, the script should be launched from the local machine. On Docker, launch the script inside the container: `docker compose exec server sh add-admin.sh admin password http://127.0.0.1:8080/auth/signup`.
 
 Where **admin** is the login for the new admin account and **password** is the password.
 
@@ -283,7 +287,7 @@ Here's an example of output file:
     1,,5d30162ced7ee117b842ad4a,Lionel,admin,fr,#BCCDFF,#FF8F00,aaaa,
     1,Given password was invalid (Generated random password).,5d30162ced7ee117b842ad57,Nikhil,student,en,#D1A3FF,#AC32FF,l0dU,CM2
 
-Note: For security reason, the script should be launched from the local machine. On Docker, attach a new shell to the container and launch the script from this shell - in that case the port to use should be 80, not 8080.
+Note: For security reason, the script should be launched from the local machine. On Docker, launch the script inside the container: `docker compose exec server sh add-admin.sh admin password http://127.0.0.1:8080/auth/signup`.
 
 
 ## Running Server securely using SSL

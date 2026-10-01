@@ -1,14 +1,14 @@
-<%- include includes/header %>
+<%- include('includes/header') %>
   <div class="wrapper">
-  	<%- include includes/sidebar %>
+  	<%- include('includes/sidebar') %>
     	<div class="main-panel">
-    	<%- include includes/navbar %>
+    	<%- include('includes/navbar') %>
     		<div class="content">
     			<div class="container-fluid">
             <div class="col-md-8 col-lg-8 col-sm-12">
               <div class="card">
                 <div class="card-content">
-                    <%- include includes/flash-errors %>
+                    <%- include('includes/flash-errors') %>
                     <form id="user-add-edit-form" method="post" <% if(typeof user == 'object' && module =="profile"){ %> action="/dashboard/profile" <% } else if (typeof user == 'object') { %> action="<%= user._id %>" <% } %>>
                         <div class="row" id="editUser-name">
                             <div class="col-md-12">
@@ -64,9 +64,9 @@
                                         <% if(typeof user == "undefined") var random=Math.floor(Math.random()*xocolors.length); %>
                                         <% for(var i=0; i< xocolors.length; i++){ %>
                                           <% if(typeof user == 'object' && (typeof user.color == 'object' && xocolors[i].stroke == user.color.stroke && xocolors[i].fill == user.color.fill) || (random == i)) { %>
-                                            <option selected="selected" data-stroke="<%= xocolors[i].stroke %>" data-fill="<%= xocolors[i].fill %>" value='<%- JSON.stringify(xocolors[i]) %>'></option>
+                                            <option selected="selected" data-stroke="<%= xocolors[i].stroke %>" data-fill="<%= xocolors[i].fill %>" value="<%= JSON.stringify(xocolors[i]) %>"></option>
                                           <% }else{ %>
-                                            <option data-stroke="<%= xocolors[i].stroke %>" data-fill="<%= xocolors[i].fill %>" value='<%- JSON.stringify(xocolors[i]) %>'></option>
+                                            <option data-stroke="<%= xocolors[i].stroke %>" data-fill="<%= xocolors[i].fill %>" value="<%= JSON.stringify(xocolors[i]) %>"></option>
                                           <% } %>
                                         <% } %>
                                     </select>
@@ -77,8 +77,8 @@
                             <div class="col-md-12">
                                 <div class="form-group form-black label-floating">
                                     <label class="control-label" data-l10n-id="password"></label>
-                                    <input class="form-control" name="password" id="password" value="<% if(typeof user == 'object'){ %><%= user.password %><% } %>" type="text" oninput="document.getElementById('passemoji').innerHTML = getHtmlForEmoji(document.getElementById('password').value);">
-                                    <span class="form-control emojis" id="passemoji"><%- (typeof user == 'object') ? emoji.getHtml(user.password) : '' %></span>
+                                    <input class="form-control" name="password" id="password" value="<% if(typeof user == 'object'){ %><%= user.password || '' %><% } %>" type="text" oninput="document.getElementById('passemoji').innerHTML = getHtmlForEmoji(document.getElementById('password').value);">
+                                    <span class="form-control emojis" id="passemoji"><%- (typeof user == 'object') ? emoji.getHtml(user.password || '') : '' %></span>
                                     <span class="material-input"></span>
                                 </div>
                             </div>
@@ -114,7 +114,7 @@
                                                     <div class="xo-icon"></div>
                                                 </div>
                                                 <script>
-                                                    new icon().loadByClass("/public/img/classroom-icon.svg", (<%- JSON.stringify(classrooms[i].color) %>), "<%= classrooms[i]._id + '_icon' %>");
+                                                    new icon().loadByClass("/public/img/classroom-icon.svg", (<%- jsonForScript(classrooms[i].color) %>), "<%= classrooms[i]._id + '_icon' %>");
                                                 </script>
                                                 <div style="padding: 4px 0px 0px 40px;"><%= classrooms[i].name %></div>
                                             </div>
@@ -195,7 +195,7 @@
                                 <form action="/dashboard/profile/disable2FA" method="POST">
                                     <div class="form-group col-12 text-center">
                                             <button class="btn btn pull-left btn-align btn-round" data-l10n-id="disable2FA" style="margin-top: -68px;"
-                                                onclick="return confirm(document.webL10n.get('DoYouWantToDisable2FA', {name: '<%= user.name %>'}))"
+                                                data-name="<%= user.name %>" onclick="return confirmWith(this, 'DoYouWantToDisable2FA', 'name')"
                                                 type="submit"></button>
                                     </div>
                                 </form>
@@ -207,7 +207,7 @@
       </div>
     </div>
   </div>
-<%- include includes/footer %>
+<%- include('includes/footer') %>
 <script>
 function show_user_fields(val) {
     var adminLang = ["en", "es", "fr", "hi"];

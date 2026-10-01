@@ -1,11 +1,11 @@
-<%- include ../includes/header %>
+<%- include('../includes/header') %>
 <div class="wrapper">
-	<%- include ../includes/sidebar %>
+	<%- include('../includes/sidebar') %>
 	<div class="main-panel">
-		<%- include ../includes/navbar %>
+		<%- include('../includes/navbar') %>
 		<div class="content ">
 			<div class="container-fluid">
-                <%- include ../includes/flash-errors %>
+                <%- include('../includes/flash-errors') %>
 				<div class="row">
                     <div class="col-md-12">
 						<div class="card">
@@ -67,7 +67,7 @@
                                                 </label>
                                             </div>
                                             <a data-l10n-id="editChart" title="Edit Chart" href="/dashboard/stats/edit/<%= charts[i]._id %>" style="height: 40px; padding: 0px 5px 0px 5px;"><i id="listCharts-editChart" class="material-icons text-muted">edit</i></a>
-                                            <a data-l10n-id="deleteChart" title="Delete Chart" href="/dashboard/stats/delete/<%= charts[i]._id %>?&title=<%= charts[i].title %>" style="height: 40px; padding: 0px 5px 0px 5px;" onclick="return confirm(document.webL10n.get('DoYouWantDeleteChart', {chart:'<%= charts[i].title %>'}))"><i id="listCharts-deleteChart" class="material-icons text-muted">delete_forever</i></a>
+                                            <a data-l10n-id="deleteChart" title="Delete Chart" href="/dashboard/stats/delete/<%= charts[i]._id %>?&title=<%= encodeURIComponent(charts[i].title) %>" data-name="<%= charts[i].title %>" style="height: 40px; padding: 0px 5px 0px 5px;" onclick="return confirmWith(this, 'DoYouWantDeleteChart', 'chart')"><i id="listCharts-deleteChart" class="material-icons text-muted">delete_forever</i></a>
                                         </div>
                                     </div>
 
@@ -82,11 +82,11 @@
 		</div>
 	</div>
 </div>
-<%- include ../includes/footer %>
+<%- include('../includes/footer') %>
 <script>
 
 //set headers
-var headers = <%- JSON.stringify(headers) %>;
+var headers = <%- jsonForScript(headers) %>;
 var url = '<%= url %>';
 
 //init drag drop on desktop

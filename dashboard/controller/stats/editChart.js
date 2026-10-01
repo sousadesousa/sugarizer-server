@@ -70,6 +70,12 @@ module.exports = function editChart(req, res) {
 				.get(common.getAPIUrl(req) + 'api/v1/charts/' + req.params.chartid)
 				.set(common.getHeaders(req))
 				.end(function (error, response) {
+					if (response.statusCode == 200 && (!response.body || !response.body._id)) {
+						req.flash('errors', {
+							msg: common.l10n.get('ThereIsError')
+						});
+						return res.redirect('/dashboard/stats/list');
+					}
 					if (response.statusCode == 200) {
 						// send to stats page
 						res.render('admin/addEditChart', {

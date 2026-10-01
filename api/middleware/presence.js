@@ -84,6 +84,8 @@ exports.init = function(settings, httpserver) {
 
 		// An user sent some message
 		connection.on('message', function(message) {
+			// ws gives a Buffer, messages are JSON text
+			message = message.toString();
 			// First message sent is user settings
 			if (userId === false) {
 				// Get user settings

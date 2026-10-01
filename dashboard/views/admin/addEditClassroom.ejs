@@ -1,14 +1,14 @@
-<%- include ../includes/header %>
+<%- include('../includes/header') %>
   <div class="wrapper">
-  	<%- include ../includes/sidebar %>
+  	<%- include('../includes/sidebar') %>
     	<div class="main-panel">
-    	<%- include ../includes/navbar %>
+    	<%- include('../includes/navbar') %>
     		<div class="content">
     			<div class="container-fluid">
             <div class="col-md-8 col-lg-8 col-sm-12">
               <div class="card">
                 <div class="card-content">
-                    <%- include ../includes/flash-errors %>
+                    <%- include('../includes/flash-errors') %>
                     <form id="classroom-add-edit-form" method="post" <% if(typeof classroom == 'object'){ %> action="<%= classroom._id %>" <% } %>>
                         <div class="row" id="editClassroom-name">
                             <div class="col-md-12">
@@ -78,6 +78,24 @@
                                 </div>
                             </div>
                         </div>
+                        <div class="row" id="editClassroom-activities">
+                            <div class="col-md-12">
+                                <div class="form-group form-black">
+                                    <label class="control-label" data-l10n-id="classroomActivities"></label>
+                                    <p class="text-muted" data-l10n-id="classroomActivitiesHint"></p>
+                                    <div class="classroom-activities" style="max-height: 260px; overflow-y: auto; border: 1px solid #ddd; border-radius: 4px; padding: 8px;">
+                                        <% var assigned = (typeof classroom == 'object' && Array.isArray(classroom.activities)) ? classroom.activities : []; %>
+                                        <% for (var i = 0; i < activities.length; i++) { %>
+                                            <label style="display: inline-block; width: 220px; margin: 4px 8px; font-weight: normal; vertical-align: middle;">
+                                                <input type="checkbox" name="activities" value="<%= activities[i].id %>" <% if (assigned.indexOf(activities[i].id) != -1) { %>checked<% } %>>
+                                                <img src="/<%= activities[i].directory %>/<%= activities[i].icon %>" alt="" style="width: 24px; height: 24px; margin: 0 6px;">
+                                                <%= activities[i].name %>
+                                            </label>
+                                        <% } %>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                         <div class="row color_input" id="editClassroom-colors">
                             <div class="col-md-12">
                                 <div class="form-group form-black label-floating">
@@ -86,9 +104,9 @@
                                         <% if(typeof classroom == "undefined") var random=Math.floor(Math.random()*xocolors.length); %>
                                         <% for(var i=0; i< xocolors.length; i++){ %>
                                           <% if(typeof classroom == 'object' && (typeof classroom.color == 'object' && xocolors[i].stroke == classroom.color.stroke && xocolors[i].fill == classroom.color.fill) || (random == i)) { %>
-                                            <option selected="selected" data-stroke="<%= xocolors[i].stroke %>" data-icon="classroom-icon" data-fill="<%= xocolors[i].fill %>" value='<%- JSON.stringify(xocolors[i]) %>'></option>
+                                            <option selected="selected" data-stroke="<%= xocolors[i].stroke %>" data-icon="classroom-icon" data-fill="<%= xocolors[i].fill %>" value="<%= JSON.stringify(xocolors[i]) %>"></option>
                                           <% }else{ %>
-                                            <option data-stroke="<%= xocolors[i].stroke %>" data-icon="classroom-icon" data-fill="<%= xocolors[i].fill %>" value='<%- JSON.stringify(xocolors[i]) %>'></option>
+                                            <option data-stroke="<%= xocolors[i].stroke %>" data-icon="classroom-icon" data-fill="<%= xocolors[i].fill %>" value="<%= JSON.stringify(xocolors[i]) %>"></option>
                                           <% } %>
                                         <% } %>
                                     </select>
@@ -126,7 +144,7 @@
       </div>
     </div>
   </div>
-<%- include ../includes/footer %>
+<%- include('../includes/footer') %>
 
 <script>
     var currTour = sugarizerTour("editClassroom", <% if (account.user && account.user.role=="admin") { %> "admin" <% } else { %> "teacher" <% } %>, "<%= mode %>");

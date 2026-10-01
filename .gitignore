@@ -4,8 +4,6 @@ dashboard/node_modules
 api/test/fakestats.js
 
 # database and docker files
-docker/Dockerfile-mongodb
-docker/Dockerfile-server
 docker/db
 
 build/
@@ -14,3 +12,12 @@ build/
 tmp/
 
 .nyc_output/
+
+# generated token signing secret
+env/secret.key
+
+# Docker Compose settings (secret)
+.env
+
+# written by FerretDB when run from this folder
+state.json

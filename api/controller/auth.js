@@ -2,7 +2,8 @@ var jwt = require('jwt-simple'),
 	users = require('./users.js'),
 	mongo = require('mongodb'),
 	otplib = require('otplib'),
-	common = require('../../dashboard/helper/common');
+	common = require('../../dashboard/helper/common'),
+	passwords = require('./utils/password');
 
 var security;
 var secret;
@@ -69,10 +70,7 @@ exports.login = function(req, res) {
 	var password = user.password || '';
 	var query = {
 		'name': {
-			$regex: new RegExp("^" + name + "$", "i")
-		},
-		'password': {
-			$regex: new RegExp("^" + password + "$", "i")
+			$regex: new RegExp("^" + passwords.escapeRegex(name) + "$", "i")
 		}
 	};
 
@@ -81,14 +79,14 @@ exports.login = function(req, res) {
 		user.role.forEach(function(rl) {
 			query.$or.push({
 				role: {
-					$regex: new RegExp("^" + rl + "$", "i")
+					$regex: new RegExp("^" + passwords.escapeRegex(rl) + "$", "i")
 				}
 			});
 		});
 	} else if (user.role) {
 		var role = user.role || 'student';
 		query.role = {
-			$regex: new RegExp("^" + role + "$", "i")
+			$regex: new RegExp("^" + passwords.escapeRegex(role) + "$", "i")
 		};
 	} else {
 		query['$or'] = [
@@ -105,32 +103,46 @@ exports.login = function(req, res) {
 		];
 	}
 
-	//find user by name & password
-	users.getAllUsers(query, {}, function(users) {
-
-		if (users && users.length > 0) {
-
-			//take the first user incase of multple matches
-			user = users[0];
-
-			var maxAge = req.iniconfig.security.max_age;
-			var maxAgeTfa = req.iniconfig.security.max_age_TFA;
-			// If authentication is success, we will generate a token and dispatch it to the client
-			if (user.tfa === false || typeof user.tfa === "undefined") {
-				res.send(genToken(user, maxAge, false));
+	//find user by name then check password
+	users.getAllUsers(query, {enablePassword: true}, function(users) {
+		findUserWithPassword(users || [], password, function(user) {
+			if (user) {
+				var maxAge = req.iniconfig.security.max_age;
+				var maxAgeTfa = req.iniconfig.security.max_age_TFA;
+				// If authentication is success, we will generate a token and dispatch it to the client
+				if (user.tfa === false || typeof user.tfa === "undefined") {
+					res.send(genToken(user, maxAge, false));
+				} else {
+					delete user.deployments;
+					res.send(genToken(user, maxAgeTfa, true)); //give users a buffer of 30 mins to verify.
+				}
 			} else {
-				delete user.deployments;
-				res.send(genToken(user, maxAgeTfa, true)); //give users a buffer of 30 mins to verify.
+				res.status(401).send({
+					'error': "Invalid credentials",
+					'code': 1
+				});
 			}
-		} else {
-			res.status(401).send({
-				'error': "Invalid credentials",
-				'code': 1
-			});
-		}
-		return;
+		});
 	});
 };
+
+// private method: return the first user matching the password, upgrade legacy clear password to a hash
+function findUserWithPassword(candidates, password, callback) {
+	if (candidates.length == 0) {
+		return callback(false);
+	}
+	var user = candidates[0];
+	passwords.verify(password, user.password, function(err, match, needsRehash) {
+		if (err || !match) {
+			return findUserWithPassword(candidates.slice(1), password, callback);
+		}
+		if (needsRehash) {
+			users.rehashPassword(user._id, password);
+		}
+		callback(user);
+	});
+}
+
 exports.verify2FA = function(req, res) {
 
 	if (!req.body.userToken) {
@@ -147,7 +159,7 @@ exports.verify2FA = function(req, res) {
 
 	//find user by user id.
 	users.getAllUsers({
-		_id: new mongo.ObjectID(uid),
+		_id: new mongo.ObjectId(uid),
 		verified: {
 			$ne: false
 		}
@@ -272,7 +284,7 @@ exports.signup = function(req, res) {
 function validateUsername(name, callback) {
 	users.getAllUsers({
 		'name': {
-			$regex: new RegExp("^" + name + "$", "i")
+			$regex: new RegExp("^" + passwords.escapeRegex(name) + "$", "i")
 		}
 	}, {}, function(users) {
 		if (users.length > 0) {
@@ -287,7 +299,7 @@ exports.validateUser = function(uid, callback) {
 
 	//parse response
 	users.getAllUsers({
-		'_id': new mongo.ObjectID(uid)
+		'_id': new mongo.ObjectId(uid)
 	}, {}, function(users) {
 		if (users.length > 0) {
 			callback(users[0]);
@@ -360,9 +372,7 @@ exports.checkAdminOrLocal = function(req, res, next) {
 			'code': 19
 		});
 	}
-	var ip = common.getClientIP(req);
-	var serverIp = common.getServerIP();
-	if (whishedRole == 'admin' && serverIp.indexOf(ip) == -1) {
+	if (whishedRole == 'admin' && !common.isLocalRequest(req)) {
 		return res.status(401).send({
 			'error': 'You don\'t have permission to perform this action',
 			'code': 19
@@ -375,9 +385,11 @@ exports.checkAdminOrLocal = function(req, res, next) {
 function genToken(user, age, partial) {
 	var expires = expiresIn(age);
 	var token = jwt.encode({
+		uid: user._id.toString(),
 		partial: partial,
 		exp: expires
 	}, secret);
+	delete user.password;
 
 	return {
 		token: token,

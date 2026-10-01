@@ -1,5 +1,6 @@
 // stats handling
-var mongo = require('mongodb');
+var mongo = require('mongodb'),
+	dbutil = require('./utils/db');
 
 var chartsCollection;
 var usersCollection;
@@ -57,7 +58,7 @@ exports.init = function(settings, database) {
 exports.findAll = function(req, res) {
 	//form query
 	var query = {
-		user_id: new mongo.ObjectID(req.user._id)
+		user_id: new mongo.ObjectId(req.user._id)
 	};
 
 	query = addQuery('key', req.query, query);
@@ -72,8 +73,9 @@ exports.findAll = function(req, res) {
 	}
 
 	//get data
-	db.collection(chartsCollection, function(err, collection) {
-		collection.find(query, options).toArray(function(err, data) {
+	{
+		const collection = db.collection(chartsCollection);
+		dbutil.callback(collection.find(query, options).toArray(), function(err, data) {
 			if (!(req.query.key || req.query.q || req.query.sort) && typeof req.user.charts == 'object' && req.user.charts.length > 0) {
 				var expectedOrder = req.user.charts.map(function (chart) {
 					return chart.toString();
@@ -92,7 +94,7 @@ exports.findAll = function(req, res) {
 				res.send({charts: data});
 			}
 		});
-	});
+	}
 };
 
 /**
@@ -129,28 +131,29 @@ exports.findAll = function(req, res) {
  *     }
  **/
 exports.findById = function(req, res) {
-	if (!mongo.ObjectID.isValid(req.params.chartid)) {
+	if (!mongo.ObjectId.isValid(req.params.chartid)) {
 		res.status(401).send({
 			error: "Invalid chart id",
 			code: 27
 		});
 		return;
 	}
-	db.collection(chartsCollection, function(err, collection) {
-		collection.findOne(
+	{
+		const collection = db.collection(chartsCollection);
+		dbutil.callback(collection.findOne(
 			{
-				_id: new mongo.ObjectID(req.params.chartid),
-				user_id: new mongo.ObjectID(req.user._id)
-			},
-			function(err, chart) {
-				if (!chart) {
-					res.status(401).send({});
-					return;
-				}
-				res.send(chart);
+				_id: new mongo.ObjectId(req.params.chartid),
+				user_id: new mongo.ObjectId(req.user._id)
+			}),
+		function(err, chart) {
+			if (!chart) {
+				res.status(401).send({});
+				return;
 			}
+			res.send(chart);
+		}
 		);
-	});
+	}
 };
 
 /**
@@ -200,62 +203,64 @@ exports.addChart = function(req, res) {
 	//add timestamp & language
 	chart.created_time = +new Date();
 	chart.timestamp = +new Date();
-	chart.user_id = new mongo.ObjectID(req.user._id);
+	chart.user_id = new mongo.ObjectId(req.user._id);
 
 	// store
-	db.collection(chartsCollection, function(err, collection) {
-		collection.insertOne(
+	{
+		const collection = db.collection(chartsCollection);
+		dbutil.callback(collection.insertOne(
 			chart,
 			{
 				safe: true
-			},
-			function(err, result) {
-				if (err) {
-					res.status(500).send({
-						error: "An error has occurred",
-						code: 10
-					});
-				} else {
-					if (result && result.result && result.result.n == 1) {
-						db.collection(usersCollection, function(err, collection) {
-							collection.updateOne({
-								_id: new mongo.ObjectID(req.user._id)
-							},
-							{
-								$push: {
-									charts: result.ops[0]._id // Push chart ID
-								}
-							}, {
-								safe: true
-							},
-							function(err, rest) {
-								if (err) {
-									return res.status(500).send({
-										'error': 'An error has occurred',
-										'code': 10
-									});
+			}),
+		function(err, result) {
+			if (err) {
+				res.status(500).send({
+					error: "An error has occurred",
+					code: 10
+				});
+			} else {
+				if (dbutil.affected(result) == 1) {
+					{
+						const collection = db.collection(usersCollection);
+						dbutil.callback(collection.updateOne({
+							_id: new mongo.ObjectId(req.user._id)
+						},
+						{
+							$push: {
+								charts: chart._id // Push chart ID
+							}
+						}, {
+							safe: true
+						}),
+						function(err, rest) {
+							if (err) {
+								return res.status(500).send({
+									'error': 'An error has occurred',
+									'code': 10
+								});
+							} else {
+								if (dbutil.affected(rest) == 1) {
+									res.send(chart);
 								} else {
-									if (rest && rest.result && rest.result.n == 1) {
-										res.send(result.ops[0]);
-									} else {
-										return res.status(401).send({
-											'error': 'Error while adding chart',
-											'code': 25
-										});
-									}
+									return res.status(401).send({
+										'error': 'Error while adding chart',
+										'code': 25
+									});
 								}
-							});
-						});
-					} else {
-						res.status(401).send({
-							error: "Inexisting chart id",
-							code: 26
+							}
 						});
 					}
+				} else {
+					res.status(401).send({
+						error: "Inexisting chart id",
+						code: 26
+					});
 				}
 			}
+		}
 		);
-	});
+	}
 };
 
 /**
@@ -276,7 +281,7 @@ exports.addChart = function(req, res) {
  **/
 exports.removeChart = function(req, res) {
 	//validate
-	if (!mongo.ObjectID.isValid(req.params.chartid)) {
+	if (!mongo.ObjectId.isValid(req.params.chartid)) {
 		res.status(401).send({
 			error: "Invalid chart id",
 			code: 27
@@ -284,60 +289,62 @@ exports.removeChart = function(req, res) {
 		return;
 	}
 
-	db.collection(chartsCollection, function(err, collection) {
-		collection.deleteOne(
+	{
+		const collection = db.collection(chartsCollection);
+		dbutil.callback(collection.deleteOne(
 			{
-				_id: new mongo.ObjectID(req.params.chartid)
-			},
-			function(err, result) {
-				if (err) {
-					res.status(500).send({
-						error: "An error has occurred",
-						code: 10
-					});
-				} else {
-					if (result && result.result && result.result.n == 1) {
-						db.collection(usersCollection, function(err, collection) {
-							collection.updateOne({
-								_id: new mongo.ObjectID(req.user._id)
-							},
-							{
-								$pull: {
-									charts: new mongo.ObjectID(req.params.chartid)
-								}
-							}, {
-								safe: true
-							},
-							function(err, result) {
-								if (err) {
-									return res.status(500).send({
-										'error': 'An error has occurred',
-										'code': 10
+				_id: new mongo.ObjectId(req.params.chartid)
+			}),
+		function(err, result) {
+			if (err) {
+				res.status(500).send({
+					error: "An error has occurred",
+					code: 10
+				});
+			} else {
+				if (dbutil.affected(result) == 1) {
+					{
+						const collection = db.collection(usersCollection);
+						dbutil.callback(collection.updateOne({
+							_id: new mongo.ObjectId(req.user._id)
+						},
+						{
+							$pull: {
+								charts: new mongo.ObjectId(req.params.chartid)
+							}
+						}, {
+							safe: true
+						}),
+						function(err, result) {
+							if (err) {
+								return res.status(500).send({
+									'error': 'An error has occurred',
+									'code': 10
+								});
+							} else {
+								if (dbutil.affected(result) == 1) {
+									res.send({
+										id: req.params.chartid
 									});
 								} else {
-									if (result && result.result && result.result.n == 1) {
-										res.send({
-											id: req.params.chartid
-										});
-									} else {
-										return res.status(401).send({
-											'error': 'Error while adding chart',
-											'code': 25
-										});
-									}
+									return res.status(401).send({
+										'error': 'Error while adding chart',
+										'code': 25
+									});
 								}
-							});
-						});
-					} else {
-						res.status(401).send({
-							error: "Inexisting chart id",
-							code: 26
+							}
 						});
 					}
+				} else {
+					res.status(401).send({
+						error: "Inexisting chart id",
+						code: 26
+					});
 				}
 			}
+		}
 		);
-	});
+	}
 };
 
 /**
@@ -374,7 +381,7 @@ exports.removeChart = function(req, res) {
  *     }
  **/
 exports.updateChart = function(req, res) {
-	if (!mongo.ObjectID.isValid(req.params.chartid)) {
+	if (!mongo.ObjectId.isValid(req.params.chartid)) {
 		res.status(401).send({
 			error: "Invalid chart id",
 			code: 27
@@ -398,45 +405,46 @@ exports.updateChart = function(req, res) {
 	chart.timestamp = +new Date();
 
 	//update the chart
-	db.collection(chartsCollection, function(err, collection) {
-		collection.updateOne(
+	{
+		const collection = db.collection(chartsCollection);
+		dbutil.callback(collection.updateOne(
 			{
-				_id: new mongo.ObjectID(chartid),
-				user_id: new mongo.ObjectID(req.user._id)
+				_id: new mongo.ObjectId(chartid),
+				user_id: new mongo.ObjectId(req.user._id)
 			},
 			{
 				$set: chart
 			},
 			{
 				safe: true
-			},
-			function(err, result) {
-				if (err) {
-					res.status(500).send({
-						error: "An error has occurred",
-						code: 10
-					});
-				} else {
-					if (result && result.result && result.result.n == 1) {
-						collection.findOne(
-							{
-								_id: new mongo.ObjectID(chartid)
-							},
-							function(err, chartResponse) {
-								// return
-								res.send(chartResponse);
-							}
-						);
-					} else {
-						res.status(401).send({
-							error: "Inexisting chart id",
-							code: 26
-						});
+			}),
+		function(err, result) {
+			if (err) {
+				res.status(500).send({
+					error: "An error has occurred",
+					code: 10
+				});
+			} else {
+				if (dbutil.affected(result) == 1) {
+					dbutil.callback(collection.findOne(
+						{
+							_id: new mongo.ObjectId(chartid)
+						}),
+					function(err, chartResponse) {
+						// return
+						res.send(chartResponse);
 					}
+					);
+				} else {
+					res.status(401).send({
+						error: "Inexisting chart id",
+						code: 26
+					});
 				}
 			}
+		}
 		);
-	});
+	}
 };
 
 /**
@@ -474,13 +482,14 @@ exports.reorderChart = function (req, res) {
 	var list = [];
 	if (chart.list) {
 		list = chart.list.map(function(id) {
-			return new mongo.ObjectID(id);
+			return new mongo.ObjectId(id);
 		});
 	}
 
-	db.collection(usersCollection, function(err, collection) {
-		collection.updateOne({
-			_id: new mongo.ObjectID(req.user._id)
+	{
+		const collection = db.collection(usersCollection);
+		dbutil.callback(collection.updateOne({
+			_id: new mongo.ObjectId(req.user._id)
 		},
 		{
 			$set: {
@@ -488,7 +497,7 @@ exports.reorderChart = function (req, res) {
 			}
 		}, {
 			safe: true
-		},
+		}),
 		function(err, result) {
 			if (err) {
 				return res.status(500).send({
@@ -496,7 +505,7 @@ exports.reorderChart = function (req, res) {
 					'code': 10
 				});
 			} else {
-				if (result && result.result && result.result.n == 1) {
+				if (dbutil.affected(result) == 1) {
 					res.send({
 						charts: list
 					});
@@ -508,7 +517,7 @@ exports.reorderChart = function (req, res) {
 				}
 			}
 		});
-	});
+	}
 };
 
 function getOptions(req, def_sort) {

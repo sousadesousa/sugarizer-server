@@ -1,0 +1,31 @@
+name: Docker
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  compose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Get the Sugarizer client next to the server (mounted by docker-compose.yml)
+        run: git clone --depth 1 https://github.com/${{ github.repository_owner }}/sugarizer ../sugarizer
+      - name: Build and start MongoDB and Sugarizer Server
+        run: docker compose up -d --build --wait --wait-timeout 180
+      - name: Check the API and the web client
+        run: |
+          curl -fsS http://localhost:8080/api
+          curl -fsS -o /dev/null http://localhost:8080/index.html
+      - name: Create an admin from inside the container
+        run: |
+          docker compose exec -T server node -e "fetch('http://127.0.0.1:8080/auth/signup', {method: 'POST', headers: {'content-type': 'application/json'}, body: JSON.stringify({user: JSON.stringify({name: 'ciadmin', password: 'ci123456', role: 'admin'})})}).then(async r => { console.log(r.status, await r.text()); process.exit(r.ok ? 0 : 1); })"
+      - name: Server runs as a non-root user
+        run: test "$(docker compose exec -T server id -u)" != "0"
+      - name: Logs
+        if: always()
+        run: docker compose logs
+      - name: Stop
+        if: always()
+        run: docker compose down

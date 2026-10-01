@@ -1,6 +1,7 @@
 // classrooms handling
 
 var mongo = require("mongodb"),
+	dbutil = require('./utils/db'),
 	users = require("./users");
 
 var db;
@@ -48,6 +49,22 @@ exports.init = function(settings, database) {
  *    ]
  *
  **/
+// Keep only a list of activity ids (strings) in the activities of a classroom
+function cleanActivities(classroom, defaultValue) {
+	if (classroom.activities === undefined) {
+		if (defaultValue) {
+			classroom.activities = defaultValue;
+		}
+		return;
+	}
+	if (!Array.isArray(classroom.activities)) {
+		classroom.activities = [];
+	}
+	classroom.activities = classroom.activities.filter(function(id, index, list) {
+		return typeof id == 'string' && id.length > 0 && list.indexOf(id) == index;
+	});
+}
+
 exports.addClassroom = function(req, res) {
 	//validate
 	if (!req.body.classroom) {
@@ -60,38 +77,41 @@ exports.addClassroom = function(req, res) {
 
 	//parse user details
 	var classroom = JSON.parse(req.body.classroom);
+	cleanActivities(classroom, []);
 
 	//add timestamp & language
 	classroom.created_time = +new Date();
 	classroom.timestamp = +new Date();
 
 	//check if classroom already exist
-	db.collection(classroomsCollection, function(err, collection) {
+	{
+		const collection = db.collection(classroomsCollection);
 
 		//count data
-		collection.countDocuments({
+		dbutil.callback(collection.countDocuments({
 			'name': new RegExp("^" + classroom.name + "$", "i")
-		}, function(err, count) {
+		}), function(err, count) {
 			if (count == 0) {
 				// store
-				db.collection(classroomsCollection, function(err, collection) {
-					collection.insertOne(
+				{
+					const collection = db.collection(classroomsCollection);
+					dbutil.callback(collection.insertOne(
 						classroom,
 						{
 							safe: true
-						},
-						function(err, result) {
-							if (err) {
-								res.status(500).send({
-									error: "An error has occurred",
-									code: 10
-								});
-							} else {
-								res.send(result.ops[0]);
-							}
+						}),
+					function(err) {
+						if (err) {
+							res.status(500).send({
+								error: "An error has occurred",
+								code: 10
+							});
+						} else {
+							res.send(classroom);
 						}
+					}
 					);
-				});
+				}
 			} else {
 				res.status(401).send({
 					'error': 'Classroom with same name already exists',
@@ -99,7 +119,7 @@ exports.addClassroom = function(req, res) {
 				});
 			}
 		});
-	});
+	}
 };
 
 /**
@@ -120,7 +140,7 @@ exports.addClassroom = function(req, res) {
  **/
 exports.removeClassroom = function(req, res) {
 	//validate
-	if (!mongo.ObjectID.isValid(req.params.classid)) {
+	if (!mongo.ObjectId.isValid(req.params.classid)) {
 		res.status(401).send({
 			error: "Invalid classroom id",
 			code: 23
@@ -128,32 +148,33 @@ exports.removeClassroom = function(req, res) {
 		return;
 	}
 
-	db.collection(classroomsCollection, function(err, collection) {
-		collection.deleteOne(
+	{
+		const collection = db.collection(classroomsCollection);
+		dbutil.callback(collection.deleteOne(
 			{
-				_id: new mongo.ObjectID(req.params.classid)
-			},
-			function(err, result) {
-				if (err) {
-					res.status(500).send({
-						error: "An error has occurred",
-						code: 10
+				_id: new mongo.ObjectId(req.params.classid)
+			}),
+		function(err, result) {
+			if (err) {
+				res.status(500).send({
+					error: "An error has occurred",
+					code: 10
+				});
+			} else {
+				if (dbutil.affected(result) == 1) {
+					res.send({
+						id: req.params.classid
 					});
 				} else {
-					if (result && result.result && result.result.n == 1) {
-						res.send({
-							id: req.params.classid
-						});
-					} else {
-						res.status(401).send({
-							error: "Inexisting classroom id",
-							code: 23
-						});
-					}
+					res.status(401).send({
+						error: "Inexisting classroom id",
+						code: 23
+					});
 				}
 			}
+		}
 		);
-	});
+	}
 };
 
 /**
@@ -205,16 +226,17 @@ exports.findAll = function(req, res) {
 	if (req.user && req.user.role == "teacher") {
 		query['_id'] = {
 			$in: req.user.classrooms.map(function(id) {
-				return new mongo.ObjectID(id);
+				return new mongo.ObjectId(id);
 			})
 		};
 	}
 
 
 	// add filter and pagination
-	db.collection(classroomsCollection, function(err, collection) {
+	{
+		const collection = db.collection(classroomsCollection);
 		//count data
-		collection.countDocuments(query, function(err, count) {
+		dbutil.callback(collection.countDocuments(query), function(err, count) {
 			//define var
 			var params = JSON.parse(JSON.stringify(req.query));
 			var route = req.route.path;
@@ -228,6 +250,7 @@ exports.findAll = function(req, res) {
 					$project: {
 						name: 1,
 						students: 1,
+						activities: 1,
 						color: 1,
 						options: 1,
 						created_time: 1,
@@ -256,11 +279,11 @@ exports.findAll = function(req, res) {
 				}
 			}
 	
-			collection.aggregate(conf, function (err, classroom) {
+			dbutil.cursor(collection.aggregate(conf), function (err, classroom) {
 				if (options.skip) classroom.skip(options.skip);
 				if (options.limit) classroom.limit(options.limit);
 				//return
-				classroom.toArray(function(err, classrooms) {
+				dbutil.callback(classroom.toArray(), function(err, classrooms) {
 					//add pagination
 					var data = {
 						classrooms: classrooms,
@@ -278,7 +301,7 @@ exports.findAll = function(req, res) {
 				});
 			});
 		});
-	});
+	}
 };
 
 /**
@@ -346,43 +369,44 @@ exports.findAll = function(req, res) {
  *      }
  **/
 exports.findById = function(req, res) {
-	if (!mongo.ObjectID.isValid(req.params.classid)) {
+	if (!mongo.ObjectId.isValid(req.params.classid)) {
 		res.status(401).send({
 			error: "Invalid classroom id",
 			code: 23
 		});
 		return;
 	}
-	db.collection(classroomsCollection, function(err, collection) {
-		collection.findOne(
+	{
+		const collection = db.collection(classroomsCollection);
+		dbutil.callback(collection.findOne(
 			{
-				_id: new mongo.ObjectID(req.params.classid)
-			},
-			function(err, classroom) {
-				if (!classroom) {
-					res.status(401).send({});
-					return;
-				}
-
-				users.getAllUsers(
-					{
-						_id: {
-							$in: classroom.students.map(function(id) {
-								return new mongo.ObjectID(id);
-							})
-						},
-						role: 'student'
-					},
-					{},
-					function(users) {
-						// append students
-						classroom.students = users;
-						res.send(classroom);
-					}
-				);
+				_id: new mongo.ObjectId(req.params.classid)
+			}),
+		function(err, classroom) {
+			if (!classroom) {
+				res.status(401).send({});
+				return;
 			}
+
+			users.getAllUsers(
+				{
+					_id: {
+						$in: classroom.students.map(function(id) {
+							return new mongo.ObjectId(id);
+						})
+					},
+					role: 'student'
+				},
+				{},
+				function(users) {
+					// append students
+					classroom.students = users;
+					res.send(classroom);
+				}
+			);
+		}
 		);
-	});
+	}
 };
 
 /**
@@ -450,7 +474,7 @@ exports.findById = function(req, res) {
  *      }
  **/
 exports.updateClassroom = function(req, res) {
-	if (!mongo.ObjectID.isValid(req.params.classid)) {
+	if (!mongo.ObjectId.isValid(req.params.classid)) {
 		res.status(401).send({
 			error: "Invalid classroom id",
 			code: 23
@@ -469,76 +493,79 @@ exports.updateClassroom = function(req, res) {
 
 	var classid = req.params.classid;
 	var classroom = JSON.parse(req.body.classroom);
+	cleanActivities(classroom);
 
 	//add timestamp & language
 	classroom.timestamp = +new Date();
 
 	//check for unique classroom name validation
-	db.collection(classroomsCollection, function(err, collection) {
+	{
+		const collection = db.collection(classroomsCollection);
 
 		//count data
-		collection.countDocuments({
+		dbutil.callback(collection.countDocuments({
 			'_id': {
-				$ne: new mongo.ObjectID(classid)
+				$ne: new mongo.ObjectId(classid)
 			},
 			'name': new RegExp("^" + classroom.name + "$", "i")
-		}, function(err, count) {
+		}), function(err, count) {
 			if (count == 0) {
 				//update the classroom
-				db.collection(classroomsCollection, function(err, collection) {
-					collection.updateOne(
+				{
+					const collection = db.collection(classroomsCollection);
+					dbutil.callback(collection.updateOne(
 						{
-							_id: new mongo.ObjectID(classid)
+							_id: new mongo.ObjectId(classid)
 						},
 						{
 							$set: classroom
 						},
 						{
 							safe: true
-						},
-						function(err, result) {
-							if (err) {
-								res.status(500).send({
-									error: "An error has occurred",
-									code: 10
-								});
-							} else {
-								if (result && result.result && result.result.n == 1) {
-									collection.findOne(
+						}),
+					function(err, result) {
+						if (err) {
+							res.status(500).send({
+								error: "An error has occurred",
+								code: 10
+							});
+						} else {
+							if (dbutil.affected(result) == 1) {
+								dbutil.callback(collection.findOne(
+									{
+										_id: new mongo.ObjectId(classid)
+									}),
+								function(err, classroomResponse) {
+									// get student mappings
+									users.getAllUsers(
 										{
-											_id: new mongo.ObjectID(classid)
+											_id: {
+												$in: classroomResponse.students.map(function(id) {
+													return new mongo.ObjectId(id);
+												})
+											}
 										},
-										function(err, classroomResponse) {
-											// get student mappings
-											users.getAllUsers(
-												{
-													_id: {
-														$in: classroomResponse.students.map(function(id) {
-															return new mongo.ObjectID(id);
-														})
-													}
-												},
-												{},
-												function(users) {
-													// append students
-													classroomResponse.students = users;
+										{},
+										function(users) {
+											// append students
+											classroomResponse.students = users;
 	
-													// return
-													res.send(classroomResponse);
-												}
-											);
+											// return
+											res.send(classroomResponse);
 										}
 									);
-								} else {
-									res.status(401).send({
-										error: "Inexisting classroom id",
-										code: 23
-									});
 								}
+								);
+							} else {
+								res.status(401).send({
+									error: "Inexisting classroom id",
+									code: 23
+								});
 							}
 						}
+					}
 					);
-				});
+				}
 			} else {
 				res.status(401).send({
 					'error': 'Classroom with same name already exists',
@@ -546,7 +573,7 @@ exports.updateClassroom = function(req, res) {
 				});
 			}
 		});
-	});
+	}
 };
 
 //private function for filtering and sorting
@@ -576,7 +603,7 @@ function addQuery(filter, params, query, default_val) {
 	//validate
 	if (
 		typeof params[filter] != "undefined" &&
-    	typeof params[filter] === "string"
+		typeof params[filter] === "string"
 	) {
 		if (filter == "q") {
 			query["name"] = {
@@ -613,39 +640,36 @@ function formPaginatedUrl(route, params, offset, limit) {
 
 exports.findStudents = function(classID) {
 	return new Promise(function(resolve, reject) {
-		if (!mongo.ObjectID.isValid(classID)) {
+		if (!mongo.ObjectId.isValid(classID)) {
 			resolve([]);
 		} else {
-			db.collection(classroomsCollection, function(err, collection) {
-				if (err) {
-					reject(err);
-				} else {
-					collection.findOne(
-						{
-							_id: new mongo.ObjectID(classID)
-						},
-						function(err, classroom) {
-							if (err) {
-								reject(err);
-							} else if (!classroom || typeof classroom.students != "object" || classroom.students.length == 0) {
-								resolve([]);
-							} else {
-								// get student mappings
-								users.getAllUsers({
-									role: 'student',
-									_id: {
-										$in: classroom.students.map(function(id) {
-											return new mongo.ObjectID(id);
-										})
-									}
-								}, {}, function(list) {
-									resolve(list);
-								});
+			{
+				const collection = db.collection(classroomsCollection);
+				dbutil.callback(collection.findOne(
+					{
+						_id: new mongo.ObjectId(classID)
+					}),
+				function(err, classroom) {
+					if (err) {
+						reject(err);
+					} else if (!classroom || typeof classroom.students != "object" || classroom.students.length == 0) {
+						resolve([]);
+					} else {
+						// get student mappings
+						users.getAllUsers({
+							role: 'student',
+							_id: {
+								$in: classroom.students.map(function(id) {
+									return new mongo.ObjectId(id);
+								})
 							}
-						}
-					);
+						}, {}, function(list) {
+							resolve(list);
+						});
+					}
 				}
-			});
+				);
+			}
 		}
 	});
 };

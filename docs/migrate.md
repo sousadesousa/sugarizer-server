@@ -2,6 +2,39 @@
 
 This documentation describes migration process to a recent Sugarizer Server version.
 
+## Migrate to the next version (unreleased)
+Sugarizer Server now requires Node.js 20+ and MongoDB 4.0+ (MongoDB 8.0 is recommended: older MongoDB versions no longer get security fixes).
+
+If you run Sugarizer Server on your computer, update Node.js first, then run `npm install` again in the Sugarizer Server directory.
+
+MongoDB cannot skip major versions when it upgrades existing data files (for example 5.0 to 6.0, then 6.0 to 7.0, then 7.0 to 8.0, setting `featureCompatibilityVersion` after each step), so the simplest way is to dump the database with your current MongoDB, install MongoDB 8.0 and restore the dump:
+
+```
+mongodump --db sugarizer --out sugarizer-dump
+# install MongoDB 8.0, start it, then
+mongorestore --db sugarizer sugarizer-dump/sugarizer
+```
+
+With Docker, the image is now built from `docker/Dockerfile` and `generate-docker-compose.sh` is gone. Before updating, dump the database from the running MongoDB container, then move the old database files aside:
+
+```
+docker compose exec mongodb mongodump --db sugarizer --out /data/db/dump
+docker compose down
+mv docker/db/dump ../sugarizer-dump
+mv docker/db ../sugarizer-db-old
+```
+
+Update Sugarizer Server (`git pull`), start the new containers, and restore the dump:
+
+```
+docker compose up -d --build
+docker compose cp ../sugarizer-dump mongodb:/tmp/dump
+docker compose exec mongodb mongorestore --db sugarizer /tmp/dump/sugarizer
+```
+
+The server now listens on port 8080 inside its container (it was 80) and runs as a non-root user; the published ports are unchanged.
+
+
 ## Migrate to 1.5.0
 Two new collections need to be added to the `[collections]` section of your `.ini` file:
 

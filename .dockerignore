@@ -1,0 +1,12 @@
+.git
+.github
+node_modules
+dashboard/node_modules
+docker/db
+build
+tmp
+coverage
+.nyc_output
+env/secret.key
+*.log
+.env
