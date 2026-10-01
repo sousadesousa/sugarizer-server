@@ -3,7 +3,8 @@ var superagent = require('superagent'),
 	moment = require('moment'),
 	common = require('../../helper/common'),
 	xocolors = require('../../helper/xocolors')(),
-	emoji = require('../../public/js/emoji');
+	emoji = require('../../public/js/emoji'),
+	journal_utils = require('../journal/util/index');
 
 var classroom = require('./index');
 
@@ -23,6 +24,10 @@ module.exports = function editClassroom(req, res) {
 				req.body.students = [req.body.students];
 			}
 
+			req.body.activities = req.body.activities || [];
+			if (typeof req.body.activities == 'string') {
+				req.body.activities = [req.body.activities];
+			}
 			req.body.color = JSON.parse(req.body.color);
 			req.assert('name', common.l10n.get('UsernameInvalid')).matches(/^[a-z0-9 ]+$/i);
 
@@ -69,15 +74,18 @@ module.exports = function editClassroom(req, res) {
 					if (response.statusCode == 200) {
 
 						// send to classrooms page
-						res.render('admin/addEditClassroom', {
-							module: 'classrooms',
-							mode: "edit",
-							classroom: response.body,
-							moment: moment,
-							emoji: emoji,
-							xocolors: xocolors,
-							account: req.session.user,
-							server: classroom.ini().information
+						return journal_utils.getActivities(req, res, function(activities) {
+							res.render('admin/addEditClassroom', {
+								module: 'classrooms',
+								mode: "edit",
+								classroom: response.body,
+								activities: activities,
+								moment: moment,
+								emoji: emoji,
+								xocolors: xocolors,
+								account: req.session.user,
+								server: classroom.ini().information
+							});
 						});
 					} else {
 						req.flash('errors', {
