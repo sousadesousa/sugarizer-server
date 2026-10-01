@@ -17,7 +17,7 @@
 													 data-private_journal="<%= user.private_journal %>"
 													 data-shared_journal="<%= user.shared_journal %>"
 													 selected="selected"
-													 data-color='<%- JSON.stringify(user.color) %>'
+													 data-color="<%= JSON.stringify(user.color) %>"
 													 data-timestamp="<%= moment(user.timestamp).calendar() %>"
 													 value="<%= user._id %>">
 													 <%- (user.name.replace(/[&<>]/g, "")) %>
@@ -59,7 +59,7 @@
 											<a href="#" onclick="downloadMultipleEntries()" class="btn btn-round" data-l10n-id="multidownload" title="Download Multiple"><i class="material-icons text-muted">cloud_download</i></a>
 										</div>
 										<div class="upload-btn-wrapper pull-right" id="journal-uploadJournal">
-											<input id="uploadJournal" type="file" <% if(user && user._id) { %>onchange='upload_journal(this.files, <%- JSON.stringify(query.journal) %>, <%- JSON.stringify(user.name) %>, <%- JSON.stringify(user._id) %>, <%- JSON.stringify(user.color) %>)' /><% } else if (account.user) { %>onchange='upload_journal(this.files, <%- JSON.stringify(query.journal) %>, <%- JSON.stringify(account.user.name) %>, <%- JSON.stringify(account.user._id) %><% if (account.user.color) { %>, <%- JSON.stringify(account.user.color) %><% } %>)' /><% } %>
+											<input id="uploadJournal" type="file" <% if(user && user._id) { %>onchange="upload_journal(this.files, <%= JSON.stringify(query.journal) %>, <%= JSON.stringify(user.name) %>, <%= JSON.stringify(user._id) %>, <%= JSON.stringify(user.color) %>)" /><% } else if (account.user) { %>onchange="upload_journal(this.files, <%= JSON.stringify(query.journal) %>, <%= JSON.stringify(account.user.name) %>, <%= JSON.stringify(account.user._id) %><% if (account.user.color) { %>, <%= JSON.stringify(account.user.color) %><% } %>)" /><% } %>
 											<a href="#" onclick="$('#uploadJournal').trigger('click'); return false;" class="btn btn-round" data-l10n-id="uploadJournal" title="Upload Journal"><i class="material-icons text-muted">cloud_upload</i></a>
 										</div>
 									<% } %>
@@ -121,15 +121,15 @@
 																	</td>
 																	<script>
 																		<% if (entries.entries[i].metadata.mimetype == "text/plain") { %>
-																			new icon().load("<%= iconList[entries.entries[i].metadata.activity] || '/public/img/application-x-txt.svg' %>", (<%- JSON.stringify(entries.entries[i].metadata.buddy_color?entries.entries[i].metadata.buddy_color:{stroke_color:"#005FE4",fill_color:"#FF2B34"}) %>), "<%= entries.entries[i].objectId %>");
+																			new icon().load("<%= iconList[entries.entries[i].metadata.activity] || '/public/img/application-x-txt.svg' %>", (<%- jsonForScript(entries.entries[i].metadata.buddy_color?entries.entries[i].metadata.buddy_color:{stroke_color:"#005FE4",fill_color:"#FF2B34"}) %>), "<%= entries.entries[i].objectId %>");
 																		<% } else if (entries.entries[i].metadata.mimetype == "application/pdf") { %>
-																			new icon().load("<%= iconList[entries.entries[i].metadata.activity] || '/public/img/application-x-pdf.svg' %>", (<%- JSON.stringify(entries.entries[i].metadata.buddy_color?entries.entries[i].metadata.buddy_color:{stroke_color:"#005FE4",fill_color:"#FF2B34"}) %>), "<%= entries.entries[i].objectId %>");
+																			new icon().load("<%= iconList[entries.entries[i].metadata.activity] || '/public/img/application-x-pdf.svg' %>", (<%- jsonForScript(entries.entries[i].metadata.buddy_color?entries.entries[i].metadata.buddy_color:{stroke_color:"#005FE4",fill_color:"#FF2B34"}) %>), "<%= entries.entries[i].objectId %>");
 																		<% } else if (entries.entries[i].metadata.mimetype == "application/msword") { %>
-																			new icon().load("<%= iconList[entries.entries[i].metadata.activity] || '/public/img/application-x-doc.svg' %>", (<%- JSON.stringify(entries.entries[i].metadata.buddy_color?entries.entries[i].metadata.buddy_color:{stroke_color:"#005FE4",fill_color:"#FF2B34"}) %>), "<%= entries.entries[i].objectId %>");
+																			new icon().load("<%= iconList[entries.entries[i].metadata.activity] || '/public/img/application-x-doc.svg' %>", (<%- jsonForScript(entries.entries[i].metadata.buddy_color?entries.entries[i].metadata.buddy_color:{stroke_color:"#005FE4",fill_color:"#FF2B34"}) %>), "<%= entries.entries[i].objectId %>");
 																		<% } else if (entries.entries[i].metadata.mimetype == "application/vnd.oasis.opendocument.text") { %>
-																			new icon().load("<%= iconList[entries.entries[i].metadata.activity] || '/public/img/application-x-odt.svg' %>", (<%- JSON.stringify(entries.entries[i].metadata.buddy_color?entries.entries[i].metadata.buddy_color:{stroke_color:"#005FE4",fill_color:"#FF2B34"}) %>), "<%= entries.entries[i].objectId %>");
+																			new icon().load("<%= iconList[entries.entries[i].metadata.activity] || '/public/img/application-x-odt.svg' %>", (<%- jsonForScript(entries.entries[i].metadata.buddy_color?entries.entries[i].metadata.buddy_color:{stroke_color:"#005FE4",fill_color:"#FF2B34"}) %>), "<%= entries.entries[i].objectId %>");
 																		<% } else {%>
-																			new icon().load("<%= iconList[entries.entries[i].metadata.activity] || '/public/img/application-x-generic.svg' %>", (<%- JSON.stringify(entries.entries[i].metadata.buddy_color?entries.entries[i].metadata.buddy_color:{stroke_color:"#005FE4",fill_color:"#FF2B34"}) %>), "<%= entries.entries[i].objectId %>");
+																			new icon().load("<%= iconList[entries.entries[i].metadata.activity] || '/public/img/application-x-generic.svg' %>", (<%- jsonForScript(entries.entries[i].metadata.buddy_color?entries.entries[i].metadata.buddy_color:{stroke_color:"#005FE4",fill_color:"#FF2B34"}) %>), "<%= entries.entries[i].objectId %>");
 																		<% } %>
 																	</script>
 																	<td><%= entries.entries[i].metadata.title %></td>
@@ -160,7 +160,7 @@
 																	<td>
 																		<a id="journal-activity-launch" href="javascript:launch_activity('/dashboard/activities/launch/<%= query.journal %>?oid=<%= entries.entries[i].objectId %>&source=journal&uid=<%= entries.entries[i].metadata.user_id %>&aid=<%= entries.entries[i].metadata.activity %>&mode=launch')" data-l10n-id="launch" title="Launch"><i class="material-icons text-muted">launch</i></a>
 																		<a id="journal-activity-download" href="javascript:download_activity('/dashboard/activities/launch/<%= query.journal %>?oid=<%= entries.entries[i].objectId %>&source=journal&uid=<%= entries.entries[i].metadata.user_id %>&aid=<%= entries.entries[i].metadata.activity %>&mode=download')" data-l10n-id="download" title="Download"><i class="material-icons text-muted">cloud_download</i></a>
-																		<a id="journal-activity-delete" data-l10n-id="deleteEntry" title="Delete Entry" href="/dashboard/journal/<%= query.journal %>/delete/<%= entries.entries[i].objectId %><%= entries.links.curr_page %>&title=<%= entries.entries[i].metadata.title %>" onclick="return confirm(document.webL10n.get('DoYouWantDeleteEntry', {activity:`<%= entries.entries[i].metadata.title %>`}))"><i class="material-icons text-muted">delete_forever</i></a>
+																		<a id="journal-activity-delete" data-l10n-id="deleteEntry" title="Delete Entry" href="/dashboard/journal/<%= query.journal %>/delete/<%= entries.entries[i].objectId %><%= entries.links.curr_page %>&title=<%= encodeURIComponent(entries.entries[i].metadata.title) %>" data-name="<%= entries.entries[i].metadata.title %>" onclick="return confirmWith(this, 'DoYouWantDeleteEntry', 'activity')"><i class="material-icons text-muted">delete_forever</i></a>
 																	</td>
 															</tr>
 														<% } %>
@@ -178,7 +178,7 @@
 <%- include('includes/footer') %>
 <script>
 	//set headers
-	var headers = <%- JSON.stringify(headers) %>;
+	var headers = <%- jsonForScript(headers) %>;
 
 	handleSort();
 	var journalList = document.getElementById("journal-cards-parent");

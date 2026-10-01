@@ -31,7 +31,7 @@
                                             </select>
                                             <script>
                                                 $(document).ready(function(){
-                                                    new icon().load("<%= iconMap[assignment.assignedWork.metadata.activity] || '/public/img/application-x-generic.svg' %>", (<%- JSON.stringify(assignment.assignedWork.metadata.buddy_color?assignment.assignedWork.metadata.buddy_color:{stroke_color:"#005FE4",fill_color:"#FF2B34"}) %>), "<%= assignment.assignedWork.objectId %>");
+                                                    new icon().load("<%= iconMap[assignment.assignedWork.metadata.activity] || '/public/img/application-x-generic.svg' %>", (<%- jsonForScript(assignment.assignedWork.metadata.buddy_color?assignment.assignedWork.metadata.buddy_color:{stroke_color:"#005FE4",fill_color:"#FF2B34"}) %>), "<%= assignment.assignedWork.objectId %>");
                                                 });
                                             </script>
                                         </div>		
@@ -53,7 +53,7 @@
                                                         $("#select2-activity").on("change", function(){
                                                             var activity = $("#select2-activity").val();
                                                             $("#icon").html("<div class='color' id='"+activity+"'><div class='xo-icon'></div></div>");
-                                                            new icon().load("<%= iconMap[entries[i].metadata.activity] || '/public/img/application-x-generic.svg' %>", (<%- JSON.stringify(entries[i].metadata.buddy_color?entries[i].metadata.buddy_color:{stroke_color:"#005FE4",fill_color:"#FF2B34"}) %>), "<%= entries[i].objectId %>");
+                                                            new icon().load("<%= iconMap[entries[i].metadata.activity] || '/public/img/application-x-generic.svg' %>", (<%- jsonForScript(entries[i].metadata.buddy_color?entries[i].metadata.buddy_color:{stroke_color:"#005FE4",fill_color:"#FF2B34"}) %>), "<%= entries[i].objectId %>");
                                                         });
                                                     });
                                                     </script>
@@ -61,7 +61,7 @@
                                             </select>
                                             <script>
                                             $(document).ready(function() {
-                                                var entries = <%- JSON.stringify(entries) %>;
+                                                var entries = <%- jsonForScript(entries) %>;
                                                 $('#select2-activity').select2({
                                                     placeholder:"<%= common.l10n.get('selectActivity') %>",
                                                     allowClear:true,
@@ -169,7 +169,7 @@
                                                             <div class="xo-icon"></div>
                                                         </div>
                                                         <script>
-                                                            new icon().loadByClass("/public/img/classroom-icon.svg", (<%- JSON.stringify(classrooms[i].color) %>), "<%= classrooms[i]._id + '_icon' %>");
+                                                            new icon().loadByClass("/public/img/classroom-icon.svg", (<%- jsonForScript(classrooms[i].color) %>), "<%= classrooms[i]._id + '_icon' %>");
                                                         </script>
                                                         <div style="padding: 4px 0px 0px 40px;"><%= classrooms[i].name %></div>
                                                     </div>

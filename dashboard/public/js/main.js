@@ -496,6 +496,64 @@ $(document).ready(function () {
 });
 
 
+// Security token of the session, sent with every request that changes something
+function csrfToken() {
+	return $('meta[name="csrf-token"]').attr('content') || '';
+}
+
+// Send a POST request to an url with a form (for links that change something)
+function postTo(url) {
+	var form = document.createElement('form');
+	form.method = 'POST';
+	form.action = url;
+	var input = document.createElement('input');
+	input.type = 'hidden';
+	input.name = '_csrf';
+	input.value = csrfToken();
+	form.appendChild(input);
+	document.body.appendChild(form);
+	form.submit();
+}
+
+// Follow a link with a POST request
+function postLink(link) {
+	postTo(link.getAttribute('href'));
+	return false;
+}
+
+// Ask confirmation, with the name read from the data-name attribute (never from JS source),
+// then follow the link with a POST request. Without link, only returns the answer.
+function confirmWith(link, key, param) {
+	var params = {};
+	params[param] = link.getAttribute('data-name') || '';
+	if (!confirm(document.webL10n.get(key, params))) {
+		return false;
+	}
+	if (link.getAttribute('href')) {
+		postTo(link.getAttribute('href'));
+		return false;
+	}
+	return true;
+}
+
+// Add the security token to every ajax request that changes something on the dashboard and to the forms
+$.ajaxSetup({
+	beforeSend: function(xhr, settings) {
+		if (!/^(GET|HEAD|OPTIONS)$/i.test(settings.type || 'GET') && !/^(https?:)?\/\//i.test(settings.url || '')) {
+			xhr.setRequestHeader('x-csrf-token', csrfToken());
+		}
+	}
+});
+$(function() {
+	$('form').filter(function() {
+		return (this.getAttribute('method') || '').toLowerCase() == 'post';
+	}).each(function() {
+		if (!$(this).find('input[name="_csrf"]').length) {
+			$('<input type="hidden" name="_csrf">').val(csrfToken()).appendTo(this);
+		}
+	});
+});
+
 function highlight(text) {
 
 	//set var
@@ -509,14 +567,18 @@ function highlight(text) {
 		var inputText = $(this).text();
 		var index = inputText.toLowerCase().indexOf(text);
 
-		//check
+		//check: rebuild the content with text nodes only, so the text is never parsed as HTML
+		$(this).empty();
 		if (index >= 0 && text.length > 0) {
 			if (offset == -1) {
 				offset = $(this).offset().top;
 			}
-			inputText = inputText.substring(0, index) + "<span class='highlight'>" + inputText.substring(index, index + text.length) + "</span>" + inputText.substring(index + text.length);
+			$(this).append(document.createTextNode(inputText.substring(0, index)));
+			$(this).append($('<span class="highlight"></span>').text(inputText.substring(index, index + text.length)));
+			$(this).append(document.createTextNode(inputText.substring(index + text.length)));
+		} else {
+			$(this).append(document.createTextNode(inputText));
 		}
-		$(this).html(inputText);
 	});
 
 	//show error
@@ -669,7 +731,12 @@ function convertToCSV(objArray) {
 				JSON.parse(array[i][index]);
 				line += array[i][index];
 			} catch (e) {
-				line += JSON.stringify(array[i][index]);
+				var value = array[i][index];
+				// avoid formulas in spreadsheets (CSV injection)
+				if (typeof value == 'string' && /^[=+\-@\t\r]/.test(value)) {
+					value = "'" + value;
+				}
+				line += JSON.stringify(value);
 			}
 		}
 

@@ -49,6 +49,22 @@ exports.init = function(settings, database) {
  *    ]
  *
  **/
+// Keep only a list of activity ids (strings) in the activities of a classroom
+function cleanActivities(classroom, defaultValue) {
+	if (classroom.activities === undefined) {
+		if (defaultValue) {
+			classroom.activities = defaultValue;
+		}
+		return;
+	}
+	if (!Array.isArray(classroom.activities)) {
+		classroom.activities = [];
+	}
+	classroom.activities = classroom.activities.filter(function(id, index, list) {
+		return typeof id == 'string' && id.length > 0 && list.indexOf(id) == index;
+	});
+}
+
 exports.addClassroom = function(req, res) {
 	//validate
 	if (!req.body.classroom) {
@@ -61,6 +77,7 @@ exports.addClassroom = function(req, res) {
 
 	//parse user details
 	var classroom = JSON.parse(req.body.classroom);
+	cleanActivities(classroom, []);
 
 	//add timestamp & language
 	classroom.created_time = +new Date();
@@ -233,6 +250,7 @@ exports.findAll = function(req, res) {
 					$project: {
 						name: 1,
 						students: 1,
+						activities: 1,
 						color: 1,
 						options: 1,
 						created_time: 1,
@@ -475,6 +493,7 @@ exports.updateClassroom = function(req, res) {
 
 	var classid = req.params.classid;
 	var classroom = JSON.parse(req.body.classroom);
+	cleanActivities(classroom);
 
 	//add timestamp & language
 	classroom.timestamp = +new Date();

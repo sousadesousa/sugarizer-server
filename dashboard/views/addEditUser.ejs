@@ -64,9 +64,9 @@
                                         <% if(typeof user == "undefined") var random=Math.floor(Math.random()*xocolors.length); %>
                                         <% for(var i=0; i< xocolors.length; i++){ %>
                                           <% if(typeof user == 'object' && (typeof user.color == 'object' && xocolors[i].stroke == user.color.stroke && xocolors[i].fill == user.color.fill) || (random == i)) { %>
-                                            <option selected="selected" data-stroke="<%= xocolors[i].stroke %>" data-fill="<%= xocolors[i].fill %>" value='<%- JSON.stringify(xocolors[i]) %>'></option>
+                                            <option selected="selected" data-stroke="<%= xocolors[i].stroke %>" data-fill="<%= xocolors[i].fill %>" value="<%= JSON.stringify(xocolors[i]) %>"></option>
                                           <% }else{ %>
-                                            <option data-stroke="<%= xocolors[i].stroke %>" data-fill="<%= xocolors[i].fill %>" value='<%- JSON.stringify(xocolors[i]) %>'></option>
+                                            <option data-stroke="<%= xocolors[i].stroke %>" data-fill="<%= xocolors[i].fill %>" value="<%= JSON.stringify(xocolors[i]) %>"></option>
                                           <% } %>
                                         <% } %>
                                     </select>
@@ -114,7 +114,7 @@
                                                     <div class="xo-icon"></div>
                                                 </div>
                                                 <script>
-                                                    new icon().loadByClass("/public/img/classroom-icon.svg", (<%- JSON.stringify(classrooms[i].color) %>), "<%= classrooms[i]._id + '_icon' %>");
+                                                    new icon().loadByClass("/public/img/classroom-icon.svg", (<%- jsonForScript(classrooms[i].color) %>), "<%= classrooms[i]._id + '_icon' %>");
                                                 </script>
                                                 <div style="padding: 4px 0px 0px 40px;"><%= classrooms[i].name %></div>
                                             </div>
@@ -195,7 +195,7 @@
                                 <form action="/dashboard/profile/disable2FA" method="POST">
                                     <div class="form-group col-12 text-center">
                                             <button class="btn btn pull-left btn-align btn-round" data-l10n-id="disable2FA" style="margin-top: -68px;"
-                                                onclick="return confirm(document.webL10n.get('DoYouWantToDisable2FA', {name: '<%= user.name %>'}))"
+                                                data-name="<%= user.name %>" onclick="return confirmWith(this, 'DoYouWantToDisable2FA', 'name')"
                                                 type="submit"></button>
                                     </div>
                                 </form>

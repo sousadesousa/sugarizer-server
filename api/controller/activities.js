@@ -7,6 +7,7 @@ var dbutil = require('./utils/db');
 
 var db;
 var activitiesCollection;
+var classroomsCollection;
 
 // Load into memory the content of activities directory
 exports.load = function(settings, database) {
@@ -15,6 +16,7 @@ exports.load = function(settings, database) {
 	var activitiesFromDir = [];
 	db = database;
 	activitiesCollection = settings.collections.activities;
+	classroomsCollection = settings.collections.classrooms;
 	var activitiesDirName = settings.activities.activities_directory_name;
 	var templateDirName = settings.activities.template_directory_name;
 	var activityInfoPath = settings.activities.activity_info_path;
@@ -163,7 +165,7 @@ exports.load = function(settings, database) {
  *     ]
  **/
 exports.findAll = function(req, res) {
-	loadActivities(function(activities) {
+	loadActivitiesFor(req, res, function(activities) {
 		//process results based on filters and fields
 		var data = process_results(req, activities);
 		res.send(data);
@@ -217,7 +219,7 @@ exports.findAll = function(req, res) {
  *     }
  **/
 exports.findById = function(req, res) {
-	loadActivities(function(activities) {
+	loadActivitiesFor(req, res, function(activities) {
 		//process results based on filters and fields
 		var data = process_results(req, activities);
 
@@ -273,6 +275,46 @@ function loadActivities(callback) {
 		);
 	}
 }
+
+// Load activities the user of a request is allowed to see:
+// admins and teachers see all activities, students only see the activities
+// assigned to their classrooms (and none if they are in no classroom)
+function loadActivitiesFor(req, res, callback) {
+	loadActivities(function(activities) {
+		if (!req.user || req.user.role != 'student') {
+			return callback(activities);
+		}
+		activities = activities || [];
+		const collection = db.collection(classroomsCollection);
+		dbutil.callback(collection.find({ students: String(req.user._id) }, { projection: { activities: 1 } }).toArray(), function(err, classrooms) {
+			if (err) {
+				console.log(err);
+				return res.status(500).send({
+					'error': 'An error has occurred',
+					'code': 10
+				});
+			}
+			callback(filterAssigned(activities, classrooms));
+		});
+	});
+}
+
+// Keep the activities assigned to at least one of the classrooms
+function filterAssigned(activities, classrooms) {
+	const assigned = {};
+	for (let i = 0 ; i < classrooms.length ; i++) {
+		const list = classrooms[i].activities;
+		if (Array.isArray(list)) {
+			for (let j = 0 ; j < list.length ; j++) {
+				assigned[list[j]] = true;
+			}
+		}
+	}
+	return activities.filter(function(activity) {
+		return Object.prototype.hasOwnProperty.call(assigned, activity.id);
+	});
+}
+exports.filterAssigned = filterAssigned;
 
 // Merge activities list
 function mergeActivities(list1, list2) {

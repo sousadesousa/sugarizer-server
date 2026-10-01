@@ -22,15 +22,20 @@ module.exports = function verify2FA(req, res) {
 				})
 				.end(function (error, response) {
                         
+					if (response.statusCode == 200 && response.body && response.body.partial === false) { //verifiedUser is true - user fully authenticated.
+						/**
+						 The user is fully authenticated: start a new session
+						 and redirect the user to dashboard
+						 */
+						return common.startSession(req, response.body, function() {
+							return res.redirect('/dashboard'+(req.body && req.body.lang ? "?lang="+req.body.lang : ""));
+						});
+					}
 					req.session.user = response.body;
 					if (response.statusCode == 200) {
     
-						if (req.session.user.partial === false) { //verifiedUser is true - user fully authenticated.
-							/**
-                                 The user is fully authenticated
-                                 so we redirect the user to dashboard
-                                 */
-							return res.redirect('/dashboard'+(req.body && req.body.lang ? "?lang="+req.body.lang : ""));
+						if (req.session.user.partial === false) {
+							return res.redirect('/dashboard');
 						} else {
 							/**
                                  The user has enabled 2FA, and is not fully authenticated
