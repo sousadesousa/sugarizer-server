@@ -47,7 +47,7 @@
                             </div>
                         </div>
                         <script>
-                            var chartList = <%- JSON.stringify(charts) %>;
+                            var chartList = <%- jsonForScript(charts) %>;
                             $('input[name="type"]').on('change', function(e) {
                                 if (e && e.target && e.target.value) {
                                     var filteredCharts = chartList.filter(function (chart) {

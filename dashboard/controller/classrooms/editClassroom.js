@@ -60,6 +60,12 @@ module.exports = function editClassroom(req, res) {
 				.get(common.getAPIUrl(req) + 'api/v1/classrooms/' + req.params.classid)
 				.set(common.getHeaders(req))
 				.end(function (error, response) {
+					if (response.statusCode == 200 && (!response.body || !response.body._id)) {
+						req.flash('errors', {
+							msg: common.l10n.get('ThereIsError')
+						});
+						return res.redirect('/dashboard/classrooms');
+					}
 					if (response.statusCode == 200) {
 
 						// send to classrooms page

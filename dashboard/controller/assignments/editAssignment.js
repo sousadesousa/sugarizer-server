@@ -73,6 +73,12 @@ module.exports = function editAssignment(req, res) {
 				.get(common.getAPIUrl(req) + 'api/v1/assignments/' + req.params.assignmentId)
 				.set(common.getHeaders(req))
 				.end(function (error, response) {
+					if (response.statusCode == 200 && (!response.body || !response.body._id)) {
+						req.flash('errors', {
+							msg: common.l10n.get('ThereIsError')
+						});
+						return res.redirect('/dashboard/assignments/');
+					}
 					if (response.statusCode == 200) {
 						var assignment = response.body;
 
@@ -114,7 +120,7 @@ module.exports = function editAssignment(req, res) {
 						req.flash('errors', {
 							msg: common.l10n.get('ErrorCode' + response.body.code)
 						});
-						return res.redirect('/dashboard/assignments/edit/' + req.params.assignmentId);
+						return res.redirect('/dashboard/assignments/');
 					}
 				});
 		}

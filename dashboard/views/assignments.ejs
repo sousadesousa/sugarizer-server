@@ -85,17 +85,17 @@
                                                 <script>
                                                     <% var assignedWork = data.assignments[i].assignedWork;
                                                        if (!assignedWork || !assignedWork.metadata) { %>
-                                                       new icon().load("<%= '/public/img/application-x-generic.svg' %>", (<%- JSON.stringify({stroke_color:"#005FE4",fill_color:"#FF2B34"}) %>), "<%= 'ic'+i+'unknown' %>");
+                                                       new icon().load("<%= '/public/img/application-x-generic.svg' %>", (<%- jsonForScript({stroke_color:"#005FE4",fill_color:"#FF2B34"}) %>), "<%= 'ic'+i+'unknown' %>");
                                                     <% } else if (assignedWork.metadata.mimetype == "text/plain") { %>
-                                                        new icon().load("<%= iconMap[assignedWork.metadata.activity] || '/public/img/application-x-txt.svg' %>", (<%- JSON.stringify(assignedWork.metadata.buddy_color?assignedWork.metadata.buddy_color:{stroke_color:"#005FE4",fill_color:"#FF2B34"}) %>), "<%= 'ic'+i+assignedWork.objectId %>");
+                                                        new icon().load("<%= iconMap[assignedWork.metadata.activity] || '/public/img/application-x-txt.svg' %>", (<%- jsonForScript(assignedWork.metadata.buddy_color?assignedWork.metadata.buddy_color:{stroke_color:"#005FE4",fill_color:"#FF2B34"}) %>), "<%= 'ic'+i+assignedWork.objectId %>");
                                                     <% } else if (assignedWork.metadata.mimetype == "application/pdf") { %>
-                                                        new icon().load("<%= iconMap[assignedWork.metadata.activity] || '/public/img/application-x-pdf.svg' %>", (<%- JSON.stringify(assignedWork.metadata.buddy_color?assignedWork.metadata.buddy_color:{stroke_color:"#005FE4",fill_color:"#FF2B34"}) %>), "<%= 'ic'+i+assignedWork.objectId %>");
+                                                        new icon().load("<%= iconMap[assignedWork.metadata.activity] || '/public/img/application-x-pdf.svg' %>", (<%- jsonForScript(assignedWork.metadata.buddy_color?assignedWork.metadata.buddy_color:{stroke_color:"#005FE4",fill_color:"#FF2B34"}) %>), "<%= 'ic'+i+assignedWork.objectId %>");
                                                     <% } else if (assignedWork.metadata.mimetype == "application/msword") { %>
-                                                        new icon().load("<%= iconMap[assignedWork.metadata.activity] || '/public/img/application-x-doc.svg' %>", (<%- JSON.stringify(assignedWork.metadata.buddy_color?assignedWork.metadata.buddy_color:{stroke_color:"#005FE4",fill_color:"#FF2B34"}) %>), "<%= 'ic'+i+assignedWork.objectId %>");
+                                                        new icon().load("<%= iconMap[assignedWork.metadata.activity] || '/public/img/application-x-doc.svg' %>", (<%- jsonForScript(assignedWork.metadata.buddy_color?assignedWork.metadata.buddy_color:{stroke_color:"#005FE4",fill_color:"#FF2B34"}) %>), "<%= 'ic'+i+assignedWork.objectId %>");
                                                     <% } else if (assignedWork.metadata.mimetype == "application/vnd.oasis.opendocument.text") { %>
-                                                        new icon().load("<%= iconMap[assignedWork.metadata.activity] || '/public/img/application-x-odt.svg' %>", (<%- JSON.stringify(assignedWork.metadata.buddy_color?assignedWork.metadata.buddy_color:{stroke_color:"#005FE4",fill_color:"#FF2B34"}) %>), "<%= 'ic'+i+assignedWork.objectId %>");
+                                                        new icon().load("<%= iconMap[assignedWork.metadata.activity] || '/public/img/application-x-odt.svg' %>", (<%- jsonForScript(assignedWork.metadata.buddy_color?assignedWork.metadata.buddy_color:{stroke_color:"#005FE4",fill_color:"#FF2B34"}) %>), "<%= 'ic'+i+assignedWork.objectId %>");
                                                     <% } else {%>
-                                                        new icon().load("<%= iconMap[assignedWork.metadata.activity] || '/public/img/application-x-generic.svg' %>", (<%- JSON.stringify(assignedWork.metadata.buddy_color?assignedWork.metadata.buddy_color:{stroke_color:"#005FE4",fill_color:"#FF2B34"}) %>), "<%= 'ic'+i+assignedWork.objectId %>");
+                                                        new icon().load("<%= iconMap[assignedWork.metadata.activity] || '/public/img/application-x-generic.svg' %>", (<%- jsonForScript(assignedWork.metadata.buddy_color?assignedWork.metadata.buddy_color:{stroke_color:"#005FE4",fill_color:"#FF2B34"}) %>), "<%= 'ic'+i+assignedWork.objectId %>");
                                                     <% } %>
                                                     </script>
                                                 
@@ -120,12 +120,12 @@
                                                              <% } else { %> 
                                                                     <a data-l10n-id="editAssignment" title="Edit Assignment" style=" cursor: not-allowed; pointer-events: none;"  href="/dashboard/assignments/edit/<%= data.assignments[i]._id %>"><i style="color:#ddd" id="assignment-edit-class" class="material-icons text-muted">edit</i></a> 
                                                             <% } %> 
-                                                            <a data-l10n-id="deleteAssignment" title="Delete Assignment" href="/dashboard/assignments/delete/<%= data.assignments[i]._id %>?&name=<%= data.assignments[i].name %>" onclick="return confirm(document.webL10n.get('DoYouWantDeleteAssignment', {assignment:'<%= data.assignments[i].name %>'}))"><i id="assignments-delete-class" class="material-icons text-muted">delete_forever</i></a>
+                                                            <a data-l10n-id="deleteAssignment" title="Delete Assignment" href="/dashboard/assignments/delete/<%= data.assignments[i]._id %>?&name=<%= encodeURIComponent(data.assignments[i].name) %>" data-name="<%= data.assignments[i].name %>" onclick="return confirmWith(this, 'DoYouWantDeleteAssignment', 'assignment')"><i id="assignments-delete-class" class="material-icons text-muted">delete_forever</i></a>
                                                         <% } else { %> 
                                                             <a data-l10n-id="launchAssignment" style=" cursor: not-allowed; pointer-events: none;" title="Launch Assignment" href="/dashboard/assignments/launch/<%= data.assignments[i]._id %>"><div class="launchAssignment-icon-inactive"></div></a>
                                                             <a id="assignment-deliveries" style=" cursor: not-allowed; pointer-events: none;" href="/dashboard/assignments/deliveries/<%= data.assignments[i]._id %>" data-l10n-id="deliveries" title="deliveries"><div class="assignment-icon2-inactive"></div></a>
                                                             <a data-l10n-id="editAssignment" style=" cursor: not-allowed; pointer-events: none;" title="Edit Assignment" href="/dashboard/assignments/edit/<%= data.assignments[i]._id %>"><i style="color:#ddd" id="assignment-edit-class" class="material-icons text-muted">edit</i></a> 
-                                                            <a data-l10n-id="deleteAssignment" style=" cursor: not-allowed; pointer-events: none;" title="Delete Assignment" href="/dashboard/assignments/delete/<%= data.assignments[i]._id %>?&name=<%= data.assignments[i].name %>" onclick="return confirm(document.webL10n.get('DoYouWantDeleteAssignment', {assignment:'<%= data.assignments[i].name %>'}))"><i style="color:#ddd" id="assignments-delete-class" class="material-icons text-muted">delete_forever</i></a>
+                                                            <a data-l10n-id="deleteAssignment" style=" cursor: not-allowed; pointer-events: none;" title="Delete Assignment" href="/dashboard/assignments/delete/<%= data.assignments[i]._id %>?&name=<%= encodeURIComponent(data.assignments[i].name) %>" data-name="<%= data.assignments[i].name %>" onclick="return confirmWith(this, 'DoYouWantDeleteAssignment', 'assignment')"><i style="color:#ddd" id="assignments-delete-class" class="material-icons text-muted">delete_forever</i></a>
                                                         <% } %> 
                                                     <% } %>
                                                 </td>
@@ -144,7 +144,7 @@
 <%- include('includes/footer') %>
 <script>
     //set headers
-    var headers = <%- JSON.stringify(headers) %>;
+    var headers = <%- jsonForScript(headers) %>;
     handleSort();
     var currTour = sugarizerTour("assignment", <% if (account.user && account.user.role=="admin") {"admin"} else {"teacher"} %>);
     if (!currTour.isFinished()) currTour.start();

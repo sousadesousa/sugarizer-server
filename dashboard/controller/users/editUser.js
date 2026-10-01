@@ -149,6 +149,11 @@ module.exports = function editUser(req, res) {
 							msg: common.l10n.get('ThereIsError')
 						});
 						return res.redirect('/dashboard/users');
+					} else if (response.statusCode == 200 && (!user || !user._id)) {
+						req.flash('errors', {
+							msg: common.l10n.get('ErrorCode21')
+						});
+						return res.redirect('/dashboard/users');
 					} else if (response.statusCode == 200) {
 						if (user && user.role == 'teacher') {
 							// fetch classrooms

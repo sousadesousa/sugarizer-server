@@ -496,6 +496,13 @@ $(document).ready(function () {
 });
 
 
+// Ask confirmation before following a link, with the name read from the data-name attribute (never from JS source)
+function confirmWith(link, key, param) {
+	var params = {};
+	params[param] = link.getAttribute('data-name') || '';
+	return confirm(document.webL10n.get(key, params));
+}
+
 function highlight(text) {
 
 	//set var
@@ -509,14 +516,18 @@ function highlight(text) {
 		var inputText = $(this).text();
 		var index = inputText.toLowerCase().indexOf(text);
 
-		//check
+		//check: rebuild the content with text nodes only, so the text is never parsed as HTML
+		$(this).empty();
 		if (index >= 0 && text.length > 0) {
 			if (offset == -1) {
 				offset = $(this).offset().top;
 			}
-			inputText = inputText.substring(0, index) + "<span class='highlight'>" + inputText.substring(index, index + text.length) + "</span>" + inputText.substring(index + text.length);
+			$(this).append(document.createTextNode(inputText.substring(0, index)));
+			$(this).append($('<span class="highlight"></span>').text(inputText.substring(index, index + text.length)));
+			$(this).append(document.createTextNode(inputText.substring(index + text.length)));
+		} else {
+			$(this).append(document.createTextNode(inputText));
 		}
-		$(this).html(inputText);
 	});
 
 	//show error
@@ -669,7 +680,12 @@ function convertToCSV(objArray) {
 				JSON.parse(array[i][index]);
 				line += array[i][index];
 			} catch (e) {
-				line += JSON.stringify(array[i][index]);
+				var value = array[i][index];
+				// avoid formulas in spreadsheets (CSV injection)
+				if (typeof value == 'string' && /^[=+\-@\t\r]/.test(value)) {
+					value = "'" + value;
+				}
+				line += JSON.stringify(value);
 			}
 		}
 

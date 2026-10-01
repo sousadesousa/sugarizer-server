@@ -15,7 +15,14 @@ var authController = require('./controller/auth'),
 	assignmentsController = require('./controller/assignments'),
 	statsController = require('./controller/stats');
 
+var common = require('./helper/common'),
+	apiGuard = require('./helper/apiGuard');
+
 module.exports = function (app, ini) {
+
+	// one language per request and safe API calls
+	apiGuard.install();
+	app.use('/dashboard', common.languageMiddleware);
 
 	// init routes using settings
 	authController.init(ini);
@@ -84,7 +91,6 @@ module.exports = function (app, ini) {
 	app.get('/dashboard/assignments/delete/:assignmentId', authController.validateSession, assignmentsController.deleteAssignment);
 	app.get('/dashboard/assignments/launch/:assignmentId', authController.validateSession, assignmentsController.launchAssignment);
 	app.get('/dashboard/assignments/deliveries/return/:assignmentId', authController.validateSession, assignmentsController.returnAssignment);
-	app.get('/dashboard/assignments/edit/:assignmentId', authController.validateSession, assignmentsController.editAssignment);
 	app.get('/dashboard/assignments/edit/:assignmentId', authController.validateSession, assignmentsController.editAssignment);
 	app.post('/dashboard/assignments/edit/:assignmentId', authController.validateSession, assignmentsController.editAssignment);
 

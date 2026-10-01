@@ -1,7 +1,7 @@
 var fs = require('fs');
 var os = require('os');
 var ini = null;
-var language = '*';
+var AsyncLocalStorage = require('async_hooks').AsyncLocalStorage;
 var moment = require('moment');
 var version = '';
 
@@ -12,24 +12,37 @@ exports.init = function(settings) {
 };
 
 // language features
+// The language is stored per request (not per process), so that concurrent users don't see each other's language
+var languageContext = new AsyncLocalStorage();
+
+function currentStore() {
+	return languageContext.getStore();
+}
+
 exports.l10n = {
 	setLanguage: function(lang) {
-		language = lang;
+		var store = currentStore();
+		if (store) {
+			store.language = lang;
+		}
 	},
 
 	getLanguage: function() {
-		return language;
+		var store = currentStore();
+		return store ? store.language : '*';
 	},
 
 	get: function(text, params) {
-		var locales = ini.locales[language];
-		if (!locales) {
-			locales = ini.locales['*'];
+		var language = exports.l10n.getLanguage();
+		var locales = Object.prototype.hasOwnProperty.call(ini.locales, language) ? ini.locales[language] : ini.locales['*'];
+		var translate = locales[text];
+		if (translate === undefined) {
+			// not translated in this language: fallback to default
+			translate = ini.locales['*'][text];
 		}
-		if (!locales[text]) {
+		if (translate === undefined) {
 			return text;
 		}
-		var translate = locales[text];
 		for (var param in params) {
 			translate = translate.replace('{{'+param+'}}', params[param]);
 		}
@@ -37,12 +50,76 @@ exports.l10n = {
 	}
 };
 
-exports.reinitLocale = function(req) {
-	// reinit l10n and moment with locale
-	if (req.query && req.query.lang) {
-		exports.l10n.setLanguage(req.query.lang);
-		moment.locale(req.query.lang);
+// Is this a language we have locales for
+function isKnownLanguage(lang) {
+	return typeof lang == 'string' && lang != '*' && ini && ini.locales && Object.prototype.hasOwnProperty.call(ini.locales, lang);
+}
+
+// Middleware: run each dashboard request in its own language context.
+// The language comes from the request (lang parameter) then from the session.
+exports.languageMiddleware = function(req, res, next) {
+	var lang = (req.query && req.query.lang) || (req.body && req.body.lang) || (req.session && req.session.lang);
+	var store = { language: '*' };
+	if (isKnownLanguage(lang)) {
+		store.language = lang;
+		if (req.session && req.session.lang !== lang) {
+			req.session.lang = lang;
+		}
 	}
+	res.locals.jsonForScript = exports.jsonForScript;
+	languageContext.run(store, function() {
+		next();
+	});
+};
+
+// Capture the current language context to run a callback in it later
+exports.bindLanguage = function(fn) {
+	var store = currentStore();
+	if (!store) {
+		return fn;
+	}
+	return function() {
+		var args = arguments;
+		var self = this;
+		return languageContext.run(store, function() {
+			return fn.apply(self, args);
+		});
+	};
+};
+
+// Language to use for dates (moment keeps a global locale)
+exports.reinitLocale = function() {
+	var lang = exports.l10n.getLanguage();
+	if (isKnownLanguage(lang)) {
+		moment.locale(lang);
+	}
+};
+
+// Escape a value to put it in HTML text or in a quoted attribute
+exports.escapeHtml = function(value) {
+	if (value === undefined || value === null) {
+		return '';
+	}
+	return String(value)
+		.replace(/&/g, '&amp;')
+		.replace(/</g, '&lt;')
+		.replace(/>/g, '&gt;')
+		.replace(/"/g, '&quot;')
+		.replace(/'/g, '&#39;');
+};
+
+// Serialize a value to JSON that can safely be put in a <script> block
+exports.jsonForScript = function(value) {
+	var json = JSON.stringify(value);
+	if (json === undefined) {
+		return 'null';
+	}
+	return json
+		.replace(/</g, '\\u003c')
+		.replace(/>/g, '\\u003e')
+		.replace(/&/g, '\\u0026')
+		.replace(/\u2028/g, '\\u2028')
+		.replace(/\u2029/g, '\\u2029');
 };
 
 exports.loadCredentials = function(settings) {

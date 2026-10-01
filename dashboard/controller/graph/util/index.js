@@ -4,6 +4,48 @@ var superagent = require('superagent'),
 	common = require('../../../helper/common');
 
 
+var esc = common.escapeHtml;
+var defaultColor = { stroke: "#005FE4", fill: "#FF2B34" };
+
+// Colors of a user, with a default for users without color
+function colorOf(color) {
+	return (color && typeof color == 'object' && color.stroke && color.fill) ? color : defaultColor;
+}
+
+// Rows of the home page tables. All values coming from users are escaped.
+exports.studentRow = function(user, i) {
+	var url = '/dashboard/journal/' + encodeURIComponent(user.private_journal) + '?uid=' + encodeURIComponent(user._id) + '&type=private';
+	var id = esc(user._id) + i.toString();
+	return '<tr onclick="' + esc('window.document.location=' + JSON.stringify(url)) + '">' +
+		'<td>' + (i + 1) + '</td>' +
+		'<td><div class="color" id="' + id + '"><div class="xo-icon"></div></div></td>' +
+		'<script>new icon().load("/public/img/owner-icon.svg", ' + common.jsonForScript(colorOf(user.color)) + ', ' + common.jsonForScript(String(user._id) + i.toString()) + ')</script>' +
+		'<td title="' + esc(user.name) + '">' + esc(user.name) + '</td>' +
+		'<td class="text-muted">' + esc(moment(user.timestamp).calendar()) + '</td>' +
+		'</tr>';
+};
+
+exports.userRow = function(user, i) {
+	return '<tr>' +
+		'<td>' + (i + 1) + '</td>' +
+		'<td title="' + esc(user.name) + '">' + esc(user.name) + '</td>' +
+		'<td class="text-muted">' + esc(moment(user.timestamp).calendar()) + '</td>' +
+		'</tr>';
+};
+
+exports.activityRow = function(entry, i, iconURL) {
+	var url = '/dashboard/activities/launch/' + encodeURIComponent(entry.journalId) + '?oid=' + encodeURIComponent(entry.objectId) + '&uid=' + encodeURIComponent(entry.metadata.user_id) + '&aid=' + encodeURIComponent(entry.metadata.activity);
+	var id = esc(entry.objectId) + i.toString();
+	return '<tr onclick="' + esc('javascript:launch_activity(' + JSON.stringify(url) + ')') + '">' +
+		'<td>' + (i + 1) + '</td>' +
+		'<td><div class="color" id="' + id + '"><div class="xo-icon"></div></div></td>' +
+		'<script>new icon().load(' + common.jsonForScript(iconURL) + ', ' + common.jsonForScript(colorOf(entry.metadata.buddy_color)) + ', ' + common.jsonForScript(String(entry.objectId) + i.toString()) + ')</script>' +
+		'<td title="' + esc(entry.metadata.title) + '">' + esc(entry.metadata.title) + '</td>' +
+		'<td title="' + esc(entry.metadata.buddy_name) + '">' + esc(entry.metadata.buddy_name) + '</td>' +
+		'<td class="text-muted">' + esc(moment(entry.metadata.timestamp).calendar()) + '</td>' +
+		'</tr>';
+};
+
 var averageEntries = 0.0;
 exports.averageEntries = function() {
 	return averageEntries;
@@ -178,14 +220,7 @@ exports.getRecentStudents = function(req, res) {
 		var data = '';
 		for (var i = 0; i < users.length; i++) {
 
-			var url = '/dashboard/journal/' + users[i].private_journal + '?uid=' + users[i]._id + '&type=private';
-			data += '<tr onclick="window.document.location=\'' + url + '\'">\
-									<td>' + (i + 1) + '</td>\
-									<td><div class="color" id="' + users[i]._id + i.toString() + '"><div class="xo-icon"></div></div></td>\
-									<script>new icon().load("/public/img/owner-icon.svg", ' + JSON.stringify(users[i].color) + ', "' + users[i]._id + i.toString() + '")</script>\
-									<td title="' + users[i].name + '">' + users[i].name + '</td>\
-									<td class="text-muted">' + moment(users[i].timestamp).calendar(); + '</td>\
-							</tr>';
+			data += exports.studentRow(users[i], i);
 		}
 
 		return res.json({
@@ -210,11 +245,7 @@ exports.getRecentTeachers = function(req, res) {
 		var data = '';
 		for (var i = 0; i < users.length; i++) {
 
-			data += '<tr>\
-						<td>' + (i + 1) + '</td>\
-						<td title="' + users[i].name + '">' + users[i].name + '</td>\
-						<td class="text-muted">' + moment(users[i].timestamp).calendar(); + '</td>\
-					</tr>';
+			data += exports.userRow(users[i], i);
 		}
 
 		return res.json({
@@ -239,11 +270,7 @@ exports.getRecentAdmins = function(req, res) {
 		var data = '';
 		for (var i = 0; i < users.length; i++) {
 
-			data += '<tr>\
-						<td>' + (i + 1) + '</td>\
-						<td title="' + users[i].name + '">' + users[i].name + '</td>\
-						<td class="text-muted">' + moment(users[i].timestamp).calendar(); + '</td>\
-					</tr>';
+			data += exports.userRow(users[i], i);
 		}
 
 		return res.json({
@@ -283,9 +310,6 @@ exports.getRecentActivities = function(req, res) {
 			var data = '';
 			for (var i = 0; i < allEntries.length; i++) {
 				
-				// launch url
-				var url = '/dashboard/activities/launch/' + allEntries[i].journalId + '?oid=' + allEntries[i].objectId + '&uid=' + allEntries[i].metadata.user_id + '&aid=' + allEntries[i].metadata.activity;
-
 				var iconURL = hashList[allEntries[i].metadata.activity] || '/public/img/application-x-generic.svg';
 				if (allEntries[i].metadata.mimetype == "text/plain") {
 					iconURL = '/public/img/application-x-txt.svg';
@@ -297,14 +321,7 @@ exports.getRecentActivities = function(req, res) {
 					iconURL = '/public/img/application-x-odt.svg';
 				}
 
-				data += '<tr onclick="javascript:launch_activity(\'' + url + '\')">\
-										<td>' + (i + 1) + '</td>\
-										<td><div class="color" id="' + allEntries[i].objectId + i.toString() + '"><div class="xo-icon"></div></div></td>\
-										<script>new icon().load("' +  iconURL + '", ' + JSON.stringify(allEntries[i].metadata.buddy_color) + ', "' + allEntries[i].objectId + i.toString() + '")</script>\
-										<td title="' + allEntries[i].metadata.title + '">' + allEntries[i].metadata.title + '</td>\
-										<td title="' + allEntries[i].metadata.buddy_name + '">' + allEntries[i].metadata.buddy_name + '</td>\
-										<td class="text-muted">' + moment(allEntries[i].metadata.timestamp).calendar() + '</td>\
-								</tr>';
+				data += exports.activityRow(allEntries[i], i, iconURL);
 			}
 
 			return res.json({

@@ -36,7 +36,7 @@
                                     <option id="allClassrooms" data-l10n-id="allClassrooms" value="" <% if(classroom_id == "allClassrooms") { %>selected="selected"<% } %>></option>
                                     <% for(var i=0; i < classrooms.length; i++) { %>
                                         <% if(Array.isArray(classrooms[i].students) && classrooms[i].students && classrooms[i].students.length > 0) { %>
-                                            <option id="<%- classrooms[i]._id %>" value="<%- classrooms[i].students.join(',') %>" <% if(classroom_id == classrooms[i]._id) { %>selected="selected"<% } %> ><%= classrooms[i].name %></option>
+                                            <option id="<%= classrooms[i]._id %>" value="<%= classrooms[i].students.join(",") %>" <% if(classroom_id == classrooms[i]._id) { %>selected="selected"<% } %> ><%= classrooms[i].name %></option>
                                         <% } %>
                                     <% } %>
                                 </select>
@@ -237,7 +237,7 @@
                                                                                               </div>
                                                                                           </td>
                                                                                           <script>
-                                                                                              new icon().load("/public/img/owner-icon.svg", (<%- JSON.stringify(data.users[i].color) %>), "<%= data.users[i]._id %>");
+                                                                                              new icon().load("/public/img/owner-icon.svg", (<%- jsonForScript(data.users[i].color) %>), "<%= data.users[i]._id %>");
                                                                                           </script>
                                                                                       <% } %>
                                               <td><%= data.users[i].name %></td>
@@ -259,7 +259,7 @@
                                                 <a data-l10n-id="seeJournalEntries" title="See Journal Entries" href="/dashboard/journal/<%= data.users[i].private_journal %>?uid=<%= data.users[i]._id %>&type=private"><span class="journal-icon2" id="seeJournalEntries"></span></a>
                                                 <% } %>
                                                 <a data-l10n-id="editUser" title="Edit User" href="/dashboard/users/edit/<%= data.users[i]._id %>"><i class="material-icons text-muted" id="editUser">edit</i></a>
-                                                <a data-l10n-id="deleteUser" title="Delete User" href="/dashboard/users/delete/<%= data.users[i]._id %>?role=<%= data.users[i].role %>&name=<%= data.users[i].name %>" onclick="return confirm(document.webL10n.get('DoYouWantDeleteUser',{user:'<%= data.users[i].name %>'}))"><i class="material-icons text-muted" id="deleteUser">delete_forever</i></a>
+                                                <a data-l10n-id="deleteUser" title="Delete User" href="/dashboard/users/delete/<%= data.users[i]._id %>?role=<%= data.users[i].role %>&name=<%= encodeURIComponent(data.users[i].name) %>" data-name="<%= data.users[i].name %>" onclick="return confirmWith(this, 'DoYouWantDeleteUser', 'user')"><i class="material-icons text-muted" id="deleteUser">delete_forever</i></a>
                                               </td>
                                           </tr>
                                         <% } %>
@@ -277,7 +277,7 @@
 <%- include('includes/footer') %>
 <script>
     //set headers
-	var headers = <%- JSON.stringify(headers) %>;
+	var headers = <%- jsonForScript(headers) %>;
 
     function show_class_fields() {
         if($('#user-form [name="role"]').length && $('#user-form [name="role"]').select2('data')[0].id != 'student'){
