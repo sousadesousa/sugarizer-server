@@ -151,12 +151,12 @@ async function start() {
 		for (var key of ['admin', 'tfa']) {
 			await api(base, 'POST', '/auth/signup', {user: JSON.stringify(Object.assign({password: PASSWORD, language: 'en'}, users[key]))});
 		}
-		var admin = await api(base, 'POST', '/auth/login', {user: JSON.stringify({name: users.admin.name, password: PASSWORD})});
+		var admin = await api(base, 'POST', '/auth/login', {user: JSON.stringify({name: users.admin.name, password: PASSWORD, role: 'admin'})});
 		var created = {};
 		for (key of ['teacher', 'student1', 'student2']) {
 			created[key] = await api(base, 'POST', '/api/v1/users/', {user: JSON.stringify(Object.assign({password: PASSWORD, language: 'en', color: {stroke: '#FF0000', fill: '#0000FF'}}, users[key]))}, admin);
 		}
-		var teacher = await api(base, 'POST', '/auth/login', {user: JSON.stringify({name: users.teacher.name, password: PASSWORD})});
+		var teacher = await api(base, 'POST', '/auth/login', {user: JSON.stringify({name: users.teacher.name, password: PASSWORD, role: 'teacher'})});
 		var classroom = await api(base, 'POST', '/api/v1/classrooms/', {classroom: JSON.stringify({name: 'E2E Class ' + stamp, color: {stroke: '#FF0000', fill: '#0000FF'}, students: [created.student1._id, created.student2._id]})}, admin);
 		var workId = 'ffffffff-ffff-ffff-ffff-fffffffffff1';
 		await api(base, 'POST', '/api/v1/journal/' + teacher.user.private_journal, {journal: JSON.stringify({
