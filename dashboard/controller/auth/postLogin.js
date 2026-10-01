@@ -50,21 +50,28 @@ module.exports = function postLogin(req, res) {
 			.send(form)
 			.end(function (error, response) {
 				if (response.statusCode == 200) {
-					//store user and key in session
-					req.session.user = response.body;
-					if (req.session.user.partial === false) { // - user fully authenticated.
-						/**
-						 The user has either 2FA disabed or has not set it up yet, and is fully authenticated
-						 so we redirect the user to dashboard
-						 */
-						return res.redirect('/dashboard'+(req.body && req.body.lang ? "?lang="+req.body.lang : ""));
-					} else {
-						/**
-						 The user has enabled 2FA, and is not fully authenticated
-						 so we redirect the user to verify2FA page
-						 */
-						return res.redirect('/dashboard/verify2FA');
-					}
+					//store user and key in a new session
+					return common.startSession(req, response.body, function(err) {
+						if (err) {
+							req.flash('errors', {
+								msg: common.l10n.get('ThereIsError')
+							});
+							return res.redirect('/dashboard/login');
+						}
+						if (req.session.user.partial === false) { // - user fully authenticated.
+							/**
+							 The user has either 2FA disabed or has not set it up yet, and is fully authenticated
+							 so we redirect the user to dashboard
+							 */
+							return res.redirect('/dashboard'+(req.body && req.body.lang ? "?lang="+req.body.lang : ""));
+						} else {
+							/**
+							 The user has enabled 2FA, and is not fully authenticated
+							 so we redirect the user to verify2FA page
+							 */
+							return res.redirect('/dashboard/verify2FA');
+						}
+					});
 				} else {
 					req.flash('errors', {
 						msg: common.l10n.get('ErrorCode'+response.body.code)

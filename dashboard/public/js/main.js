@@ -496,12 +496,63 @@ $(document).ready(function () {
 });
 
 
-// Ask confirmation before following a link, with the name read from the data-name attribute (never from JS source)
+// Security token of the session, sent with every request that changes something
+function csrfToken() {
+	return $('meta[name="csrf-token"]').attr('content') || '';
+}
+
+// Send a POST request to an url with a form (for links that change something)
+function postTo(url) {
+	var form = document.createElement('form');
+	form.method = 'POST';
+	form.action = url;
+	var input = document.createElement('input');
+	input.type = 'hidden';
+	input.name = '_csrf';
+	input.value = csrfToken();
+	form.appendChild(input);
+	document.body.appendChild(form);
+	form.submit();
+}
+
+// Follow a link with a POST request
+function postLink(link) {
+	postTo(link.getAttribute('href'));
+	return false;
+}
+
+// Ask confirmation, with the name read from the data-name attribute (never from JS source),
+// then follow the link with a POST request. Without link, only returns the answer.
 function confirmWith(link, key, param) {
 	var params = {};
 	params[param] = link.getAttribute('data-name') || '';
-	return confirm(document.webL10n.get(key, params));
+	if (!confirm(document.webL10n.get(key, params))) {
+		return false;
+	}
+	if (link.getAttribute('href')) {
+		postTo(link.getAttribute('href'));
+		return false;
+	}
+	return true;
 }
+
+// Add the security token to every ajax request that changes something on the dashboard and to the forms
+$.ajaxSetup({
+	beforeSend: function(xhr, settings) {
+		if (!/^(GET|HEAD|OPTIONS)$/i.test(settings.type || 'GET') && !/^(https?:)?\/\//i.test(settings.url || '')) {
+			xhr.setRequestHeader('x-csrf-token', csrfToken());
+		}
+	}
+});
+$(function() {
+	$('form').filter(function() {
+		return (this.getAttribute('method') || '').toLowerCase() == 'post';
+	}).each(function() {
+		if (!$(this).find('input[name="_csrf"]').length) {
+			$('<input type="hidden" name="_csrf">').val(csrfToken()).appendTo(this);
+		}
+	});
+});
 
 function highlight(text) {
 

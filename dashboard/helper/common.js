@@ -1,6 +1,7 @@
 var fs = require('fs');
 var os = require('os');
 var ini = null;
+var crypto = require('crypto');
 var AsyncLocalStorage = require('async_hooks').AsyncLocalStorage;
 var moment = require('moment');
 var version = '';
@@ -69,6 +70,43 @@ exports.languageMiddleware = function(req, res, next) {
 	res.locals.jsonForScript = exports.jsonForScript;
 	languageContext.run(store, function() {
 		next();
+	});
+};
+
+// Middleware: protect the dashboard against cross-site requests.
+// Each session has a random token, that requests changing something must send back (_csrf field, query or x-csrf-token header).
+exports.csrfMiddleware = function(req, res, next) {
+	if (!req.session) {
+		return next();
+	}
+	if (!req.session.csrf) {
+		req.session.csrf = crypto.randomBytes(32).toString('hex');
+	}
+	res.locals.csrfToken = req.session.csrf;
+	if (req.method == 'GET' || req.method == 'HEAD' || req.method == 'OPTIONS') {
+		return next();
+	}
+	var sent = (req.body && req.body._csrf) || (req.query && req.query._csrf) || req.headers['x-csrf-token'];
+	var expected = Buffer.from(req.session.csrf);
+	var received = Buffer.from(typeof sent == 'string' ? sent : '');
+	if (received.length != expected.length || !crypto.timingSafeEqual(received, expected)) {
+		return res.status(403).send('Invalid or missing security token. Please reload the page and try again.');
+	}
+	next();
+};
+
+// Start a new session for a user that just logged in (avoids session fixation), keeping the language
+exports.startSession = function(req, user, callback) {
+	var lang = req.session.lang;
+	req.session.regenerate(function(err) {
+		if (err) {
+			return callback(err);
+		}
+		if (lang) {
+			req.session.lang = lang;
+		}
+		req.session.user = user;
+		callback();
 	});
 };
 

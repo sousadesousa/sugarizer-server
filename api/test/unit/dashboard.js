@@ -131,6 +131,67 @@ describe('Dashboard helpers', function() {
 		});
 	});
 
+	describe('csrf protection', function() {
+		function csrfRequest(method, session, extra) {
+			return Object.assign({ method: method, session: session, query: {}, body: {}, headers: {} }, extra || {});
+		}
+		function fakeRes() {
+			var res = { locals: {}, statusCode: 200 };
+			res.status = function(code) { res.statusCode = code; return res; };
+			res.send = function(text) { res.sent = text; return res; };
+			return res;
+		}
+		function run(req) {
+			var res = fakeRes();
+			var passed = false;
+			common.csrfMiddleware(req, res, function() { passed = true; });
+			return { res: res, passed: passed };
+		}
+
+		it('creates a token in the session and lets GET requests through', function() {
+			var req = csrfRequest('GET', {});
+			var result = run(req);
+			result.passed.should.equal(true);
+			req.session.csrf.should.have.length(64);
+			result.res.locals.csrfToken.should.equal(req.session.csrf);
+		});
+		it('refuses a POST without token', function() {
+			var result = run(csrfRequest('POST', { csrf: 'a'.repeat(64) }));
+			result.passed.should.equal(false);
+			result.res.statusCode.should.equal(403);
+		});
+		it('refuses a POST with a wrong token', function() {
+			var result = run(csrfRequest('POST', { csrf: 'a'.repeat(64) }, { body: { _csrf: 'b'.repeat(64) } }));
+			result.passed.should.equal(false);
+			result.res.statusCode.should.equal(403);
+		});
+		it('accepts the token in the body, the query or a header', function() {
+			var token = 'a'.repeat(64);
+			run(csrfRequest('POST', { csrf: token }, { body: { _csrf: token } })).passed.should.equal(true);
+			run(csrfRequest('POST', { csrf: token }, { query: { _csrf: token } })).passed.should.equal(true);
+			run(csrfRequest('POST', { csrf: token }, { headers: { 'x-csrf-token': token } })).passed.should.equal(true);
+		});
+		it('refuses a token that is not a string', function() {
+			var result = run(csrfRequest('POST', { csrf: 'a'.repeat(64) }, { body: { _csrf: ['a'.repeat(64)] } }));
+			result.passed.should.equal(false);
+		});
+	});
+
+	describe('session start', function() {
+		it('uses a new session and keeps the language', function(done) {
+			var regenerated = false;
+			var req = { session: { lang: 'fr', csrf: 'old', regenerate: function(cb) { regenerated = true; req.session = {}; cb(); } } };
+			common.startSession(req, { token: 't' }, function(err) {
+				(err === undefined).should.equal(true);
+				regenerated.should.equal(true);
+				req.session.user.token.should.equal('t');
+				req.session.lang.should.equal('fr');
+				(req.session.csrf === undefined).should.equal(true);
+				done();
+			});
+		});
+	});
+
 	describe('home page rows', function() {
 		var evil = '<img src=x onerror=alert(1)>"\'';
 
