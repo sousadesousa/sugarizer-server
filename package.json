@@ -34,6 +34,7 @@
 	"devDependencies": {
 		"@eslint/eslintrc": "^3.3.7",
 		"@eslint/js": "^9.39.5",
+		"@playwright/test": "^1.63.0",
 		"apidoc": "^1.2.0",
 		"chai": "^4.5.0",
 		"chai-http": "^4.4.0",
@@ -58,7 +59,8 @@
 		"start:watch": "nodemon sugarizer.js",
 		"seed:users-csv": "node scripts/seed_users.js",
 		"migrate:hash-passwords": "node scripts/hash_passwords.js",
-		"lint": "eslint ."
+		"lint": "eslint .",
+		"test:e2e": "playwright test"
 	},
 	"overrides": {
 		"validator": "^13.15.0"

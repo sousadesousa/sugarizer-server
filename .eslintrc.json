@@ -110,6 +110,16 @@
                 "node": true,
                 "es6": true
             }
+        },
+        {
+            "files": ["playwright.config.js", "test/e2e/**/*.js"],
+            "parserOptions": {
+                "ecmaVersion": 2022
+            },
+            "env": {
+                "node": true,
+                "es2021": true
+            }
         }
     ]
 }
