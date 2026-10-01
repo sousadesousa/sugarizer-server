@@ -18,3 +18,6 @@ env/secret.key
 
 # Docker Compose settings (secret)
 .env
+
+# written by FerretDB when run from this folder
+state.json
