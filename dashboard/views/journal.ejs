@@ -42,7 +42,7 @@
 													$('#getJournalEntries').attr('action', '/dashboard/journal/' + document.pj_global);
 												}
 											}
-											if (window.location.pathname.substring(19) == '<%= shared %>') {
+											if ('<%= shared %>' != '' && window.location.pathname.substring(19) == '<%= shared %>') {
 												var checkBox = document.getElementById("journal-type");
 												checkBox.setAttribute("checked", "true");
 												changeJournalType();

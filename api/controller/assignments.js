@@ -454,29 +454,34 @@ exports.findAllDeliveries = function (req, res) {
 						'code': 10
 					});
 				}
-				deliveries.get(function(err, all){
-					var length = all.length;
+				// the driver cursor has no get(): read all the deliveries once, count them, then paginate
+				dbutil.callback(deliveries.toArray(), function (err, all) {
+					if (err) {
+						return res.status(500).send({
+							'error': "An error has occurred",
+							'code': 10
+						});
+					}
+					options.total = all.length;
+					var items = all;
 					if (options.skip) {
-						deliveries.skip(options.skip);
+						items = items.slice(options.skip);
 					}
 					if (options.limit) {
-						deliveries.limit(options.limit);
+						items = items.slice(0, options.limit);
 					}
-					dbutil.callback(deliveries.toArray(), function (err, items) {
-						options.total = length;
-						var data = {
-							'deliveries': items,
-							'offset': options.skip,
-							'limit': options.limit,
-							'total': options.total,
-							'sort': options.sort[0][0] + "(" + options.sort[0][1] + ")",
-							'links': {
-								prev_page: (options.skip - options.limit >= 0) ? formPaginatedUrl(route, params, options.skip - options.limit, options.limit) : undefined,
-								next_page: (options.skip + options.limit < options.total) ? formPaginatedUrl(route, params, options.skip + options.limit, options.limit) : undefined
-							}
-						};
-						return res.status(200).send(data);
-					});
+					var data = {
+						'deliveries': items,
+						'offset': options.skip,
+						'limit': options.limit,
+						'total': options.total,
+						'sort': options.sort[0][0] + "(" + options.sort[0][1] + ")",
+						'links': {
+							prev_page: (options.skip - options.limit >= 0) ? formPaginatedUrl(route, params, options.skip - options.limit, options.limit) : undefined,
+							next_page: (options.skip + options.limit < options.total) ? formPaginatedUrl(route, params, options.skip + options.limit, options.limit) : undefined
+						}
+					};
+					return res.status(200).send(data);
 				});
 			});
 		});

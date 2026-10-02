@@ -71,13 +71,22 @@ exports.getSharedJournalId = function(req, res, callback) {
 			type: "shared"
 		})
 		.end(function (error, response) {
-			if (response.statusCode == 200 && response.body && response.body.length > 0 && response.body[0]._id) {
-				callback(response.body[0]._id);
-			} else {
-				req.flash('errors', {
-					msg: common.l10n.get('ErrorCode'+response.body.code)
-				});
-				return res.redirect('/dashboard/journal');
+			if (response && response.statusCode == 200 && response.body && response.body.length > 0 && response.body[0]._id) {
+				return callback(response.body[0]._id);
 			}
+			// No shared journal (e.g. a teacher with no classroom): tell it and go on with an empty id.
+			// Redirecting to /dashboard/journal would loop, as this page is the one calling this function.
+			var message;
+			if (!response) {
+				message = common.l10n.get('ErrorCodeNetwork');
+			} else if (response.statusCode == 200) {
+				message = common.l10n.get('NoSharedJournal');
+			} else {
+				message = common.l10n.get('ErrorCode'+(response.body && response.body.code));
+			}
+			req.flash('errors', {
+				msg: message
+			});
+			callback('');
 		});
 };
