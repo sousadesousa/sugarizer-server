@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="<%= typeof htmlLang == 'string' ? htmlLang : 'en' %>">
 
 <head>
   	<meta charset="utf-8" />
@@ -60,10 +60,15 @@
 
 	<!-- jump to an url with language as argument -->
 	<script>
-	function jumpTo(url) {
+	function jumpTo(url, event) {
+		// let the browser handle ctrl/cmd/shift clicks (new tab or window) with the plain href
+		if (event && (event.ctrlKey || event.metaKey || event.shiftKey || event.button > 0)) {
+			return true;
+		}
 		// the selector of the navbar, or its copy in the sidebar on small screens: the visible one
 		var lang = $('#languageSelection:visible, #languageSelectionMobile:visible').first().val() || $('#languageSelection').val();
 		location.href = url + "?lang=" + lang;
+		return false;
 	}
 	</script>
 </head>

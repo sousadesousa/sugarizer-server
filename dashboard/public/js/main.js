@@ -588,6 +588,7 @@ function onLocalized() {
 			l10n.setLanguage(localStorage.getItem("languageSelection"));
 			lang.value = localStorage.getItem("languageSelection");
 		}
+		document.documentElement.lang = lang.value || l10n.getLanguage() || document.documentElement.lang;
 		lang.onchange = function () {
 			localStorage.setItem("languageSelection", this.value);
 			var searchQuery = location.search;

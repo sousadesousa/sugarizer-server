@@ -10,7 +10,7 @@
 	<div class="sidebar-wrapper">
 		<ul class="nav flex-column flex-nowrap">
 			<li class="nav-item">
-				<a class="nav-link pointer hide-desk-el" onclick="postTo('/dashboard/logout')">
+				<a class="nav-link pointer hide-desk-el" href="#" onclick="postTo('/dashboard/logout'); return false;">
 					<i class="custom-icon shutdown-icon"></i>
 					<p data-l10n-id="logout">Logout</p>
 			  	</a>
@@ -21,7 +21,7 @@
 			<% } else {%>
 				<li class="nav-item">
 			<% }%>
-				<a class="nav-link pointer" onclick="jumpTo('/dashboard')">
+				<a class="nav-link pointer" href="/dashboard" onclick="return jumpTo(\'/dashboard\', event)">
 					<i class="custom-icon home-icon"></i>
 					<p data-l10n-id="dashboard">Home</p>
 				</a>
@@ -31,7 +31,7 @@
 			<% } else {%>
 				<li class="nav-item">
 			<% }%>
-				<a class="nav-link pointer" onclick="jumpTo('/dashboard/users')">
+				<a class="nav-link pointer" href="/dashboard/users" onclick="return jumpTo(\'/dashboard/users\', event)">
 					<i class="custom-icon xo-icon"></i>
 					<p data-l10n-id="users">Users</p>
 				</a>
@@ -41,7 +41,7 @@
 			<% } else {%>
 				<li class="nav-item">
 			<% }%>
-				<a class="nav-link pointer" onclick="jumpTo('/dashboard/activities')">
+				<a class="nav-link pointer" href="/dashboard/activities" onclick="return jumpTo(\'/dashboard/activities\', event)">
 					<i class="custom-icon activity-icon"></i>
 					<p data-l10n-id="activities">Activities</p>
 				</a>
@@ -51,7 +51,7 @@
 			<% } else {%>
 				<li class="nav-item">
 			<% }%>
-				<a class="nav-link pointer" onclick="jumpTo('/dashboard/journal')">
+				<a class="nav-link pointer" href="/dashboard/journal" onclick="return jumpTo(\'/dashboard/journal\', event)">
 					<i class="custom-icon journal-icon"></i>
 					<p data-l10n-id="journals">Journals</p>
 				</a>
@@ -61,7 +61,7 @@
 			<% } else {%>
 				<li class="nav-item">
 			<% }%>
-				<a class="nav-link pointer" onclick="jumpTo('/dashboard/classrooms')">
+				<a class="nav-link pointer" href="/dashboard/classrooms" onclick="return jumpTo(\'/dashboard/classrooms\', event)">
 					<i class="custom-icon classroom-icon"></i>
 					<p data-l10n-id="classrooms">Classrooms</p>
 				</a>
@@ -71,7 +71,7 @@
 			<% } else {%>
 				<li class="nav-item">
 			<% }%>
-				<a class="nav-link pointer" onclick="jumpTo('/dashboard/assignments')">
+				<a class="nav-link pointer" href="/dashboard/assignments" onclick="return jumpTo(\'/dashboard/assignments\', event)">
 					<i class="custom-icon assignment-icon"></i>
 					<p data-l10n-id="assignments">Assignments</p>
 				</a>
@@ -82,7 +82,7 @@
 			<% } else {%>
 				<li class="nav-item">
 			<% }%>
-				<a class="nav-link pointer" onclick="jumpTo('/dashboard/stats')">
+				<a class="nav-link pointer" href="/dashboard/stats" onclick="return jumpTo(\'/dashboard/stats\', event)">
 					<i class="custom-icon stats-icon"></i>
 					<p data-l10n-id="stats">Statistics</p>
 				</a>
@@ -93,7 +93,7 @@
 			<% } else {%>
 				<li class="nav-item hide-desk-el">
 			<% }%>
-				<a class="nav-link pointer" onclick="jumpTo('/dashboard/profile')">
+				<a class="nav-link pointer" href="/dashboard/profile" onclick="return jumpTo(\'/dashboard/profile\', event)">
 					<i class="custom-icon user-icon"></i>
 					<p data-l10n-id="profile">Profile</p>
 				</a>

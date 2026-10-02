@@ -375,3 +375,30 @@ check box (`btn-check`), the enable-2FA button wrapping on mobile, lost small-sc
   the card); text of "Select Classroom" is cut with an ellipsis at that width. Judged minor; say if you want it widened.
 - Tablet widths (768-991 px), dark mode and right-to-left: not covered by any screenshot.
 - Baseline fonts and Chromium: the baseline was regenerated here, as in phase 1.
+
+## Phase 2c (follow-ups)
+
+Follow-up of the Tester's report of phase 2a and the manager's decisions on the open points of phase 2b.
+
+1. **D1, titles of the home tables**: `.dashboard-table-title` is now `position: static` (it was `fixed`), so "Recent Students" / "Recent Entries" scroll with their card. e2e: the home page is scrolled and each title must end above its table and not be `fixed`.
+2. **Keyboard**: the sidebar items (and the Profile item of the user menu) are real links with an `href`; `jumpTo(url, event)` keeps adding `?lang=` and returns `false`, except for ctrl/cmd/shift/middle clicks, which follow the plain `href`. Logout keeps its POST (`href="#"`, `postTo`, `return false`). e2e: Tab from the language selector reaches the sidebar, and Enter on "Users" navigates.
+3. **`<html lang>`**: the server renders the language of the request (`res.locals.htmlLang`, `en` by default) and `main.js` sets it to the value of the language selector when the page is localized. e2e: `en`, then `fr` and `en` again after changing the selector.
+4. **Contrast** (checked in an e2e test, minimum 4.5:1 with white text): card headers, active sidebar item, tutorial titles `#808080` to `#6f6f6f`; toasts `#4caf50` to `#2e7d32`, danger `#d32f2f`, warning `#b45f00`, info `#00838f`.
+5. **Mobile login / verify2FA selector**: back to a white pill without border, 200 px wide, 34 px high, with the 95 px high top bar of the baseline (rule limited to the navbar placed directly in `body`, i.e. the pages without sidebar). Note: in the screenshots of verify2FA on a phone the page shows the menu button and no selector (as in the baseline), so only the login page shows the pill.
+6. **Cleanup**: no empty `<span class="material-input">` was left in `dashboard/views` (the 2b work had removed them; grep is empty); `dashboard/public/js/noty.js` deleted.
+7. **select2 on the users page**: the classroom column is `col-lg-3` (was 2) and the button column `col-lg-5` (was 6): "Select Classroom" is shown in full at 1280 px.
+8. **Tablet**: new viewport 820x1180 for home, users, assignments-add and journal (admin and teacher, 8 new screenshots). On home the four counters now use `col-lg-3`, so they stack between 768 and 991 px as in Bootstrap 3 (the two cards of each lower row already did).
+9. Upward drag of the sortable list: not changed. 10. Dark mode and RTL: out of scope.
+
+### Comparison before the baseline was regenerated (compare against the 2b baseline)
+
+| Page | Different pixels |
+|---|---|
+| `public-mobile-login` | 3.25 % (bar and selector back to the old look; the label above the field remains) |
+| `public-mobile-verify2FA` | 3.51 % (top bar taller as before) |
+| `admin-desktop-home`, `teacher-desktop-home` | 0.94 % (contrast of the icon squares, header and sidebar item) |
+| `admin-desktop-users`, `teacher-desktop-users` | 0.90 % (wider classroom select, buttons column, grey of the header) |
+| `teacher-mobile-profile` | 0.01 % (rendering noise) |
+| 8 tablet pages | new |
+
+All other 75 screenshots are identical or have the same pixels. Suites: `test:e2e` 146 tests, `npm test` 168 passing, lint 0 errors (the 1 old warning). The baseline was regenerated once: only the 7 files above were updated and the 8 tablet files added.

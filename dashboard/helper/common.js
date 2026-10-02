@@ -68,6 +68,8 @@ exports.languageMiddleware = function(req, res, next) {
 		}
 	}
 	res.locals.jsonForScript = exports.jsonForScript;
+	// language of the <html> element
+	res.locals.htmlLang = store.language != '*' ? store.language : 'en';
 	languageContext.run(store, function() {
 		next();
 	});

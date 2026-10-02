@@ -39,6 +39,9 @@ const PAGES = [
 	{ slug: '404', path: '/dashboard/does-not-exist' }
 ];
 
+// The tablet size (768-991 px, between the phone and the desktop layouts) is only captured for these pages
+const TABLET_PAGES = ['home', 'users', 'assignments-add', 'journal'];
+
 for (const role of ['admin', 'teacher']) {
 	for (const [vpName, viewport] of Object.entries(VIEWPORTS)) {
 		test.describe(role + ' ' + vpName, () => {
@@ -63,6 +66,9 @@ for (const role of ['admin', 'teacher']) {
 
 			for (const p of PAGES) {
 				if (p.admin && role != 'admin') {
+					continue;
+				}
+				if (vpName == 'tablet' && !TABLET_PAGES.includes(p.slug)) {
 					continue;
 				}
 				test(p.slug, async ({ page }, testInfo) => {
@@ -105,6 +111,86 @@ for (const role of ['admin', 'teacher']) {
 					await page.click('#datetimepicker1');
 					await expect(page.locator('.xdsoft_datetimepicker').filter({ visible: true }).first()).toBeVisible();
 					expect(watched.errors).toEqual([]);
+				});
+
+				test('the titles of the home tables scroll with their card', async ({ page }) => {
+					await page.goto('/dashboard');
+					await settle(page);
+					await page.locator('.main-area').evaluate((el) => { el.scrollTo(0, 300); window.scrollTo(0, 300); });
+					await page.waitForTimeout(200);
+					for (const id of ['recent-users-table-parent', 'recent-activities-table-parent']) {
+						const card = page.locator('#' + id);
+						const title = await card.locator('.dashboard-table-title').boundingBox();
+						const table = await card.locator('table').boundingBox();
+						expect(title.y + title.height, id + ': title above its table').toBeLessThanOrEqual(table.y);
+						expect(await card.locator('.dashboard-table-title').evaluate((el) => getComputedStyle(el).position)).not.toBe('fixed');
+					}
+				});
+
+				test('the sidebar is reachable with the keyboard', async ({ page }) => {
+					await page.goto('/dashboard');
+					await settle(page);
+					const links = page.locator('#sugarizer-sidebar .nav-link[href]:visible');
+					await expect(links.first()).toHaveAttribute('href', '/dashboard');
+					await page.locator('#languageSelection').focus();
+					let focused = false;
+					for (let i = 0; i < 12 && !focused; i++) {
+						await page.keyboard.press('Tab');
+						focused = await page.evaluate(() => !!document.activeElement.closest('#sugarizer-sidebar .nav-item'));
+					}
+					expect(focused, 'Tab reaches an item of the sidebar').toBe(true);
+					// the second item (Users): Tab until it has the focus, then Enter
+					for (let i = 0; i < 12; i++) {
+						if (await page.evaluate(() => (document.activeElement.getAttribute('href') || '').indexOf('/dashboard/users') == 0)) {
+							break;
+						}
+						await page.keyboard.press('Tab');
+					}
+					await page.keyboard.press('Enter');
+					await page.waitForURL(/\/dashboard\/users/);
+				});
+
+				test('the page has the language of the dashboard', async ({ page }) => {
+					await page.goto('/dashboard');
+					await settle(page);
+					await expect(page.locator('html')).toHaveAttribute('lang', 'en', { timeout: 15000 });
+					await page.selectOption('#languageSelection', 'fr');
+					await page.waitForURL(/lang=fr/);
+					await settle(page);
+					await expect(page.locator('html')).toHaveAttribute('lang', 'fr', { timeout: 15000 });
+					await page.selectOption('#languageSelection', 'en');
+					await page.waitForURL(/lang=en/);
+					await settle(page);
+					await expect(page.locator('html')).toHaveAttribute('lang', 'en', { timeout: 15000 });
+				});
+
+				test('the text of the toasts and of the card headers has a contrast of 4.5:1', async ({ page }) => {
+					await page.goto('/dashboard');
+					await settle(page);
+					const ratio = (page_) => page_.evaluate(() => {
+						const lum = (c) => {
+							const v = c.match(/[\d.]+/g).slice(0, 3).map((n) => { n /= 255; return n <= 0.03928 ? n / 12.92 : Math.pow((n + 0.055) / 1.055, 2.4); });
+							return 0.2126 * v[0] + 0.7152 * v[1] + 0.0722 * v[2];
+						};
+						const worst = [];
+						const add = (el) => {
+							const st = getComputedStyle(el);
+							const a = lum(st.color), b = lum(st.backgroundColor);
+							worst.push((Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05));
+						};
+						document.querySelectorAll('.card-header[data-background-color="black"]').forEach(add);
+						document.querySelectorAll('.sidebar .nav-item.active > .nav-link').forEach(add);
+						['success', 'danger', 'warning', 'info'].forEach((type) => {
+							const el = document.createElement('div');
+							el.className = 'toast notify notify-' + type;
+							el.style.color = '#fff';
+							document.body.appendChild(el);
+							add(el);
+							el.remove();
+						});
+						return Math.min.apply(null, worst);
+					});
+					expect(await ratio(page)).toBeGreaterThanOrEqual(4.5);
 				});
 
 				test('QR modal opens from the sidebar', async ({ page }) => {
@@ -196,6 +282,9 @@ test.describe('teacher without classroom', () => {
 
 // Pages without a session
 for (const [vpName, viewport] of Object.entries(VIEWPORTS)) {
+	if (vpName == 'tablet') {
+		continue;
+	}
 	test.describe('logged out ' + vpName, () => {
 		test.use({ viewport });
 

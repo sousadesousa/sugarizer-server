@@ -343,7 +343,7 @@
 }
 
 .dashboard-table-title {
-  position: fixed;
+  position: static;
 }
 
 .dashboard-table {
@@ -626,7 +626,7 @@
 }
 
 .tutorial-title {
-	background-color: #808080 !important;
+	background-color: #6f6f6f !important;
 	color: #ffffff !important;
 }
 
@@ -1005,7 +1005,7 @@ a:hover, a:focus {
 }
 
 .sidebar[data-color="black"] .nav .nav-item.active > .nav-link {
-  background-color: #808080;
+  background-color: #6f6f6f;
   color: #fff;
 }
 
@@ -1203,7 +1203,7 @@ a:hover, a:focus {
 }
 
 .card .card-header[data-background-color="black"] {
-  background: #808080;
+  background: #6f6f6f;
 }
 
 .card .card-header a {
@@ -1373,10 +1373,10 @@ textarea.form-control {
   margin-right: 12px;
 }
 
-.toast.notify-success { background-color: #4caf50; }
-.toast.notify-danger { background-color: #f55a4e; }
-.toast.notify-warning { background-color: #ff9800; }
-.toast.notify-info { background-color: #00bcd4; }
+.toast.notify-success { background-color: #2e7d32; }
+.toast.notify-danger { background-color: #d32f2f; }
+.toast.notify-warning { background-color: #b45f00; }
+.toast.notify-info { background-color: #00838f; }
 
 /* ---- tutorials (driver.js) ---- */
 .driver-popover.sugarizer-tour {
@@ -1394,7 +1394,7 @@ textarea.form-control {
   display: block;
   padding: 8px 40px 8px 20px;
   border-radius: 6px 6px 0 0;
-  background-color: #808080;
+  background-color: #6f6f6f;
   color: #fff;
   font-family: inherit;
   font-size: 16px;
@@ -1671,4 +1671,20 @@ ol.simple_with_animation .card-body {
 .form-select:focus {
   box-shadow: none;
   color: #555;
+}
+
+/* ---- login and second factor pages on small screens: the language selector is a wide white pill without border ---- */
+@media (max-width: 991.98px) {
+  body > .navbar-absolute:has(#languageSelection) {
+    padding: 34px 0 27px;
+  }
+
+  body > .navbar-absolute #languageSelection {
+    width: 200px;
+    height: 34px;
+    margin: 0 5px 0 0;
+    border: 0;
+    background-image: none;
+    padding: 7px 12px;
+  }
 }

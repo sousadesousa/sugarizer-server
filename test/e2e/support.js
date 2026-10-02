@@ -6,6 +6,7 @@ const info = JSON.parse(process.env.E2E_INFO);
 
 const VIEWPORTS = {
 	desktop: { width: 1280, height: 800 },
+	tablet: { width: 820, height: 1180 },
 	mobile: { width: 390, height: 844 }
 };
 
