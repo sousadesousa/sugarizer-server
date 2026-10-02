@@ -122,7 +122,23 @@ for (const role of ['admin', 'teacher']) {
 					await page.goto('/dashboard');
 					await settle(page);
 					await page.click('#navbar-help');
-					await expect(page.locator('.introjs-tooltip').first()).toBeVisible();
+					await expect(page.locator('.driver-popover').first()).toBeVisible();
+					expect(watched.errors).toEqual([]);
+				});
+
+				test('tutorial walks through all its steps and stores that it is finished', async ({ page }) => {
+					const watched = watch(page);
+					await page.goto('/dashboard');
+					await settle(page);
+					await page.click('#navbar-help');
+					const popover = page.locator('.driver-popover');
+					await expect(popover).toBeVisible();
+					for (let i = 0; i < 20 && await popover.count(); i++) {
+						await popover.locator('.driver-popover-next-btn').click();
+						await page.waitForTimeout(150);
+					}
+					await expect(popover).toHaveCount(0);
+					expect(await page.evaluate(() => localStorage.getItem('home_end'))).toBe('yes');
 					expect(watched.errors).toEqual([]);
 				});
 			}

@@ -17,7 +17,7 @@ module.exports = [
 			"coverage/**",
 			".nyc_output/**",
 			"dashboard/public/js/bootstrap.bundle.min.js",
-			"dashboard/public/js/intro.js",
+			"dashboard/public/js/driver.js.iife.js",
 			"dashboard/public/js/Chart.min.js",
 			"dashboard/public/js/jquery-3.7.1.min.js",
 			"dashboard/public/js/jquery-ui-1-11-4.js",

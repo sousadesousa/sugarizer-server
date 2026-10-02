@@ -578,9 +578,12 @@ function hideLabel(value) {
 // localization
 function onLocalized() {
 	var l10n = document.webL10n;
-	var lang = document.getElementById('languageSelection');
-
-	if (lang != null) {
+	// the language selector of the navbar and, on small screens, its copy in the sidebar
+	['languageSelection', 'languageSelectionMobile'].forEach(function (id) {
+		var lang = document.getElementById(id);
+		if (lang == null) {
+			return;
+		}
 		if (lang.selectedIndex == -1) {
 			lang.value = l10n.getLanguage();
 		} else if (localStorage.getItem("languageSelection") == null) {
@@ -604,7 +607,7 @@ function onLocalized() {
 			}
 			location.href = window.location.pathname + searchQuery;
 		};
-	}
+	});
 }
 document.webL10n.ready(onLocalized);
 
@@ -952,9 +955,11 @@ function initMobileMenu() {
 		});
 		var menu = $('<ul class="nav flex-column nav-mobile-menu"></ul>').html(items);
 		var form = $('.navbar .navbar-form').first().clone(true);
+		form.find('#languageSelection').attr('id', 'languageSelectionMobile');
 		menu.insertBefore(wrapper.children('.nav').first());
 		form.insertBefore(menu);
 		mobileMenu.built = true;
+		document.webL10n.ready(onLocalized);
 	} else if (!small && mobileMenu.built) {
 		wrapper.find('.navbar-form, .nav-mobile-menu').remove();
 		mobileMenu.built = false;

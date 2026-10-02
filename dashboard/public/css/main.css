@@ -1378,70 +1378,82 @@ textarea.form-control {
 .toast.notify-warning { background-color: #ff9800; }
 .toast.notify-info { background-color: #00bcd4; }
 
-/* ---- tutorials (Intro.js) ---- */
-.introjs-tooltip.sugarizer-tour {
+/* ---- tutorials (driver.js) ---- */
+.driver-popover.sugarizer-tour {
   min-width: 280px;
   max-width: 340px;
+  padding: 0;
   border-radius: 6px;
+  background: #fff;
+  color: #3C4858;
   font-family: "Roboto", "Helvetica", "Arial", sans-serif;
   font-weight: 400;
 }
 
-.sugarizer-tour .introjs-tooltip-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 8px 20px;
+.sugarizer-tour .driver-popover-title {
+  display: block;
+  padding: 8px 40px 8px 20px;
   border-radius: 6px 6px 0 0;
   background-color: #808080;
-}
-
-.sugarizer-tour .introjs-tooltip-title {
-  float: none;
   color: #fff;
+  font-family: inherit;
   font-size: 16px;
   font-weight: 500;
   line-height: 28px;
 }
 
-.sugarizer-tour .introjs-tooltiptext {
-  padding: 15px 20px;
-  color: #3C4858;
+.sugarizer-tour .driver-popover-close-btn {
+  top: 8px;
+  right: 8px;
+  width: 28px;
+  height: 28px;
+  color: #fff;
 }
 
-.sugarizer-tour .introjs-button {
+.sugarizer-tour .driver-popover-close-btn:hover, .sugarizer-tour .driver-popover-close-btn:focus {
+  color: #fff;
+  opacity: .7;
+}
+
+.sugarizer-tour .driver-popover-description {
+  margin: 0;
+  padding: 15px 20px;
+  color: #3C4858;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.sugarizer-tour .driver-popover-footer {
+  display: flex;
+  justify-content: flex-end;
+  margin: 0;
+  padding: 0 20px 15px;
+}
+
+.sugarizer-tour .driver-popover-footer button {
+  margin-left: 8px;
   padding: 6px 20px;
   border: 2px solid #808080;
   border-radius: 22px;
   background: #808080;
   color: #fff;
-  text-shadow: none;
-}
-
-.sugarizer-tour .introjs-button:hover, .sugarizer-tour .introjs-button:focus {
-  background: #6e6e6e;
-  border-color: #6e6e6e;
-  color: #fff;
-  box-shadow: none;
-}
-
-.sugarizer-tour .introjs-disabled, .sugarizer-tour .introjs-disabled:hover {
-  background: #f4f4f4;
-  border-color: #f4f4f4;
-  color: #9e9e9e;
-}
-
-.sugarizer-tour .introjs-skipbutton {
-  float: none;
-  margin-left: 12px;
-  padding: 6px 20px;
-  border: 2px solid #808080;
-  border-radius: 22px;
-  background: #fff;
-  color: #808080;
+  font-family: inherit;
   font-size: 14px;
   font-weight: 400;
   line-height: 1.5;
+  text-shadow: none;
+}
+
+.sugarizer-tour .driver-popover-footer button:hover, .sugarizer-tour .driver-popover-footer button:focus {
+  background: #6e6e6e;
+  border-color: #6e6e6e;
+  color: #fff;
+}
+
+.sugarizer-tour .driver-popover-footer button.driver-popover-btn-disabled {
+  background: #f4f4f4;
+  border-color: #f4f4f4;
+  color: #9e9e9e;
 }
 
 /* ---- Bootstrap 3 names still used by the views that are not migrated yet (remove when all are) ---- */

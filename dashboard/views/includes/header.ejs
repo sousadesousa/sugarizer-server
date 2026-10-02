@@ -19,7 +19,7 @@
     <link href="/public/css/bootstrap.min.css" rel="stylesheet" />
 
     <!-- Intro.js CSS (tutorials)     -->
-    <link href="/public/css/introjs.css" rel="stylesheet" />
+    <link href="/public/css/driver.css" rel="stylesheet" />
 
     <!--     custom stylesheets (theme of the dashboard: layout, cards, buttons, forms)     -->
     <link type="text/css" rel="stylesheet" href="/public/css/main.css" />
@@ -60,7 +60,9 @@
 	<!-- jump to an url with language as argument -->
 	<script>
 	function jumpTo(url) {
-		location.href = url + "?lang="+document.getElementById('languageSelection').value;
+		// the selector of the navbar, or its copy in the sidebar on small screens: the visible one
+		var lang = $('#languageSelection:visible, #languageSelectionMobile:visible').first().val() || $('#languageSelection').val();
+		location.href = url + "?lang=" + lang;
 	}
 	</script>
 </head>

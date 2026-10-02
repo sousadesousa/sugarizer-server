@@ -243,8 +243,8 @@ function sugarizerTour(currentView, role, mode) {
 		return launched;
 	};
 
-	// The tour of a view, on Intro.js. It has the interface that the code above uses (addStep, init, start) and keeps the
-	// state in localStorage like the previous library did: <name>_end = "yes" when finished, <name>_current_step.
+	// The tour of a view, on driver.js. It has the interface that the code above uses (addStep, init, start) and keeps the
+	// state in localStorage like the previous libraries did: <name>_end = "yes" when finished, <name>_current_step.
 	// options: name, labels {prev, next, end}, onNext(tour), onPrev(tour), onEnd(); tour._current is the index
 	// (in the list of steps) of the step that is left when onNext and onPrev are called.
 	function createTour(options) {
@@ -268,42 +268,7 @@ function sugarizerTour(currentView, role, mode) {
 			if (!shown.length) {
 				return;
 			}
-			var last = shown[0].index;
 			var finished = false;
-			var intro = introJs();
-			intro.setOptions({
-				steps: shown.map(function (item) {
-					var step = { title: item.step.title, intro: item.step.content, position: item.step.placement || 'bottom' };
-					if (item.step.element) {
-						step.element = item.step.element;
-					}
-					return step;
-				}),
-				nextLabel: options.labels.next,
-				prevLabel: options.labels.prev,
-				doneLabel: options.labels.end,
-				skipLabel: options.labels.end,
-				showBullets: false,
-				showProgress: false,
-				showStepNumbers: false,
-				exitOnOverlayClick: false,
-				disableInteraction: true,
-				scrollToElement: true,
-				scrollPadding: 30,
-				tooltipClass: 'sugarizer-tour'
-			});
-			intro.onchange(function () {
-				var current = shown[this.currentStep()].index;
-				tour._current = last;
-				if (current > last && options.onNext) {
-					options.onNext(tour);
-				} else if (current < last && options.onPrev) {
-					options.onPrev(tour);
-				}
-				last = current;
-				tour._current = current;
-				localStorage.setItem(options.name + "_current_step", current);
-			});
 			var end = function () {
 				if (finished) {
 					return;
@@ -314,9 +279,63 @@ function sugarizerTour(currentView, role, mode) {
 					options.onEnd();
 				}
 			};
-			intro.oncomplete(end);
-			intro.onexit(end);
-			intro.start();
+			var move = function (driverObj, forward) {
+				var from = shown[driverObj.getActiveIndex()].index;
+				tour._current = from;
+				if (forward && options.onNext) {
+					options.onNext(tour);
+				} else if (!forward && options.onPrev) {
+					options.onPrev(tour);
+				}
+				if (forward) {
+					if (driverObj.hasNextStep()) {
+						driverObj.moveNext();
+					} else {
+						end();
+						driverObj.destroy();
+					}
+				} else {
+					driverObj.movePrevious();
+				}
+				var active = driverObj.getActiveIndex();
+				if (active !== undefined) {
+					tour._current = shown[active].index;
+					localStorage.setItem(options.name + "_current_step", tour._current);
+				}
+			};
+			var driverObj = window.driver.js.driver({
+				steps: shown.map(function (item) {
+					var step = { popover: { title: item.step.title, description: item.step.content, side: item.step.placement || 'bottom' } };
+					if (item.step.element) {
+						step.element = item.step.element;
+					}
+					return step;
+				}),
+				nextBtnText: options.labels.next,
+				prevBtnText: options.labels.prev,
+				doneBtnText: options.labels.end,
+				showProgress: false,
+				allowClose: true,
+				overlayClickBehavior: function () {},
+				disableActiveInteraction: true,
+				smoothScroll: true,
+				stagePadding: 6,
+				popoverClass: 'sugarizer-tour',
+				onNextClick: function () {
+					move(driverObj, true);
+				},
+				onPrevClick: function () {
+					move(driverObj, false);
+				},
+				// the close button, Esc and the end of the last step all come here
+				onDestroyStarted: function () {
+					end();
+					driverObj.destroy();
+				}
+			});
+			tour._current = shown[0].index;
+			localStorage.setItem(options.name + "_current_step", tour._current);
+			driverObj.drive();
 		};
 
 		return tour;

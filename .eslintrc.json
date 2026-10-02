@@ -80,7 +80,7 @@
         {
             "files": ["dashboard/public/js/tutorial.js"],
             "globals": {
-                "introJs": "readonly"
+                "driver": "readonly"
             },
             "rules": {
                 "no-unused-vars": "off"
