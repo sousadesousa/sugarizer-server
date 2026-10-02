@@ -189,13 +189,13 @@
                     </form>
                         <% if (typeof user=='object' && (account.user.role=="admin" || account.user.role=="teacher") && module=="profile" && (typeof user.tfa==="undefined" || user.tfa===false)) { %>
                             <div class="col-12 text-center">
-                                <a class="btn btn-align btn float-start btn-round" data-l10n-id="enable2FA" style="margin-top: -63px;"
+                                <a class="btn btn-align btn float-start btn-round text-nowrap" data-l10n-id="enable2FA" style="margin-top: -63px;"
                                 href="/dashboard/profile/enable2FA"></a>
                             </div>
                             <% } else if(typeof user=='object' && (account.user.role=="admin" || account.user.role=="teacher") && module=="profile" && user.tfa===true) { %>
                                 <form action="/dashboard/profile/disable2FA" method="POST">
                                     <div class="col-12 text-center">
-                                            <button class="btn btn float-start btn-align btn-round" data-l10n-id="disable2FA" style="margin-top: -68px;"
+                                            <button class="btn btn float-start btn-align btn-round text-nowrap" data-l10n-id="disable2FA" style="margin-top: -68px;"
                                                 data-name="<%= user.name %>" onclick="return confirmWith(this, 'DoYouWantToDisable2FA', 'name')"
                                                 type="submit"></button>
                                     </div>

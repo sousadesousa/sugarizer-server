@@ -274,3 +274,104 @@ Their baseline screenshots will be regenerated page by page in 2b, when each is 
   clicked during a step, like the backdrop of bootstrap-tour did.
 - Toasts last 5 s (bootstrap-notify used its default of 5 s as well, plus the animation); tell me if another delay is wanted.
 - The sidebar and navbar are now Bootstrap 5; nothing was done for dark mode or right-to-left languages.
+
+
+## Phase 2b: every page on Bootstrap 5
+
+Status: done. `npm run test:e2e` 130 passed (5.0 min), `npm run lint` 0 errors (the old warning), `npm test` 168 passing
+(needs a mongod on 27017 and the `../sugarizer` checkout, as before), baseline regenerated (82 PNG).
+
+### Commits (one per group, `test:e2e` and `test:e2e:compare` after each)
+
+1. **driver.js instead of intro.js** (MIT, 1.8.0 from npm: `dist/driver.js.iife.js` and `driver.css` in
+   `dashboard/public`, banner with the license kept, `driver.LICENSE` next to it, listed in `NOTICE`). No intro.js file or
+   reference is left. `sugarizerTour(view, role, mode)`, the steps, the `Tuto*` strings, `<name>_end` /
+   `<name>_current_step`, the skipping of missing or hidden elements, the 992 px rule and `disableActiveInteraction` are
+   kept. The popover is restyled in `main.css` (`.driver-popover.sugarizer-tour`: grey title bar, pill buttons). The e2e
+   selector is `.driver-popover`; a new test walks the home tour to its last step and checks `home_end`.
+   Two driver.js behaviors worth knowing: `onDestroyed` is not called when the last step is closed from my own
+   `destroy()`, so the end state is written from `onDestroyStarted` and from the last "next"; and the close button (x)
+   replaces the "skip" button of intro.js (it stores the tour as finished, like skip did).
+   Also in this commit: the copy of the language selector in the mobile sidebar has its own id
+   (`languageSelectionMobile`), `onLocalized` binds both, `jumpTo` reads the visible one.
+2. **List pages**: users, classrooms, activities, assignments, deliveries, journal (+ entries), charts list, stats.
+3. **Form pages**: user (add/edit/profile), classroom, assignment (the date code is untouched, only classes changed;
+   `dates.spec.js` 25 tests pass), comment, chart.
+4. **Compatibility block removed** (`pull-*`, `card-content`), and `main-panel` renamed `main-area` (views, `main.js`,
+   `tutorial.js`, `main.css`), because `\bpanel\b` matches `main-panel` and the required grep must be empty.
+5. **Check boxes / radios / selects**: check boxes are `form-check-input` (table check boxes standalone, 2FA, late turn-in,
+   hidden chart, shared journal, classroom activities with `form-check-inline`), selects are `form-select` (the
+   underlined theme is restated for it; the select2 default width is `100%`). The star and eye toggles
+   (`favoriteBox`, `hideshowBox`) and the chart type cards are custom widgets and stay as they were.
+6. **E2E for the widgets** (`test/e2e/widgets.spec.js`, 2 tests, runs last and puts the data back): the sortable activity
+   list (real mouse drag, the POST to `api/v1/activities`, the order after a reload, put back) and the two lists widget
+   of the user form (search box filter, remove a classroom, save, reopen, add it again, save, reopen).
+   (4 and 5 are in one commit: the same files and the same compare run.)
+
+`grep -rn "col-xs\|pull-\|form-group\|control-label\|label-floating\|is-empty\|material-input\|data-toggle\|data-dismiss\|hidden-xs\|hidden-sm\|visible-xs\|\bpanel\b" dashboard/views` returns nothing. The Material Icons font is still used for the icons
+(`material-icons`); no Material Dashboard CSS, JS or markup (`btn-round`, `data-background-color`, `card-header` colors
+are now defined in `main.css` itself).
+
+### Decisions I took (tell me if you want them otherwise)
+
+- Search cards: a `row mx-0 search-row` inside the card, fields in `col-lg-*`. They are in one row on desktop as in
+  the baseline; the buttons still wrap in two rows (the baseline did too, `Show results` under the others), on desktop the
+  order of the first row is the one of the baseline.
+- Breakpoints: the names are shifted so that the thresholds stay (Bootstrap 3 `sm`/`md`/`lg` = 768/992/1200 px are now
+  `md`/`lg`/`xl`). The pages of 2a (home) kept `col-md-3` / `col-lg-6`: between 768 and 991 px they show the columns
+  side by side, where Bootstrap 3 stacked them; I did not change a 2a page. No screenshot is taken at that width.
+- Labels of the forms are above the field (as decided in 2a). The "Chart not found" / "Activity not found" message of the
+  search boxes is a red `.search-notfound` line with `is-invalid` on the field (it was the Material `has-error` label).
+- The sortable cards (activities, charts): in Bootstrap 3 the floated columns overflowed a card that was 46 px high;
+  they are now 46 px high by construction (`ol.simple_with_animation .card`).
+- The journal search card is now inside a column like the other cards (it stuck out 15 px on each side).
+- `.pull-right-mobinterrupt` (CSS only, no view uses it) was left.
+
+### Comparison with the Bootstrap 3 baseline (82 screenshots, threshold 0.1, before the baseline was regenerated)
+
+All 82 differ (the sidebar and navbar of 2a are in every page). None is a regression I left: layout, colors, icons,
+charts and tables are where they were; the judgments of 2a are kept for the six pages of 2a. Regressions found and fixed
+during the work: collapsed layout of the activity rows (cards 120 px apart), the search button of the activity list
+(grey instead of white), the wrapped "Favorite" header, a delivered search card that wrapped its button, the hidden 2FA
+check box (`btn-check`), the enable-2FA button wrapping on mobile, lost small-screen CSS (my own deletion, restored).
+
+| Page (admin / teacher, desktop / mobile) | Different pixels | Judgment |
+|---|---|---|
+| `users` (4) | admin-mobile 14.90 %; teacher-mobile 14.90 %; admin-desktop 3.81 %; teacher-desktop 3.76 % | intended / minor: search fields in one row as before, buttons wrap in the same two rows (on mobile the Add / Import / Show order differs because the floats wrap otherwise); select2 widths 130 px instead of 146 px; text and sort headers 1-3 px off. Mobile: the table is a little narrower, a name wraps in two lines (the table scrolls sideways as before) |
+| `profile` (4) | teacher-mobile 9.79 %; admin-mobile 9.01 %; admin-desktop 3.82 %; teacher-desktop 3.57 % | intended: as users-edit; the language select has the Bootstrap 5 arrow (Bootstrap 3 showed none); on mobile the 2FA button stays on one line and 4 px wider than the card text, like before |
+| `journal-entries` (4) | admin-mobile 8.98 %; teacher-mobile 8.98 %; admin-desktop 2.51 %; teacher-desktop 2.47 % | minor: header and rows 1-3 px off; check boxes form-check (grey when checked) |
+| `activities` (4) | admin-mobile 8.01 %; teacher-mobile 8.01 %; admin-desktop 5.38 %; teacher-desktop 5.33 % | minor: the sortable cards are 46 px high with 14 px between, as before (the Bootstrap 3 cards let the floated columns overflow); the search field and round search button are 1-3 px off; header "Favorite" no longer wraps (nowrap) |
+| `classrooms-edit` (2) | admin-mobile 7.36 %; admin-desktop 4.15 % | intended: as classrooms-add |
+| `assignments` (4) | teacher-mobile 6.91 %; admin-mobile 6.59 %; teacher-desktop 1.89 %; admin-desktop 1.88 % | intended / minor: as classrooms |
+| `classrooms-add` (2) | admin-mobile 6.61 %; admin-desktop 3.13 % | intended: label above the field; the activity check boxes are form-check (grey when checked instead of the Material green-less box); same grid of 220 px items |
+| `classrooms` (4) | admin-mobile 6.44 %; teacher-mobile 6.11 %; admin-desktop 1.75 %; teacher-desktop 1.62 % | intended / minor: search row and table as before, 1-2 px line boxes |
+| `deliveries` (4) | admin-desktop 5.90 %; teacher-desktop 5.85 %; admin-mobile 5.50 %; teacher-mobile 5.50 % | minor: the card-header and rows are 3-6 px shorter (Bootstrap 5 line boxes in the icon and action cells); search card 6 px higher |
+| `users-add` (4) | teacher-mobile 5.66 %; admin-mobile 5.62 %; admin-desktop 1.96 %; teacher-desktop 1.91 % | intended: label above the field (form-label), spacing of the fields 4-8 px different, selects with the Bootstrap 5 arrow; same fields, same order |
+| `two-factor-enable` (4) | admin-mobile 5.62 %; teacher-mobile 5.62 %; admin-desktop 4.39 %; teacher-desktop 4.34 % | 2a, accepted: labels above the fields, card shorter |
+| `charts-edit` (2) | admin-mobile 5.05 %; admin-desktop 3.76 % | intended: as charts-add |
+| `assignments-add` (4) | admin-mobile 4.60 %; teacher-mobile 3.48 %; teacher-desktop 2.42 %; admin-desktop 1.67 % | intended: label above the field; date, time and classroom widgets unchanged (dates.spec passes); late turn-in is a form-check |
+| `journal` (4) | admin-mobile 4.60 %; teacher-mobile 4.60 %; admin-desktop 1.67 %; teacher-desktop 1.62 % | intended / minor: the search card is now in a column like the other cards (it stuck out 15 px on each side before); the check box is a form-check |
+| `home` (4) | teacher-mobile 4.40 %; admin-mobile 4.40 %; admin-desktop 2.72 %; teacher-desktop 2.67 % | 2a, accepted: same layout, 1-2 px line boxes |
+| `charts-add` (2) | admin-mobile 4.27 %; admin-desktop 2.79 % | intended: label above the field; the type cards and the chart choice are unchanged |
+| `users-edit` (4) | admin-mobile 4.08 %; teacher-mobile 4.08 %; admin-desktop 1.99 %; teacher-desktop 1.94 % | intended: as users-add; the 2 factor check box is a visible disabled form-check, as in Bootstrap 3 (it was hidden by btn-check in the first 2b step) |
+| `assignments-edit` (4) | admin-mobile 4.03 %; teacher-mobile 4.03 %; admin-desktop 2.53 %; teacher-desktop 2.49 % | intended: as assignments-add; the date reads 03/22/2035 as in the 2a baseline |
+| `verify2FA` (2) | public-mobile-verify2FA 3.43 %; public-desktop-verify2FA 0.83 % | 2a, accepted: same as login |
+| `login` (2) | public-mobile-login 3.39 %; public-desktop-login 1.00 % | 2a, accepted: label above the field |
+| `deliveries-comment` (4) | admin-mobile 2.80 %; teacher-mobile 2.80 %; admin-desktop 0.75 %; teacher-desktop 0.71 % | intended: label above the field |
+| `stats` (2) | admin-mobile 2.71 %; admin-desktop 1.73 % | minor: add / list buttons and cards where they were, content 3-8 px higher (chart card shorter) |
+| `charts-list` (2) | admin-mobile 2.45 %; admin-desktop 2.00 % | minor: one compact card per chart as before; search field and round button 1-3 px off |
+| `no-classroom-journal-entries` (1) | tnc-desktop-journal-entries 1.81 % | minor: as journal-entries |
+| `no-classroom-journal` (1) | tnc-desktop-journal 1.62 % | intended / minor: as journal |
+| `404` (4) | admin-mobile 1.19 %; teacher-mobile 1.19 %; admin-desktop 0.39 %; teacher-desktop 0.39 % | 2a, accepted: text 1-2 px off |
+
+### Things the work showed / open
+
+- **Upward drag of the sortable list**: with a scripted mouse, dragging an item up lands one place short (down moves are
+  exact, and the order is saved and kept after a reload). I did not check whether the Bootstrap 3 version behaves the same
+  with this exact mouse path, so the widget test uses down moves only. Worth a manual try.
+- The e2e suite needs `MONGOD_BIN` in every shell (an unset variable gives "Timeout waiting for MongoDB"); `npm test`
+  needs a running mongod on 27017 and the `../sugarizer` checkout (I cloned `sousadesousa/sugarizer`, depth 1).
+- select2 widths on the users page are 130 px instead of 146 px (the baseline columns were slightly wider than 1/6 of
+  the card); text of "Select Classroom" is cut with an ellipsis at that width. Judged minor; say if you want it widened.
+- Tablet widths (768-991 px), dark mode and right-to-left: not covered by any screenshot.
+- Baseline fonts and Chromium: the baseline was regenerated here, as in phase 1.
