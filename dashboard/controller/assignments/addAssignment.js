@@ -41,14 +41,14 @@ module.exports = function addAssignment(req, res) {
 		} else {
 			req.body.lateTurnIn = true;
 		}
-		//join date and time
-		if (!req.body.dueDate || !req.body.time) {
+		// the due date is the sum of two numbers computed by the browser (midnight of the day, time since midnight)
+		let computedDate = parseInt(req.body.dueTimestamp, 10) + parseInt(req.body.dueDatestamp, 10);
+		if (!req.body.dueDate || !req.body.time || isNaN(computedDate)) {
+			// no date, no time, or a value the picker could not read (NaN is never sent to the API)
+			req.assert('dueDate', common.l10n.get('MissingDueDate')).equals(null);
+		} else if (computedDate < Date.now()) {
+			// a date and a time that are already past
 			req.assert('dueDate', common.l10n.get('InvalidDueDate')).equals(null);
-		}
-		//check if due date is in the past
-		let computedDate = parseInt(req.body.dueTimestamp)+parseInt(req.body.dueDatestamp);
-		if (req.body.dueDate && computedDate < Date.now()) {
-			req.assert('dueDate', common.l10n.get('InvalidDueDate')).equals(req.body.dueDate);
 		}
 		req.body.dueDate = computedDate;
 		delete req.body.dueTimestamp;
