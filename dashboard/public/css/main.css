@@ -1541,3 +1541,83 @@ textarea.form-control {
     display: none !important;
   }
 }
+
+/* ---- list pages: search cards, headers of lists ---- */
+.search-row {
+  padding: 6px 0;
+}
+
+.search-row .btn {
+  margin-right: .5px;
+  margin-left: .5px;
+}
+
+.search-field {
+  padding-bottom: 7px;
+  margin: 17px 0 0;
+}
+
+.search-notfound {
+  display: block;
+  color: #f44336;
+  font-size: 11px;
+  line-height: 1.07143;
+}
+
+.search-notfound.d-none {
+  display: none;
+}
+
+.form-control.is-invalid, .form-control.is-invalid:focus {
+  padding-right: 0;
+  background-image: linear-gradient(#f44336, #f44336), linear-gradient(#f44336, #f44336);
+  background-size: 100% 2px, 100% 1px;
+  box-shadow: none;
+}
+
+.table th button {
+  padding: 1px 6px;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+}
+
+.card-plain {
+  background: transparent;
+  box-shadow: none;
+}
+
+.card-plain .row > div {
+  white-space: nowrap;
+}
+
+/* the sortable lists (activities, charts): one compact card per item */
+ol.simple_with_animation .card {
+  margin: 7px 0;
+}
+
+ol.simple_with_animation .card-body {
+  padding: 3px 20px;
+}
+
+.btn-white {
+  --bs-btn-bg: #fff;
+  --bs-btn-hover-bg: #fff;
+  --bs-btn-active-bg: #fff;
+  --bs-btn-color: #999;
+  --bs-btn-hover-color: #999;
+  --bs-btn-active-color: #999;
+}
+
+.btn-just-icon {
+  width: 41px;
+  height: 41px;
+  padding: 0;
+  border-radius: 50%;
+  line-height: 41px;
+}
+
+.btn-just-icon .material-icons {
+  line-height: 41px;
+}

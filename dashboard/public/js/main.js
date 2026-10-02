@@ -543,16 +543,11 @@ function highlight(text) {
 
 	//show error
 	if (offset === -1 && text !== '') {
-		$('.control-label').removeClass('hidden');
-		$('.search_query')
-			.parent()
-			.addClass('label-floating has-error is-focused')
-			.removeClass('form-black is-empty');
+		$('.search-notfound').removeClass('d-none');
+		$('.search_query').addClass('is-invalid');
 	} else {
-		$('.control-label').addClass('hidden');
-		$('.search_query')
-			.parent()
-			.removeClass('label-floating has-error is-focused');
+		$('.search-notfound').addClass('d-none');
+		$('.search_query').removeClass('is-invalid');
 	}
 
 	//scroll
@@ -570,7 +565,8 @@ function highlight(text) {
 //hide label when input is empty
 function hideLabel(value) {
 	if (value === '') {
-		$('.control-label').addClass('hidden');
+		$('.search-notfound').addClass('d-none');
+		$('.search_query').removeClass('is-invalid');
 		highlight('');
 	}
 }

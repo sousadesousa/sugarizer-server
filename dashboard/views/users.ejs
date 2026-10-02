@@ -7,17 +7,17 @@
 			<div class="container-fluid">
           <%- include('includes/flash-errors') %>
           <div class="row">
-              <div class="col-md-12">
+              <div class="col-12">
                   <div class="card" id="user-serach-row">
                       <form method="get" id="user-form">
-                            <div class="col-md-2">
-                          <div class="form-group form-black label-floating is-empty">
+<div class="row mx-0 search-row">
+                            <div class="col-lg-2">
+                          <div class="search-field">
                               <input data-l10n-id="john" placeholder="John..." class="form-control" id="username" name="username" value="<% if(query.q){ %><%= query.q %><% } %>" type="text">
-                              <span class="material-input"></span>
                           </div>
                         </div>
-                        <div class="col-md-2">
-                          <div class="form-group form-black label-floating is-empty">
+                        <div class="col-lg-2">
+                          <div class="search-field">
                               <select class="form-control" id="user-type-select2" name="role">
                                 <option data-l10n-id="student" value="student" <% if(query.role=='student'){ %>selected="selected"<% } %> >Student</option>
                                 <% if (account.user && account.user.role=="admin") { %>
@@ -29,8 +29,8 @@
                           </div>
                         </div>
                         <input name="classroom_id" type="text" style="display:none" %>" value="<% if(classroom_id) { %><%= classroom_id %><% } %>" />
-                        <div class="col-md-2">
-                          <div class="form-group form-black label-floating is-empty classroom_input">
+                        <div class="col-lg-2">
+                          <div class="search-field classroom_input">
                                 <select class="form-control" id="classroom_select" name="classid">
                                     <option data-l10n-id="selectclassroom" value="" selected="selected" disabled></option>
                                     <option id="allClassrooms" data-l10n-id="allClassrooms" value="" <% if(classroom_id == "allClassrooms") { %>selected="selected"<% } %>></option>
@@ -66,11 +66,11 @@
                                 $('#user-form [name="classid"]').select2("destroy").select2(); // Fix for selected option not being localized
                             });
                         </script>
-                        <div class="col-md-6">
-                            <div class="upload-btn-wrapper pull-right" id="users-deleteMultiple">
+                        <div class="col-lg-6">
+                            <div class="upload-btn-wrapper float-end" id="users-deleteMultiple">
                                 <a href="#" onclick="deleteMultipleUsers(); return false;" class="btn btn-round" data-l10n-id="multidelete" title="Delete Multiple"><i class="material-icons text-muted">delete_forever</i></a>
                             </div>
-                            <div class="btn pull-right btn-round" onclick="downloadUsers()" data-l10n-id="ExportUsers" id="users-exportusers">Export Users</div>
+                            <div class="btn float-end btn-round" onclick="downloadUsers()" data-l10n-id="ExportUsers" id="users-exportusers">Export Users</div>
                             <script>
                                 function downloadUsers(event) {
                                     $.ajax({
@@ -98,7 +98,7 @@
                                 }
                             </script>
                             <div>
-                                <label for="csv-upload" class="btn pull-right btn-round" data-l10n-id="ImportUsers" id="users-addfromcsv">Add From CSV<div class="ripple-container"></div></label>
+                                <label for="csv-upload" class="btn float-end btn-round" data-l10n-id="ImportUsers" id="users-addfromcsv">Add From CSV</label>
                                 <input id="csv-upload" style="visibility:hidden; display:none;" type="file" name="csv-file" accept="text/csv">
                                 <script>
                                     $("#csv-upload").change(function() {
@@ -141,13 +141,14 @@
                                     });
                                 </script>
                             </div>
-                            <a class="btn btn-round pull-right " href="/dashboard/users/add" data-l10n-id="addUser" id="users-adduser"><div class="ripple-container"></div></a>
-                            <button class="btn pull-right btn-round" type="submit" data-l10n-id="showResults" id="show-result"><div class="ripple-container"></div></button>
+                            <a class="btn btn-round float-end " href="/dashboard/users/add" data-l10n-id="addUser" id="users-adduser"></a>
+                            <button class="btn float-end btn-round" type="submit" data-l10n-id="showResults" id="show-result"></button>
                         </div>
-                      </form>
+                      </div>
+</form>
                   </div>
               </div>
-              <div class="col-md-12" id="users-userlist">
+              <div class="col-12" id="users-userlist">
                   <% if(data.users.length == 0) {%>
                     <div class="text-center" style="margin-top:50px;">
                             <i class="material-icons dp96">info_outline</i>
@@ -157,19 +158,19 @@
                     else {%>
                     <div class="card">
                             <div class="card-header row" data-background-color="black">
-                                <div class="col-md-4 col-sm-4 col-lg-4 text-left">
+                                <div class="col-md-4 text-start">
                                 <% if(data.links.prev_page) { %>
                                    <a href="<%= data.links.prev_page %>" class="page-button" data-l10n-id="prevPage"><< Prev Page</a>
                                 <% } %>
                                 </div>
-                                <div class="col-md-4 col-sm-4 col-lg-4 text-center" data-l10n-id="showingResults" data-l10n-args='{ "offset": "<%= data.offset + 1 %>", "to": "<%= data.offset + data.users.length %>", "total": "<%= data.total %>" }'></div>
-                                <div class="col-md-4 col-sm-4 col-lg-4 text-right">
+                                <div class="col-md-4 text-center" data-l10n-id="showingResults" data-l10n-args='{ "offset": "<%= data.offset + 1 %>", "to": "<%= data.offset + data.users.length %>", "total": "<%= data.total %>" }'></div>
+                                <div class="col-md-4 text-end">
                                 <% if(data.links.next_page) { %>
                                    <a href="<%= data.links.next_page %>" class="page-button" data-l10n-id="nextPage">Next Page >></a>
                                 <% } %>
                                 </div>
                             </div>
-                            <div class="card-content table-responsive">
+                            <div class="card-body table-responsive">
                                 <table class="table">
                                     <thead class="text-muted">
                                         <tr>
@@ -239,11 +240,11 @@
 
     function show_class_fields() {
         if($('#user-form [name="role"]').length && $('#user-form [name="role"]').select2('data')[0].id != 'student'){
-            $('.classroom_input').addClass('hide');
+            $('.classroom_input').addClass('d-none');
             $('#user-form [name="classid"]').val('').trigger('change');
 
         }else{
-            $('.classroom_input').removeClass('hide');
+            $('.classroom_input').removeClass('d-none');
         }
     }
     show_class_fields('<% if(typeof query == "object"){ %><%= query.role || "student" %><% } %>')

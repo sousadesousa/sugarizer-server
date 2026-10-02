@@ -7,17 +7,17 @@
             <div class="container-fluid">
                   <%- include('includes/flash-errors') %>
                 <div class="row">
-                    <div class="col-md-12">
+                    <div class="col-12">
                         <div class="card" id="deliveries-serach-row" >
                             <form method="get" id="user-form">
-                                <div class="col-md-3">
-                                    <div class="form-group form-black label-floating is-empty">
+<div class="row mx-0 search-row">
+                                <div class="col-lg-3">
+                                    <div class="search-field">
                                         <input data-l10n-id="john" placeholder="Search User..." class="form-control" name="user" value="<% if(query.u){ %><%= query.u %><% } %>" type="text">
-                                        <span class="material-input"></span>
                                     </div>
                                 </div>
-                                <div class="col-md-3"> 
-                                    <div class="form-group form-black label-floating is-empty">
+                                <div class="col-lg-3"> 
+                                    <div class="search-field">
                                         <select class="form-control" id="select-status-select2" name="status" value="<% if(query.Delivered){ %><%= query.Delivered %><% } %>">
                                             <option data-l10n-id="statusAll" value="">All status</option>
                                             <option data-l10n-id="statusExpected" value="false">Assigned</option>
@@ -25,14 +25,15 @@
                                         </select>
                                     </div>
                                 </div>
-                                <div class="col-md-3"></div>
-                                <div class="col-md-6">
-                                    <button class="btn btn-round pull-right" type="submit" data-l10n-id="showResults"><div class="ripple-container"></div></button>
+                                
+                                <div class="col-lg-6">
+                                    <button class="btn btn-round float-end" type="submit" data-l10n-id="showResults"></button>
                                 </div>
-                            </form>
+                            </div>
+</form>
                         </div>
                     </div>
-                    <div class="col-md-12" id="deliveries-cards-parent">
+                    <div class="col-12" id="deliveries-cards-parent">
                         <% if(data.deliveries.length == 0){%>
                             <div class="text-center" style="margin-top:50px;">
                                     <i class="material-icons dp96">info_outline</i>
@@ -41,19 +42,19 @@
                         <% } else{%>
                             <div class="card">
                                 <div class="card-header row" data-background-color="black">
-                                    <div class="col-md-4 col-sm-4 col-lg-4 text-left">
+                                    <div class="col-md-4 text-start">
                                         <% if(data.links.prev_page) { %>
                                            <a href="<%= data.links.prev_page %>" class="page-button" data-l10n-id="prevPage">&lt;&lt; Prev Page</a>
                                         <% } %>
                                     </div>
-                                    <div class="col-md-4 col-sm-4 col-lg-4 text-center" data-l10n-id="showingResults" data-l10n-args='{ "offset": "<%= data.offset + 1 %>", "to": "<%= data.offset + data.deliveries.length %>", "total": "<%= data.total %>" }'></div>
-                                    <div class="col-md-4 col-sm-4 col-lg-4 text-right">
+                                    <div class="col-md-4 text-center" data-l10n-id="showingResults" data-l10n-args='{ "offset": "<%= data.offset + 1 %>", "to": "<%= data.offset + data.deliveries.length %>", "total": "<%= data.total %>" }'></div>
+                                    <div class="col-md-4 text-end">
                                         <% if(data.links.next_page) { %>
                                            <a href="<%= data.links.next_page %>" class="page-button" data-l10n-id="nextPage">Next Page &gt;&gt;</a>
                                         <% } %>
                                     </div>
                                 </div>
-                                <div class="card-content table-responsive">
+                                <div class="card-body table-responsive">
                                     <table class="table">
                                         <thead class="text-muted">
                                             <tr>

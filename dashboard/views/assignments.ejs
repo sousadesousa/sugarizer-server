@@ -7,17 +7,17 @@
             <div class="container-fluid">
                   <%- include('includes/flash-errors') %>
                 <div class="row">
-                    <div class="col-md-12">
+                    <div class="col-12">
                         <div class="card" id="assignment-serach-row" >
                             <form method="get" id="user-form">
-                                <div class="col-md-3">
-                                    <div class="form-group form-black label-floating is-empty">
+<div class="row mx-0 search-row">
+                                <div class="col-lg-3">
+                                    <div class="search-field">
                                         <input data-l10n-id="searchAssign" placeholder="Search Assignment..." class="form-control" name="assignment" value="<% if(query.q){ %><%= query.q %><% } %>" type="text">
-                                        <span class="material-input"></span>
                                     </div>
                                 </div>
-                                <div class="col-md-3"> 
-                                    <div class="form-group form-black label-floating is-empty">
+                                <div class="col-lg-3"> 
+                                    <div class="search-field">
                                         <select class="form-control" id="select-status-select2" name="status" value="<% if(query.isAssigned){ %><%= query.isAssigned %><% } %>">
                                             <option data-l10n-id="statusAll" value="">All status</option>
                                             <option data-l10n-id="statusAssigned" value="true">Assigned</option>
@@ -26,19 +26,20 @@
                                         </select>
                                     </div>
                                 </div>
-                                <div class="col-md-6">
-                                    <div class="upload-btn-wrapper pull-right" id="assignment-deleteMultiple">
+                                <div class="col-lg-6">
+                                    <div class="upload-btn-wrapper float-end" id="assignment-deleteMultiple">
                                         <a href="#" onclick="deleteMultipleAssignments(); return false;" class="btn btn-round" data-l10n-id="multidelete" title="Delete Multiple"><i class="material-icons text-muted">delete_forever</i></a>
                                     </div>
                                     <% if (account.user && account.user.role == "teacher") { %>
-                                        <a class="btn btn-round pull-right" href="/dashboard/assignments/add" data-l10n-id="addAssignment" id="assignment-addassignment"><div class="ripple-container"></div></a>
+                                        <a class="btn btn-round float-end" href="/dashboard/assignments/add" data-l10n-id="addAssignment" id="assignment-addassignment"></a>
                                     <% } %>
-                                    <button class="btn btn-round pull-right" type="submit" data-l10n-id="showResults"><div class="ripple-container"></div></button>
+                                    <button class="btn btn-round float-end" type="submit" data-l10n-id="showResults"></button>
                                 </div>
-                            </form>
+                            </div>
+</form>
                         </div>
                     </div>
-                    <div class="col-md-12" id="assignment-cards-parent">
+                    <div class="col-12" id="assignment-cards-parent">
                         <% if(data.assignments.length == 0){%>
                             <div class="text-center" style="margin-top:50px;">
                                     <i class="material-icons dp96">info_outline</i>
@@ -47,19 +48,19 @@
                         <% } else{%>
                             <div class="card">
                                 <div class="card-header row" data-background-color="black">
-                                    <div class="col-md-4 col-sm-4 col-lg-4 text-left">
+                                    <div class="col-md-4 text-start">
                                         <% if(data.links.prev_page) { %>
                                            <a href="<%= data.links.prev_page %>" class="page-button" data-l10n-id="prevPage">&lt;&lt; Prev Page</a>
                                         <% } %>
                                     </div>
-                                    <div class="col-md-4 col-sm-4 col-lg-4 text-center" data-l10n-id="showingResults" data-l10n-args='{ "offset": "<%= data.offset + 1 %>", "to": "<%= data.offset + data.assignments.length %>", "total": "<%= data.total %>" }'></div>
-                                    <div class="col-md-4 col-sm-4 col-lg-4 text-right">
+                                    <div class="col-md-4 text-center" data-l10n-id="showingResults" data-l10n-args='{ "offset": "<%= data.offset + 1 %>", "to": "<%= data.offset + data.assignments.length %>", "total": "<%= data.total %>" }'></div>
+                                    <div class="col-md-4 text-end">
                                         <% if(data.links.next_page) { %>
                                            <a href="<%= data.links.next_page %>" class="page-button" data-l10n-id="nextPage">Next Page &gt;&gt;</a>
                                         <% } %>
                                     </div>
                                 </div>
-                                <div class="card-content table-responsive">
+                                <div class="card-body table-responsive">
                                     <table class="table">
                                         <thead class="text-muted">
                                             <tr>
