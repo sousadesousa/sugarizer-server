@@ -63,7 +63,6 @@
                                             <div class="hideshowBox" style="height: 40px; padding: 0px 5px 0px 5px;">
                                                 <label id="listCharts-toggleBox" data-id="<%= charts[i]._id %>">
                                                     <input id="<%= charts[i]._id %>" <% if(charts[i].hidden == true) { %> checked <% } %> name="hiddenCharts" type="checkbox" onclick="updateChart('<%= charts[i]._id %>')" data-l10n-id="toggle-hidden" title="Toggle Hidden" >
-                                                    <span class="checkbox-material"></span>
                                                 </label>
                                             </div>
                                             <a data-l10n-id="editChart" title="Edit Chart" href="/dashboard/stats/edit/<%= charts[i]._id %>" style="height: 40px; padding: 0px 5px 0px 5px;"><i id="listCharts-editChart" class="material-icons text-muted">edit</i></a>

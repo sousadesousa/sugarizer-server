@@ -1621,3 +1621,9 @@ ol.simple_with_animation .card-body {
 .btn-just-icon .material-icons {
   line-height: 41px;
 }
+
+/* a column placed directly in the container (not in a row) keeps its gutter */
+.container-fluid > [class*="col-"] {
+  padding-right: 15px;
+  padding-left: 15px;
+}

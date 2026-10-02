@@ -5,24 +5,23 @@
     	<%- include('../includes/navbar') %>
     		<div class="content">
     			<div class="container-fluid">
-            <div class="col-md-8 col-lg-8 col-sm-12">
+            <div class="col-lg-8">
               <div class="card">
-                <div class="card-content">
+                <div class="card-body">
                     <%- include('../includes/flash-errors') %>
                     <form id="classroom-add-edit-form" method="post" <% if(typeof classroom == 'object'){ %> action="<%= classroom._id %>" <% } %>>
                         <div class="row" id="editClassroom-name">
-                            <div class="col-md-12">
-                                <div class="form-group form-black label-floating">
-                                    <label class="control-label" data-l10n-id="name"></label>
+                            <div class="col-12">
+                                <div class="mb-3">
+                                    <label class="form-label" data-l10n-id="name"></label>
                                     <input class="form-control" name="name" value="<% if(typeof classroom == 'object'){ %><%= classroom.name %><% } %>" type="text">
-                                    <span class="material-input"></span>
                                 </div>
                             </div>
                         </div>
                         <div class="row" id="editClassroom-students">
-                            <div class="col-md-12">
-                                <div class="form-group form-black" style="margin-top: -15px;">
-                                    <label class="control-label" data-l10n-id="students"></label>
+                            <div class="col-12">
+                                <div class="mb-3" style="margin-top: -15px;">
+                                    <label class="form-label" data-l10n-id="students"></label>
                                     <select id="select-students-select2" multiple="multiple" name="students" class="form-control">
                                         <% if(typeof classroom == 'object') { %>
                                             <% for(var i=0; i < classroom.students.length; i++) { %>
@@ -79,9 +78,9 @@
                             </div>
                         </div>
                         <div class="row" id="editClassroom-activities">
-                            <div class="col-md-12">
-                                <div class="form-group form-black">
-                                    <label class="control-label" data-l10n-id="classroomActivities"></label>
+                            <div class="col-12">
+                                <div class="mb-3">
+                                    <label class="form-label" data-l10n-id="classroomActivities"></label>
                                     <p class="text-muted" data-l10n-id="classroomActivitiesHint"></p>
                                     <div class="classroom-activities" style="max-height: 260px; overflow-y: auto; border: 1px solid #ddd; border-radius: 4px; padding: 8px;">
                                         <% var assigned = (typeof classroom == 'object' && Array.isArray(classroom.activities)) ? classroom.activities : []; %>
@@ -97,9 +96,9 @@
                             </div>
                         </div>
                         <div class="row color_input" id="editClassroom-colors">
-                            <div class="col-md-12">
-                                <div class="form-group form-black label-floating">
-                                    <label class="control-label" data-l10n-id="color"></label>
+                            <div class="col-12">
+                                <div class="mb-3">
+                                    <label class="form-label" data-l10n-id="color"></label>
                                     <select class="form-control" name="color" id="color-select2">
                                         <% if(typeof classroom == "undefined") var random=Math.floor(Math.random()*xocolors.length); %>
                                         <% for(var i=0; i< xocolors.length; i++){ %>
@@ -115,9 +114,9 @@
                         </div>
                         <% if(typeof classroom == 'object' && classroom.created_time) { %>
                         <div class="row" id="editClassroom-created">
-                            <div class="col-md-12">
-                                <div class="form-group form-black label-floating">
-                                    <label class="control-label" data-l10n-id="createdTime"></label>
+                            <div class="col-12">
+                                <div class="mb-3">
+                                    <label class="form-label" data-l10n-id="createdTime"></label>
                                     <input class="form-control" readonly value="<%= moment(classroom.created_time).calendar() %>" type="text">
                                 </div>
                             </div>
@@ -125,16 +124,16 @@
                         <% } %>
                         <% if(typeof classroom == 'object' && classroom.timestamp) { %>
                         <div class="row" id="editClassroom-lastupdated">
-                            <div class="col-md-12">
-                                <div class="form-group form-black label-floating">
-                                    <label class="control-label" data-l10n-id="lastUpdated"></label>
+                            <div class="col-12">
+                                <div class="mb-3">
+                                    <label class="form-label" data-l10n-id="lastUpdated"></label>
                                     <input class="form-control" readonly value="<%= moment(classroom.timestamp).calendar() %>" type="text">
                                 </div>
                             </div>
                         </div>
                         <% } %>
-                        <button class="btn pull-right btn-round" type="submit" data-l10n-id="save"></button>
-                        <a class="btn pull-right btn-round" href="/dashboard/classrooms" data-l10n-id="cancel"></a>
+                        <button class="btn float-end btn-round" type="submit" data-l10n-id="save"></button>
+                        <a class="btn float-end btn-round" href="/dashboard/classrooms" data-l10n-id="cancel"></a>
                         <div class="clearfix"></div>
                     </form>
                 </div>

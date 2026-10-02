@@ -5,24 +5,23 @@
     	<%- include('../includes/navbar') %>
     		<div class="content">
     			<div class="container-fluid">
-            <div class="col-md-8 col-lg-8 col-sm-12">
+            <div class="col-lg-8">
               <div class="card">
-                <div class="card-content">
+                <div class="card-body">
                     <%- include('../includes/flash-errors') %>
                     <form id="classroom-add-edit-form" method="post" <% if(typeof chart == 'object'){ %> action="<%= chart._id %>" <% } %>>
                         <div class="row" id="editChart-title">
-                            <div class="col-md-12">
-                                <div class="form-group form-black label-floating">
-                                    <label class="control-label" data-l10n-id="chartTitle"></label>
+                            <div class="col-12">
+                                <div class="mb-3">
+                                    <label class="form-label" data-l10n-id="chartTitle"></label>
                                     <input class="form-control" name="title" value="<% if(typeof chart == 'object'){ %><%= chart.title %><% } %>" type="text">
-                                    <span class="material-input"></span>
                                 </div>
                             </div>
                         </div>
                         <div class="row color_input" id="editChart-type">
-                            <div class="col-md-12">
-                                <div class="form-group form-black label-floating">
-                                    <label class="control-label" data-l10n-id="type"></label>
+                            <div class="col-12">
+                                <div class="mb-3">
+                                    <label class="form-label" data-l10n-id="type"></label>
                                     <div class="type-selector">
                                         <input class="type-selector-input" id="timeline" type="radio" name="type" value="timeline" <% if(typeof chart == 'object' && chart.type == "timeline"){ %> checked <% } %>/>
                                         <label class="type-selector-card chart-timeline" data-l10n-id="timelineTitle" for="timeline"></label>
@@ -37,9 +36,9 @@
                             </div>
                         </div>
                         <div class="row color_input" id="editChart-selectchart">
-                            <div class="col-md-12">
-                                <div class="form-group form-black">
-                                    <label class="control-label" data-l10n-id="selectChart"></label>
+                            <div class="col-12">
+                                <div class="mb-3">
+                                    <label class="form-label" data-l10n-id="selectChart"></label>
                                     <div class="chart-list" id="chart-list">
                                         <label data-l10n-id="noChartSelected"></label>
                                     </div>
@@ -87,9 +86,9 @@
                             <% } %>
                         </script>
                         <div class="row color_input" id="editChart-display">
-                            <div class="col-md-12">
-                                <div class="form-group form-black">
-                                    <label class="control-label" data-l10n-id="display"></label>
+                            <div class="col-12">
+                                <div class="mb-3">
+                                    <label class="form-label" data-l10n-id="display"></label>
                                     <div class="display-check" >
                                         <input type="checkbox" id="scales" name="hidden" <% if(typeof chart == 'object' && chart.hidden == true){ %> checked <% } %>>
                                         <label for="hidden" data-l10n-id="hidden"></label>
@@ -97,8 +96,8 @@
                                 </div>
                             </div>
                         </div>
-                        <button class="btn pull-right btn-round" type="submit" data-l10n-id="save"></button>
-                        <a class="btn pull-right btn-round" href="/dashboard/stats/list" data-l10n-id="cancel"></a>
+                        <button class="btn float-end btn-round" type="submit" data-l10n-id="save"></button>
+                        <a class="btn float-end btn-round" href="/dashboard/stats/list" data-l10n-id="cancel"></a>
                         <div class="clearfix"></div>
                     </form>
                 </div>
