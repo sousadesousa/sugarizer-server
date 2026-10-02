@@ -1,6 +1,6 @@
 # Phase 1 report: Playwright baseline of the dashboard (Bootstrap 3 -> 5)
 
-**Status: DONE.** `npm run test:e2e` is green (89 passed), the baseline
+**Status: DONE (phase 1 and phase 1.5, see the last section).** `npm run test:e2e` is green (101 passed), the baseline
 screenshots are committed in `test/e2e/baseline/` (82 files, 3 MB), `npm run lint` has 0 errors and `npm test` passes
 (168 passing after the hotfix). No dashboard code, styling or CI workflow was changed.
 
@@ -52,7 +52,7 @@ Update after the hotfix (`fix/deliveries-and-journal-loop`, merged into this bra
 
 ## Test summary
 
-- `npm run test:e2e`: 89 passed, about 2.9 minutes, one worker.
+- `npm run test:e2e`: 101 passed (89 page tests + 12 form flows), about 4.1 minutes, one worker.
 - `npm run lint`: 0 errors, 1 warning that was already there (an unused eslint-disable directive).
 - `npm test`: 168 passing (162 + the 6 deliveries tests of the hotfix).
 
@@ -67,3 +67,100 @@ Update after the hotfix (`fix/deliveries-and-journal-loop`, merged into this bra
 - Select2 on `#user-form [name="role"]` (users page) and the tutorial popover selector `.popover.tour` are the
   Bootstrap 3 / bootstrap-tour ones; they will need updating together with the migration.
 - This branch is `dashboard/bootstrap5` as the briefs say (the session default was `claude/beautiful-fermi-cstc2x`).
+
+## Phase 1.5 (the Tester's findings of `TEST-REPORT-phase1.md`)
+
+### What changed
+
+1. **The baseline is read-only during a run.** Run screenshots go to `test-results/screenshots/` (git-ignored,
+   emptied at the start of each run; `E2E_SCREENSHOT_DIR` changes it). `test/e2e/baseline/` is only written by
+   `npm run test:e2e:baseline` (`E2E_BASELINE=1`; run the whole suite, it deletes the old PNGs first; the script uses
+   the `VAR=value cmd` shell syntax, so Linux/macOS). A normal run was checked to leave the baseline byte-identical.
+   Playwright's own output moved to `test-results/playwright/`.
+2. **Stable screenshots** (see the proof below). What makes the pages repeat:
+   - the server runs with `test/e2e/server-preload.js` (`node --require`): its clock starts at 2035-03-15 10:00 and then
+     runs normally, so every "Today at 10:00 AM" is the same (the seed takes a few seconds, well inside the minute), and
+     `Math.random` is seeded, so the colors that the dashboard picks "at random" (new classroom, new user) repeat;
+   - the browser clock starts at the same time (`context.clock.install`, it keeps running, so timers and jQuery
+     animations work) and `Math.random` is seeded there too (`support.js`);
+   - the seed gives a color to the users it signs up (the server picks a random one otherwise), and makes all the
+     activities favorites in a fixed order: the server reads the activities folder with asynchronous calls, so the
+     order of the activities that are not favorites changes at each start (seen as a different list order);
+   - screenshots hide the notifications (timed, they move) and, on the enable-2FA page, the QR code and the secret
+     (a new one at each visit; the secret is removed, not only hidden, as its width moves the text around it);
+   - `settle()` waits until the canvases (animated Chart.js charts) stop changing.
+3. **Compare**: `npm run test:e2e:compare` (`test/e2e/compare.js`, pixelmatch + pngjs) writes, in
+   `test-results/compare/`, `index.html` (pages sorted by difference, with the side by side image of each: baseline |
+   current | diff), one PNG per page that differs, and `summary.json`. It prints the same table and exits 0 whatever the
+   differences (2 only when a folder is missing). Options: `--baseline`, `--current`, `--out`, `--threshold`.
+4. **Form and confirm flows**, `test/e2e/flows.spec.js` (12 tests, desktop), see the list below.
+5. **404**: the assertion is now `200` with a comment, and the text "Page Not Found" is checked: the dashboard renders
+   its 404 view with `res.render()` and no `res.status()`, so a wrong dashboard URL answers 200.
+6. **"Invalid Date"** in both Due Date fields of the assignment edit page: it was the seed. The seed sent `dueDate` as
+   a string (`"1790924035125"`), the way the API documentation example shows it; the dashboard stores a number, and its
+   form does `new Date(assignment.dueDate)`, which is an Invalid Date for a numeric string. Same kind of typo: the seed
+   sent `lateTurnIn: 'false'` (a string, true for the checkbox, which was shown ticked). Both are fixed in the seed
+   (number and boolean); the regenerated edit screenshot shows `3/22/2035` and `10:00`, the checkbox unticked, and a
+   flow test checks the date of an assignment created through the dashboard. Not a dashboard bug as such; the API does
+   accept a string date that the dashboard then cannot display (worth a look when the API is revisited, not now).
+
+### Stability proof
+
+Two full runs one after the other, each in its own folder, compared with `compare.js` (`test-results/run-a`, `run-b`),
+then a normal run against the committed baseline:
+
+| Compared | Screenshots | Byte-identical | Pixel-identical (threshold 0.1) | Different |
+|---|---|---|---|---|
+| run A / run B | 82 | 66 | 16 | **0** |
+| fresh run / committed baseline | 82 | 70 | 12 | **0** |
+
+Run A / run B at threshold 0 (every pixel): 14 pages differ by at most 19 pixels of 1,024,000 (0.0019 %), always in the
+language pill of the navbar (rounded border). Chromium gives the same bytes for a page taken several times from fresh
+browsers (checked: 0 pixels differ), so this is rendering noise inside a long run, below the 0.1 color distance that
+pixelmatch ignores. For reference: the Tester saw a run rewrite 45 tracked screenshots; and with the clock and random
+fixes alone, two runs still differed on 12 pages by up to 4 % (the activities order and the 2FA secret, fixed above). The compare tool itself was checked with a copy of a run where one block of a page was painted red and one
+screenshot deleted: it reports `admin-desktop-home` as different (4.44 %) and the other as missing.
+
+### New coverage (`flows.spec.js`, as admin and as teacher)
+
+Each flow asserts the notification, the row that appears or disappears, and that the confirm dialog was asked.
+- admin: create a user (name, language, role, password), edit it (values kept, renamed), delete it (confirm);
+  create a classroom (name, student found with the select2 search, an activity checkbox), edit it (student and activity
+  kept), delete it (confirm); create a chart (type card, chart choice), delete it (confirm);
+  the data endpoints `users/search`, `users/export`, `stats/graph` and `graph` answer.
+- teacher: create an assignment (name, select2 work, instructions, date from the calendar of the datetimepicker, time
+  from its list, classroom with the two-lists widget), edit it, launch it, open its deliveries (one per student),
+  add a comment to one, return a delivery (the student hands it in through the API first, as that is done in the
+  Sugarizer client).
+- log out from the user menu, then a dashboard page sends back to the login.
+- no uncaught page error during the flows.
+
+Skipped, with the reason (also written at the top of `flows.spec.js`): `POST users/import` (needs a CSV upload),
+`GET activities/launch` and `launch/:jid` (open an activity of the Sugarizer client), the 2FA enable/disable POSTs and
+`POST verify2FA` (need the one-time code of an authenticator for a user outside the seed; the pages are in
+`dashboard.spec.js`), `POST journal/:jid/delete/:oid` and `POST assignments/delete/:id` (same delete mechanism as above),
+`POST profile`.
+
+### Things the flows showed (existing behavior, not changed)
+
+- The success message after adding a comment is the key itself, `CommentAdded`: the locales have no such string.
+- The launch link of the assignments list has no `?name=`, so the message says "Assignment assignment has been
+  successfully launched!" (the same for return) instead of the name.
+- The order of the activities after a server start is not deterministic until the favorites list is saved (race in
+  `api/controller/activities.js` `load`, which pushes in the order of the asynchronous `stat` calls).
+
+### Results
+
+- `npm run test:e2e`: 101 passed (4.1 min). `npm run lint`: 0 errors (1 old warning). `npm test`: 168 passing.
+- Baseline regenerated once and committed: 82 PNG, 3 MB.
+
+### Open questions
+
+- The baseline depends on the fonts and the Chromium of the machine that made it (here the preinstalled
+  `/opt/pw-browsers/chromium`). On another machine a compare will show text antialiasing noise on every page: the
+  baseline should be regenerated, once, in the environment where the comparisons are reviewed (CI image or the same
+  container image).
+- The e2e suite is still not in `.github/workflows/test.yml` (not changed, as asked).
+- The two runs of the proof took 4.1 minutes each; `settle()` waits for the charts to stop moving, which is most of
+  the increase from 2.9 minutes.
+- Mobile flows are not covered (the flows run at desktop size; the mobile layout is in the screenshots only).

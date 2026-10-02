@@ -1,22 +1,15 @@
 // Baseline of the dashboard before the Bootstrap 5 migration: every page, as admin and as teacher,
-// at desktop and phone size, with a full-page screenshot in test/e2e/baseline/ and the behaviors
-// that depend on Bootstrap/jQuery plugins (select2, datetimepicker, Chart.js, QR modal, tutorial).
+// at desktop and phone size, with a full-page screenshot, and the behaviors that depend on Bootstrap/jQuery
+// plugins (select2, datetimepicker, Chart.js, QR modal, tutorial).
+// Screenshots go to test-results/screenshots/ (see paths.js); test/e2e/baseline/ is only written by
+// `npm run test:e2e:baseline`. `npm run test:e2e:compare` compares the two.
 const { test, expect } = require('@playwright/test');
-const fs = require('fs');
-const path = require('path');
+const { info, VIEWPORTS, DASHBOARD_URL, prepareContext, serverReady, login, watch, settle, shot } = require('./support');
 
-const info = JSON.parse(process.env.E2E_INFO);
 const ids = info.ids;
-const shots = path.join(__dirname, 'baseline');
-fs.mkdirSync(shots, { recursive: true });
 
 // the server is started by the global setup, which passes its address in E2E_INFO
 test.use({ baseURL: info.baseURL });
-
-const VIEWPORTS = {
-	desktop: { width: 1280, height: 800 },
-	mobile: { width: 390, height: 844 }
-};
 
 // Pages of the dashboard. admin: only reachable as admin. sidebar: false for pages without sidebar.
 // select2: selector of a select that must become a select2 widget.
@@ -46,58 +39,6 @@ const PAGES = [
 	{ slug: '404', path: '/dashboard/does-not-exist' }
 ];
 
-// Tutorials are launched by the first visit of a page: mark them as finished, except in the tutorial test
-const TOURS = ['home', 'users', 'editUser', 'classroom', 'editClassroom', 'activities', 'journal1', 'journal2', 'assignment',
-	'editAssignment', 'deliveries', 'stats', 'listCharts', 'editChart'];
-function skipTours() {
-	const names = arguments[0];
-	for (const name of names) {
-		for (const suffix of ['', '_add', '_edit']) {
-			localStorage.setItem(name + suffix + '_end', 'yes');
-		}
-	}
-}
-
-async function serverReady() {
-	const end = Date.now() + 30000;
-	while (Date.now() < end) {
-		try {
-			if ((await fetch(info.baseURL + '/api')).ok) {
-				return;
-			}
-		} catch (e) {
-			// not listening yet
-		}
-		await new Promise((resolve) => setTimeout(resolve, 250));
-	}
-	throw new Error('server not answering on ' + info.baseURL);
-}
-
-async function login(page, user) {
-	await page.goto('/dashboard/login');
-	await page.fill('input[name="username"]', user.name);
-	await page.fill('input[name="password"]', info.password);
-	await page.click('button[type="submit"]');
-}
-
-// Errors of the page: uncaught exceptions are asserted, failed local requests are only reported
-function watch(page) {
-	const watched = { errors: [], failed: [] };
-	page.on('pageerror', (e) => watched.errors.push(e.message));
-	page.on('response', (r) => {
-		if (r.status() >= 400 && r.url().startsWith(info.baseURL) && !r.url().endsWith('/favicon.ico')) {
-			watched.failed.push(r.status() + ' ' + r.url().replace(info.baseURL, ''));
-		}
-	});
-	return watched;
-}
-
-async function settle(page) {
-	await page.waitForLoadState('networkidle');
-	// icons, charts and select2 widgets are drawn by scripts after load
-	await page.waitForTimeout(600);
-}
-
 for (const role of ['admin', 'teacher']) {
 	for (const [vpName, viewport] of Object.entries(VIEWPORTS)) {
 		test.describe(role + ' ' + vpName, () => {
@@ -109,7 +50,7 @@ for (const role of ['admin', 'teacher']) {
 				const context = await browser.newContext();
 				const page = await context.newPage();
 				await login(page, info.users[role]);
-				await page.waitForURL(/\/dashboard(\?.*)?$/);
+				await page.waitForURL(DASHBOARD_URL);
 				storageState = await context.storageState();
 				await context.close();
 			});
@@ -117,7 +58,7 @@ for (const role of ['admin', 'teacher']) {
 			test.beforeEach(async ({ context }) => {
 				await serverReady();
 				await context.addCookies(storageState.cookies);
-				await context.addInitScript(skipTours, TOURS);
+				await prepareContext(context);
 			});
 
 			for (const p of PAGES) {
@@ -129,7 +70,13 @@ for (const role of ['admin', 'teacher']) {
 					const response = await page.goto(p.path);
 					await settle(page);
 
-					expect(response.status(), 'HTTP status').toBe(p.slug == '404' ? 200 : 200);
+					// The dashboard renders its "Page Not Found" page with res.render() and no res.status(), so the
+					// 404 page answers 200 (a wrong dashboard URL is not a 404 for the browser). Asserted on purpose:
+					// a change of this status would be a behavior change.
+					expect(response.status(), 'HTTP status').toBe(200);
+					if (p.slug == '404') {
+						await expect(page.locator('body')).toContainText('Page Not Found');
+					}
 					expect(watched.errors, 'uncaught page errors').toEqual([]);
 					if (watched.failed.length) {
 						testInfo.annotations.push({ type: 'failed requests', description: watched.failed.join(', ') });
@@ -146,7 +93,7 @@ for (const role of ['admin', 'teacher']) {
 						await expect(page.locator('.select2-container').first()).toBeVisible();
 					}
 
-					await page.screenshot({ path: path.join(shots, role + '-' + vpName + '-' + p.slug + '.png'), fullPage: true });
+					await shot(page, role + '-' + vpName + '-' + p.slug);
 				});
 			}
 
@@ -212,10 +159,10 @@ test.describe('teacher without classroom', () => {
 	for (const [slug, journalPath] of [['journal', '/dashboard/journal'], ['journal-entries', '/dashboard/journal/' + ids.teacherNoClassJournal]]) {
 		test(slug + ' shows the page with a message instead of redirecting', async ({ page }) => {
 			await serverReady();
-			await page.context().addInitScript(skipTours, TOURS);
+			await prepareContext(page.context());
 			const watched = watch(page);
 			await login(page, info.users.teacherNoClass);
-			await page.waitForURL(/\/dashboard(\?.*)?$/);
+			await page.waitForURL(DASHBOARD_URL);
 			const response = await page.goto(journalPath);
 			await settle(page);
 			expect(response.status(), 'HTTP status').toBe(200);
@@ -226,7 +173,7 @@ test.describe('teacher without classroom', () => {
 			await expect(page.locator('#journal-type')).not.toBeChecked();
 			await expect(page.locator('#users-select2')).toBeEnabled();
 			expect(watched.errors, 'uncaught page errors').toEqual([]);
-			await page.screenshot({ path: path.join(shots, 'teacher-no-classroom-desktop-' + slug + '.png'), fullPage: true });
+			await shot(page, 'teacher-no-classroom-desktop-' + slug);
 		});
 	}
 });
@@ -237,6 +184,7 @@ for (const [vpName, viewport] of Object.entries(VIEWPORTS)) {
 		test.use({ viewport });
 
 		test('login', async ({ page }, testInfo) => {
+			await prepareContext(page.context());
 			const watched = watch(page);
 			await page.goto('/dashboard/login');
 			await settle(page);
@@ -245,10 +193,11 @@ for (const [vpName, viewport] of Object.entries(VIEWPORTS)) {
 			if (watched.failed.length) {
 				testInfo.annotations.push({ type: 'failed requests', description: watched.failed.join(', ') });
 			}
-			await page.screenshot({ path: path.join(shots, 'public-' + vpName + '-login.png'), fullPage: true });
+			await shot(page, 'public-' + vpName + '-login');
 		});
 
 		test('two-factor verification', async ({ page }, testInfo) => {
+			await prepareContext(page.context());
 			const watched = watch(page);
 			await login(page, info.users.tfa);
 			await page.waitForURL(/\/dashboard\/verify2FA(\?.*)?$/);
@@ -258,7 +207,7 @@ for (const [vpName, viewport] of Object.entries(VIEWPORTS)) {
 			if (watched.failed.length) {
 				testInfo.annotations.push({ type: 'failed requests', description: watched.failed.join(', ') });
 			}
-			await page.screenshot({ path: path.join(shots, 'public-' + vpName + '-verify2FA.png'), fullPage: true });
+			await shot(page, 'public-' + vpName + '-verify2FA');
 		});
 	});
 }

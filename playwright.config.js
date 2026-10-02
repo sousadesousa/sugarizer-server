@@ -5,6 +5,8 @@ const { defineConfig } = require('@playwright/test');
 module.exports = defineConfig({
 	testDir: 'test/e2e',
 	testMatch: '*.spec.js',
+	// Playwright empties its output folder at each run: it must not hold the screenshots or the comparison
+	outputDir: 'test-results/playwright',
 	globalSetup: require.resolve('./test/e2e/global-setup.js'),
 	// one server and one database shared by all the tests
 	workers: 1,
