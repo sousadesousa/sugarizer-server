@@ -164,3 +164,12 @@ Skipped, with the reason (also written at the top of `flows.spec.js`): `POST use
 - The two runs of the proof took 4.1 minutes each; `settle()` waits for the charts to stop moving, which is most of
   the increase from 2.9 minutes.
 - Mobile flows are not covered (the flows run at desktop size; the mobile layout is in the screenshots only).
+
+## Dates fix (branch `fix/dashboard-dates`, merged here)
+
+The three date bugs of the assignment form are fixed on `fix/dashboard-dates` (see its report in the history of that
+branch) and merged into this branch. `test/e2e/dates.spec.js` (25 tests) covers them with the real pickers in browser
+contexts of five regions and time zones (de-CH Zurich, de-CH Zurich in summer, en-US New York, fr-FR Paris, ja-JP Tokyo),
+the edit page of an assignment made by the API, and the wrong values (no time, no date, an unreadable number, a past
+time). The four `*-assignments-edit.png` baseline screenshots were regenerated on purpose (the date now reads
+`03/22/2035`, with the zero, in the order of the browser region); the other 78 are unchanged. Full run: 126 passed.
