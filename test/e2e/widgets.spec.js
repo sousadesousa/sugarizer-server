@@ -71,6 +71,53 @@ test.describe('widgets (admin)', () => {
 		expect(watched.errors).toEqual([]);
 	});
 
+	// moves the item "from" to the place "to" (0 = first), going up to the edge of the first (or last) card
+	async function dragTo(from, to) {
+		const items = page.locator('ol.simple_with_animation li');
+		const handle = items.nth(from).locator('.draggable');
+		const a = await handle.boundingBox();
+		const b = await items.nth(to).boundingBox();
+		const x = a.x + a.width / 2;
+		await page.mouse.move(x, a.y + a.height / 2);
+		await page.mouse.down();
+		await page.mouse.move(x, a.y + a.height / 2 + (to > from ? 5 : -5), { steps: 3 });
+		await page.mouse.move(x, to > from ? b.y + b.height - 4 : b.y + 4, { steps: 15 });
+		await page.mouse.move(x, to > from ? b.y + b.height - 2 : b.y + 2, { steps: 5 });
+		await page.mouse.up();
+	}
+
+	test('an item can be dragged up to the first place and down to the last place', async () => {
+		await page.goto('/dashboard/activities');
+		await settle(page);
+		const before = await names();
+		expect(before.length).toBeGreaterThan(3);
+		const last = before.length - 1;
+
+		// the 4th card to the first place (regression of the Bootstrap 5 CSS: it landed in the 2nd place)
+		let saved = page.waitForResponse((r) => r.url().includes('api/v1/activities') && r.request().method() == 'POST');
+		await dragTo(3, 0);
+		await saved;
+		expect(await names()).toEqual([before[3], ...before.slice(0, 3), ...before.slice(4)]);
+		await expect(page.locator('ol.simple_with_animation > li')).toHaveCount(before.length);
+
+		// the (new) first card to the last place
+		saved = page.waitForResponse((r) => r.url().includes('api/v1/activities') && r.request().method() == 'POST');
+		await dragTo(0, last);
+		await saved;
+		await page.reload();
+		await settle(page);
+		expect(await names()).toEqual([...before.slice(0, 3), ...before.slice(4), before[3]]);
+
+		// put it back: the last card to the 4th place
+		saved = page.waitForResponse((r) => r.url().includes('api/v1/activities') && r.request().method() == 'POST');
+		await dragTo(last, 3);
+		await saved;
+		await page.reload();
+		await settle(page);
+		expect(await names()).toEqual(before);
+		expect(watched.errors).toEqual([]);
+	});
+
 	test('the two lists widget moves a classroom and filters its list', async () => {
 		await page.goto('/dashboard/users/edit/' + info.ids.student1);
 		await settle(page);

@@ -402,3 +402,37 @@ Follow-up of the Tester's report of phase 2a and the manager's decisions on the 
 | 8 tablet pages | new |
 
 All other 75 screenshots are identical or have the same pixels. Suites: `test:e2e` 146 tests, `npm test` 168 passing, lint 0 errors (the 1 old warning). The baseline was regenerated once: only the 7 files above were updated and the 8 tablet files added.
+
+## Phase 2d: defects of the Tester's phase 2b report
+
+Branch `dashboard/bootstrap5`, on top of 3cb53e5. Source: `TEST-REPORT-phase2b.md` (branch `reports/dashboard-phase2b-test`).
+
+1. **N1, sortable list cannot go to the first place** (`dashboard/public/css/main.css`). Cause (found by dumping the DOM during a drag): the 7 px margin of each `.card` collapsed through the `li` and the `ol`, so the box the plugin keeps the dragged item in (`containment: 'parent'`) started exactly at the top of the first card. The dragged item could never cover the first item by more than half (the `intersect` tolerance) and the placeholder stayed at index 1. The spacing is now padding of the `ol` and of the `li` (3.5 px each) plus a 3.5 px card margin, and the `ol` margins compensate, so the desktop screenshots of activities and charts-list are pixel-identical to before. jQuery UI options unchanged (a `tolerance: 'pointer'` was tried and dropped: it changes how far every drag moves). `widgets.spec.js`: new test dragging the 4th card to the first place, the first card to the last place, and back (order checked in the page and after a reload).
+2. **N2, classrooms widget wider than the card padding** (`addEditAssignment.ejs`). Cause: a stray `</div>` that I left after the time input in phase 2a closed the due-date row, then the `form`'s own parents, so "Allow Late Turn In", the classrooms row and the Cancel/Save buttons ended up outside the form and the `.card-body` (directly in `.card`, without padding). Removed it. Side effect, visible on all sizes: "Allow Late Turn In" is back in the date row, as on master, and the buttons are inside the card.
+3. **N3, "Hidden" check box on the card border** (`main.css`): on a phone `.display-check` had `padding-left: 0`, but the check box sits 1.5em to the left of the padding of a `.form-check`; now `1.5em`.
+4. **N4, 2FA button covers Cancel and Save on a phone** (`addEditUser.ejs`, `main.css`): the inline `margin-top: -63px / -68px` moved to a `.btn-align` rule; below 576 px the button is no longer floated, has no negative margin and is centered under Cancel/Save. Desktop is pixel-identical. The generic check (item 7) covers every other form page: no other page has this pattern.
+5. **N5**: comment in `includes/header.ejs` is now `<!-- driver.js CSS (tutorials) -->`; a case-insensitive grep of `intro.js` in `dashboard/` finds nothing else.
+6. **Admin `assignments-add` screenshots dropped** (3 files: desktop, mobile, tablet): they were the Journals page (an admin is redirected). `dashboard.spec.js` has a `teacher: true` flag for pages that exist for teachers only, with a comment saying why. The page list went from 90 to 87 screenshots.
+7. **Generic layout test** `test/e2e/layout.spec.js` (15 tests: 11 form pages, admin and teacher where the page exists, at 390x844): every visible input, select, textarea, button, `a.btn`, label, `.form-check`, `.ms-container` and `.select2-container` of the card lies horizontally inside the content box of the card body (1 px of slack; the hidden originals of select2 and multi-select are ignored), and every button of the card passes a Playwright trial click (nothing intercepts the pointer events). Both checks run on every page (soft assertion on the first), so one run reports everything.
+
+   Run on 3cb53e5 (same spec, nothing else changed): **6 of 15 fail**, 9 pass.
+   - charts-add, charts-edit (admin): `#scales x=44..58 (card content 65..325)` = N3.
+   - profile (admin, teacher): `a.btn.btn-align... x=66..328 (card content 65..325)` and `"SAVE" cannot be clicked` (trial click times out: the 2FA link intercepts the pointer) = N4.
+   - assignments-add, assignments-edit (teacher): `label.form-label x=45..104`, `#ms-searchable-select-classrooms x=45..345`, both search boxes `x=45..180` / `x=210..345`, `button.btn.float-end x=255..344` against a card content of `65..325` = N2.
+
+   After the fixes all 15 pass.
+
+### Comparison before the baseline was regenerated (against the phase 2c baseline)
+
+| Page | Different pixels |
+|---|---|
+| `admin-mobile-profile`, `teacher-mobile-profile` | 4.34 % (2FA button below Cancel/Save) |
+| `admin-desktop-assignments-edit`, `teacher-desktop-assignments-edit` | 1.53 % (late turn-in in the date row, buttons in the card) |
+| `teacher-tablet-assignments-add` | 1.39 % (same) |
+| `teacher-desktop-assignments-add` | 1.29 % (same) |
+| `admin-mobile-assignments-edit`, `teacher-mobile-assignments-edit` | 1.16 % (widget inset, buttons in the card) |
+| `teacher-mobile-assignments-add` | 1.04 % (same) |
+| `admin-mobile-charts-add`, `admin-mobile-charts-edit` | 0.10 % (check box inside the padding) |
+| `admin-{desktop,mobile,tablet}-assignments-add` | missing on purpose (item 6), deleted from the baseline |
+
+All other screenshots are identical or have the same pixels (activities, charts-list and the desktop profile included). I looked at the desktop assignments-add and profile images side by side: the changes are the intended ones. Suites: `test:e2e` 159 tests passed, `npm test` 168 passing, lint 0 errors (the 1 old warning). The baseline was regenerated once (the 56 changed or deleted files include re-encoded PNGs with the same pixels).

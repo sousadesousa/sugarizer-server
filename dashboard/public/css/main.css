@@ -607,6 +607,24 @@
   margin-right: 15px;
 }
 
+.btn-align {
+  /* the 2FA button of the profile is below the form: pulled up to the line of Cancel and Save, on the left */
+  margin-top: -63px !important;
+}
+
+button.btn-align {
+  margin-top: -68px !important;
+}
+
+@media (max-width: 575.98px) {
+  /* no room on one line: the button goes below Cancel and Save instead of covering them */
+  .btn-align, button.btn-align {
+    float: none !important;
+    display: block;
+    margin: 12px auto 0 !important;
+  }
+}
+
 .journal-check {
   padding-left: 30px;
   padding-top: 0px;
@@ -869,7 +887,8 @@
     padding-left: 0px;
   }
   .display-check {
-    padding-left: 0px;
+    /* keeps the room of the check box (it sits 1.5em to the left of the padding of a .form-check) */
+    padding-left: 1.5em;
   }
   .journal-check {
     padding-left: 0px;
@@ -1589,8 +1608,22 @@ textarea.form-control {
 }
 
 /* the sortable lists (activities, charts): one compact card per item */
+/* The spacing is inside the items and the list, not a margin of the cards: a margin collapses through the li and the ol,
+   and the box the sortable plugin keeps the dragged item in (containment: parent) then starts at the first card, so
+   the item cannot be dropped in the first place. The margins of the list put it back where it was. */
+ol.simple_with_animation {
+  padding-top: 3.5px;
+  padding-bottom: 3.5px;
+  margin-top: -3.5px;
+  margin-bottom: calc(1rem - 10.5px);
+}
+
+ol.simple_with_animation > li {
+  padding: 3.5px 0;
+}
+
 ol.simple_with_animation .card {
-  margin: 7px 0;
+  margin: 3.5px 0;
 }
 
 ol.simple_with_animation .card-body {

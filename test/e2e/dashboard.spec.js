@@ -11,7 +11,7 @@ const ids = info.ids;
 // the server is started by the global setup, which passes its address in E2E_INFO
 test.use({ baseURL: info.baseURL });
 
-// Pages of the dashboard. admin: only reachable as admin. sidebar: false for pages without sidebar.
+// Pages of the dashboard. admin: only reachable as admin. teacher: only as teacher. sidebar: false for pages without sidebar.
 // select2: selector of a select that must become a select2 widget.
 const PAGES = [
 	{ slug: 'home', path: '/dashboard' },
@@ -25,8 +25,9 @@ const PAGES = [
 	{ slug: 'journal', path: '/dashboard/journal' },
 	{ slug: 'journal-entries', path: '/dashboard/journal/' + ids.teacherJournal },
 	{ slug: 'assignments', path: '/dashboard/assignments' },
-	// An admin has no private journal: the page redirects to the journals with "Invalid journal" (state recorded as is)
-	{ slug: 'assignments-add', path: '/dashboard/assignments/add', select2: '#select2-activity', select2Roles: ['teacher'] },
+	// teacher: only for teachers. An admin has no private journal: the page redirects to the journals with "Invalid journal",
+	// so the admin variant was a second screenshot of the Journals page, not coverage of this page (see layout.spec.js too)
+	{ slug: 'assignments-add', path: '/dashboard/assignments/add', teacher: true, select2: '#select2-activity', select2Roles: ['teacher'] },
 	{ slug: 'assignments-edit', path: '/dashboard/assignments/edit/' + ids.assignment },
 	{ slug: 'deliveries', path: '/dashboard/assignments/deliveries/' + ids.assignment },
 	{ slug: 'deliveries-comment', path: '/dashboard/assignments/deliveries/comment/' + ids.assignment + '?oid=none' },
@@ -65,7 +66,7 @@ for (const role of ['admin', 'teacher']) {
 			});
 
 			for (const p of PAGES) {
-				if (p.admin && role != 'admin') {
+				if ((p.admin && role != 'admin') || (p.teacher && role != 'teacher')) {
 					continue;
 				}
 				if (vpName == 'tablet' && !TABLET_PAGES.includes(p.slug)) {
