@@ -941,6 +941,11 @@ a:hover, a:focus {
   color: #777 !important;
 }
 
+.btn .material-icons.text-muted {
+  /* the icon of a round button is white (as on the previous dashboard), not grey on grey */
+  color: inherit !important;
+}
+
 .text-danger {
   color: #f44336 !important;
 }

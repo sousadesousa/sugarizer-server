@@ -151,6 +151,32 @@ for (const role of ['admin', 'teacher']) {
 					await page.waitForURL(/\/dashboard\/users/);
 				});
 
+				test('a mouse click on a sidebar item navigates, keeps the language and throws no error', async ({ page }) => {
+					const watched = watch(page);
+					await page.goto('/dashboard');
+					await settle(page);
+					await page.locator('#sugarizer-sidebar .nav-link[href="/dashboard/users"]').click();
+					await page.waitForURL(/\/dashboard\/users/);
+					expect(page.url(), 'the language is added to the URL').toMatch(/[?&]lang=/);
+					expect(watched.errors, 'uncaught page errors').toEqual([]);
+				});
+
+				test('every item of the sidebar can be clicked with no page error', async ({ page }) => {
+					const watched = watch(page);
+					await page.goto('/dashboard');
+					await settle(page);
+					const hrefs = await page.locator('#sugarizer-sidebar .nav-link[href^="/dashboard"]:visible').evaluateAll((els) => els.map((e) => e.getAttribute('href')));
+					expect(hrefs.length).toBeGreaterThan(3);
+					for (const href of hrefs) {
+						await page.goto('/dashboard');
+						await settle(page);
+						await page.locator('#sugarizer-sidebar .nav-link[href="' + href + '"]').click();
+						await page.waitForURL((url) => url.pathname == href && /lang=/.test(url.search), { timeout: 15000 });
+						await settle(page);
+					}
+					expect(watched.errors, 'uncaught page errors').toEqual([]);
+				});
+
 				test('the page has the language of the dashboard', async ({ page }) => {
 					await page.goto('/dashboard');
 					await settle(page);
@@ -181,6 +207,16 @@ for (const role of ['admin', 'teacher']) {
 						};
 						document.querySelectorAll('.card-header[data-background-color="black"]').forEach(add);
 						document.querySelectorAll('.sidebar .nav-item.active > .nav-link').forEach(add);
+						// the icon of the round buttons (Upload journal, Download/Delete multiple): white on the button, not text-muted grey
+						const btn = document.createElement('a');
+						btn.className = 'btn btn-round';
+						btn.innerHTML = '<i class="material-icons text-muted">delete_forever</i>';
+						document.body.appendChild(btn);
+						const icon = btn.firstChild;
+						const ia = lum(getComputedStyle(icon).color), ib = lum(getComputedStyle(btn).backgroundColor);
+						const iconRatio = (Math.max(ia, ib) + 0.05) / (Math.min(ia, ib) + 0.05);
+						const iconColor = getComputedStyle(icon).color;
+						btn.remove();
 						['success', 'danger', 'warning', 'info'].forEach((type) => {
 							const el = document.createElement('div');
 							el.className = 'toast notify notify-' + type;
@@ -189,9 +225,13 @@ for (const role of ['admin', 'teacher']) {
 							add(el);
 							el.remove();
 						});
-						return Math.min.apply(null, worst);
+						return { text: Math.min.apply(null, worst), iconRatio, iconColor };
 					});
-					expect(await ratio(page)).toBeGreaterThanOrEqual(4.5);
+					const result = await ratio(page);
+					expect(result.text).toBeGreaterThanOrEqual(4.5);
+					// white glyph on the grey button, as on master (2.85:1, not the 1.57:1 of the grey text-muted glyph)
+					expect(result.iconColor, 'icon of a round button').toBe('rgb(255, 255, 255)');
+					expect(result.iconRatio).toBeGreaterThanOrEqual(2.8);
 				});
 
 				test('QR modal opens from the sidebar', async ({ page }) => {

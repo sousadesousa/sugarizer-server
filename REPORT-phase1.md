@@ -436,3 +436,11 @@ Branch `dashboard/bootstrap5`, on top of 3cb53e5. Source: `TEST-REPORT-phase2b.m
 | `admin-{desktop,mobile,tablet}-assignments-add` | missing on purpose (item 6), deleted from the baseline |
 
 All other screenshots are identical or have the same pixels (activities, charts-list and the desktop profile included). I looked at the desktop assignments-add and profile images side by side: the changes are the intended ones. Suites: `test:e2e` 159 tests passed, `npm test` 168 passing, lint 0 errors (the 1 old warning). The baseline was regenerated once (the 56 changed or deleted files include re-encoded PNGs with the same pixels).
+
+## Phase 2e (defects N6 and N7 of the phase 2c/2d test)
+
+1. **N6, sidebar click threw "Invalid or unexpected token"** (`dashboard/views/includes/sidebar.ejs`, 8 lines): `jumpTo(\'/dashboard\', event)` had literal backslashes in the `onclick`; removed (as in `navbar.ejs`). Every sidebar click now works and adds `?lang=`. `dashboard.spec.js`: new tests click (mouse) the Users item and check the URL carries `lang=` with no page error, and click every sidebar item once with no page error. Both fail without the fix (6 of 10 tests failed on the old sidebar).
+2. **N7, grey glyph on the round buttons** (`main.css`): `.btn .material-icons.text-muted { color: inherit !important; }` makes the icon white again (white on #999 = 2.85:1, as on master; the grey glyph was 1.57:1). The contrast test builds a `.btn.btn-round` with a `text-muted` icon and asserts the glyph is `rgb(255, 255, 255)` with a ratio of at least 2.8.
+3. **N8 (optional): not fixed.** I could not reproduce the Tester's matrix with my own pointer-driven harness, so I could not check that a CSS/option change leaves the other moves intact (a `tolerance: 'pointer'` was already rejected in 2b). The last card can still be dragged up to any place, so every order stays reachable.
+
+Comparison before the baseline was regenerated (pages with round buttons only, plus the mobile profile): journal-entries mobile 0.16 %, desktop/no-classroom 0.05 %; assignments, classrooms, users mobile 0.04 %, desktop/tablet 0.01 %; admin/teacher mobile profile 0.01 % (the 2FA round button). The other 38 are identical or have the same pixels. Suites: `test:e2e` 163 passed, `npm test` 168 passing, lint 0 errors (the 1 old warning). Baseline regenerated once.
