@@ -173,3 +173,102 @@ contexts of five regions and time zones (de-CH Zurich, de-CH Zurich in summer, e
 the edit page of an assignment made by the API, and the wrong values (no time, no date, an unreadable number, a past
 time). The four `*-assignments-edit.png` baseline screenshots were regenerated on purpose (the date now reads
 `03/22/2035`, with the zero, in the order of the browser region); the other 78 are unchanged. Full run: 126 passed.
+
+
+## Phase 2a: the shared layer and six pages on Bootstrap 5
+
+Status: done. `npm run test:e2e` 126 passed, `npm run lint` 0 errors (the old warning), `npm test` 168 passing.
+
+### What changed
+
+1. **Test fix first** (own commit, on the Bootstrap 3 code): the e2e server now uses a small fixed client
+   (`test/e2e/fixtures/client`, 6 activities) instead of the `../sugarizer` checkout, so the activities counter of the
+   home page, the activities list and the activity checkboxes of the classroom form no longer depend on the checkout.
+   12 baseline files regenerated, the others untouched.
+2. **Libraries** (vendored in `dashboard/public`, no CDN): Bootstrap 5.3.8 (css + bundle), jQuery 3.7.1, select2
+   4.1.0-rc.0, intro.js 5.1.0 + css (copied from the client). Removed: Material Dashboard (css, js, `material.min.js`),
+   bootstrap-tour, bootstrap-notify, Bootstrap 3, jQuery 3.1, animate.css. No `$.material.init()` / `md.*` left.
+3. **Theme layer** in `main.css` (about 600 lines at the end of the file): body font and colors, headings, the sidebar and
+   main panel, the transparent navbar, cards (with `data-background-color`), grey uppercase buttons, underlined fields,
+   tables, dropdown, modal, toasts, the intro.js tooltip, and the small screen sidebar. Bootstrap 3 behaviors that the
+   old markup relied on are restated where Bootstrap 5 differs: `.main-content` and `.content` are `display: flow-root`
+   (the old clearfix stopped the margin of the first row or heading from collapsing), `.sidebar .nav` is a block (item
+   margins collapse as before), headings keep their Bootstrap 3 top margins, gutters are 30 px.
+4. **Migrated markup**: `includes/` (header, navbar, sidebar with the QR modal, footer, flash-errors), `login`,
+   `verify2FA`, `twoFactor`, `404`, `dashboard` (home). Class changes follow the plan table (`col-xs-*` removed,
+   `pull-*` to `float-*`, `card-content` to `card-body`, `form-group`/`control-label` to `mb-3`/`form-label`,
+   `data-toggle` to `data-bs-toggle`, `close` to `btn-close`, `navbar-toggle` to `navbar-toggler`, `sr-only` to
+   `visually-hidden`). Forms use a plain `form-label` above the field. The language selector is a `form-select`.
+5. **Shared JS** (`main.js`, `tutorial.js`):
+   - `notify(message, type)` shows a Bootstrap toast at the top right (5 s, close button; `success`, `danger`, `warning`, `info`).
+     The message is set as text. The 35 calls of `$.notify` (29 in `main.js`, 4 in `users.ejs`, 2 in `flash-errors.ejs`)
+     use it with the same message and type; flash messages now pass through `jsonForScript` instead of being pasted
+     into a JS string. The toasts keep the `data-notify="container"` / `data-notify="message"` attributes, so the e2e
+     selectors did not change.
+   - The QR code opens with `bootstrap.Modal`.
+   - On screens of 992 px and less the language selector and the user menu of the navbar are copied into the sidebar,
+     which slides in from the right with the toggler (this is what `md.initRightMenu` did); pages without sidebar
+     (login, verify) use the Bootstrap collapse.
+   - `sugarizerTour(view, role, mode)` keeps its interface, steps, `Tuto*` strings and stored state (`<name>_end`,
+     `<name>_current_step`), but runs on intro.js: steps whose element is missing or hidden are skipped, as before; the
+     scroll helpers of the home and user pages still use the same step numbers.
+6. **E2E**: one selector changed (`.popover.tour` is now `.introjs-tooltip`). Everything else, including the notification
+   checks of the flows and the date tests, passes unchanged.
+
+### Comparison with the baseline (migrated pages)
+
+`npm run test:e2e:compare`, threshold 0.1, 82 screenshots: all 82 differ (every page has the new sidebar and navbar), 16 of
+them are migrated pages:
+
+| Page | Different pixels | Judgment |
+|---|---|---|
+| admin-desktop-home | 2.72 % | intended / minor: same layout; text and cards 1-2 px off (Bootstrap 5 line boxes), the language pill is a little wider |
+| teacher-desktop-home | 2.67 % | intended / minor: same layout; text and cards 1-2 px off (Bootstrap 5 line boxes), the language pill is a little wider |
+| admin-mobile-home | 4.40 % | minor: same stacked cards; each card is 2 px shorter, which adds up over four cards |
+| teacher-mobile-home | 4.40 % | minor: same stacked cards; each card is 2 px shorter, which adds up over four cards |
+| admin-desktop-two-factor-enable | 4.39 % | intended: labels sit above the field (form-label, as decided), so the card is shorter; the rest is the same |
+| teacher-desktop-two-factor-enable | 4.34 % | intended: labels sit above the field (form-label, as decided), so the card is shorter; the rest is the same |
+| admin-mobile-two-factor-enable | 5.62 % | intended: labels sit above the field (form-label, as decided), so the card is shorter; the rest is the same |
+| teacher-mobile-two-factor-enable | 5.62 % | intended: labels sit above the field (form-label, as decided), so the card is shorter; the rest is the same |
+| public-desktop-login | 1.00 % | intended: label above the field instead of the floating label; the card and the pill are where they were |
+| public-mobile-login | 3.39 % | intended / minor: same as desktop; the language pill keeps its border and is not full width, the sticky top bar is the same |
+| public-desktop-verify2FA | 0.83 % | intended: same as login |
+| public-mobile-verify2FA | 3.43 % | intended: same as login |
+| admin-desktop-404 | 0.39 % | minor: text 1-2 px off |
+| teacher-desktop-404 | 0.39 % | minor: text 1-2 px off |
+| admin-mobile-404 | 1.19 % | minor: text 1-2 px off |
+| teacher-mobile-404 | 1.19 % | minor: text 1-2 px off |
+
+None of the 16 is a regression to fix: layout, colors, icons, charts and tables are where they were. The other 66 pages
+differ by 1.6 % to 18.1 % (see below); they are not migrated.
+
+### Known breakage left for phase 2b (pages not migrated)
+
+All 66 other screenshots were looked at through the compare index; the pages still load without error and every flow and
+date test passes, but their own markup still uses Bootstrap 3 / Material Dashboard classes:
+- list pages (users, classrooms, activities, assignments, deliveries, journal, charts list): the search card stacks its
+  fields vertically (the `col-xs-*` and `col-md-*` columns, `form-group label-floating` and `material-input` markup), the
+  placeholder-label sits at the top left of the card, buttons wrap under the fields, the list header ("Showing results")
+  and the table headers lose a few px of padding;
+- form pages (add/edit user, classroom, assignment, chart, comment, profile): `form-group`, `control-label`,
+  `label-floating`, `is-empty` have no styling now, so labels are plain small text above the field with less spacing,
+  the Material check boxes and radios are the browser ones, select elements have no arrow (`form-control` on a `select`);
+- `pull-right`, `pull-left` are kept by a short compatibility block at the end of `main.css` (to remove with 2b), and
+  `card-content` still gets its padding from the theme;
+- these pages still carry `$.material`-free but Bootstrap 3 attributes in places (`data-toggle`, `col-xs`, `hidden-*`):
+  `grep -rn "col-xs\|pull-\|form-group\|control-label\|label-floating\|data-toggle\|hidden-" dashboard/views` lists them.
+Their baseline screenshots will be regenerated page by page in 2b, when each is migrated.
+
+### Open questions
+
+- **intro.js license**: intro.js is AGPL-3.0 (commercial license for closed use). The Sugarizer client already ships it
+  (`lib/intro.js`), and the dashboard now ships the same file; please confirm that this is acceptable for the server.
+- select2 4.1.0 is only published as a release candidate (`4.1.0-rc.0`), the version asked for ("4.1.x") that exists.
+- jQuery UI 1.11.4 (sortable) and the multi-select plugin are old and run on jQuery 3.7.1 without console errors in the
+  tests, but only the pages that use them were exercised by the e2e tests; the sortable activity list is not covered.
+- The mobile sidebar copies the language selector, so the `languageSelection` id exists twice on small screens (as it did
+  with Material Dashboard); `jumpTo` reads the first one.
+- The tutorial still starts only above 992 px (unchanged); `disableInteraction` keeps the highlighted element from being
+  clicked during a step, like the backdrop of bootstrap-tour did.
+- Toasts last 5 s (bootstrap-notify used its default of 5 s as well, plus the animation); tell me if another delay is wanted.
+- The sidebar and navbar are now Bootstrap 5; nothing was done for dark mode or right-to-left languages.
