@@ -10,21 +10,23 @@ var fs = require('fs'),
 	net = require('net'),
 	path = require('path'),
 	ini = require('ini'),
+	otplib = require('otplib'),
 	spawn = require('child_process').spawn,
 	MongoClient = require('mongodb').MongoClient;
 
 var root = path.resolve(__dirname, '../..');
+// Names of the seed are the same on every run (the database is throwaway), so screenshots stay comparable
 var stamp = Date.now().toString();
 
 // Ordinary users of the seed (the password is the same for all)
 var PASSWORD = 'pokemon';
 var users = {
-	admin: {name: 'E2E Admin ' + stamp, role: 'admin'},
-	teacher: {name: 'E2E Teacher ' + stamp, role: 'teacher'},
-	student1: {name: 'E2E Student 1 ' + stamp, role: 'student'},
-	student2: {name: 'E2E Student 2 ' + stamp, role: 'student'},
+	admin: {name: 'E2E Admin', role: 'admin'},
+	teacher: {name: 'E2E Teacher', role: 'teacher'},
+	student1: {name: 'E2E Student 1', role: 'student'},
+	student2: {name: 'E2E Student 2', role: 'student'},
 	// admin with two-factor authentication enabled (same secret as the API tests)
-	tfa: {name: 'E2E TFA ' + stamp, role: 'admin', uniqueSecret: 'AAAAAAAAAAAAAAA'}
+	tfa: {name: 'E2E TFA', role: 'admin', uniqueSecret: 'AAAAAAAAAAAAAAA'}
 };
 
 function freePort() {
@@ -121,24 +123,40 @@ async function start() {
 		state.iniFile = path.join(root, 'env', envName + '.ini');
 		fs.writeFileSync(state.iniFile, ini.stringify(settings));
 
-		// Server
-		state.server = spawn(process.execPath, ['sugarizer.js'], {
-			cwd: root,
-			env: Object.assign({}, process.env, {NODE_ENV: envName}),
-			stdio: ['ignore', 'pipe', 'pipe']
-		});
-		state.server.stdout.on('data', function(d) {
-			state.log.push(String(d));
-		});
-		state.server.stderr.on('data', function(d) {
-			state.log.push(String(d));
-		});
-		state.server.on('exit', function(code) {
-			state.server = null;
-			if (code) {
-				state.log.push('server exited with code ' + code);
-			}
-		});
+		// Server. If it crashes once the tests run (a page can bring it down), it is started again, with
+		// the same database; sessions are lost, so tests logged in before a crash must log in again.
+		state.stopping = false;
+		state.started = false;
+		state.restarts = 0;
+		var launch = function() {
+			var child = spawn(process.execPath, ['sugarizer.js'], {
+				cwd: root,
+				env: Object.assign({}, process.env, {NODE_ENV: envName}),
+				stdio: ['ignore', 'pipe', 'pipe']
+			});
+			state.server = child;
+			child.stdout.on('data', function(d) {
+				state.log.push(String(d));
+			});
+			child.stderr.on('data', function(d) {
+				state.log.push(String(d));
+			});
+			child.on('exit', function(code) {
+				state.server = null;
+				if (code) {
+					state.log.push('server exited with code ' + code + '\n');
+				}
+				if (state.started && !state.stopping && state.restarts < 50) {
+					state.restarts++;
+					setTimeout(function() {
+						if (!state.stopping) {
+							launch();
+						}
+					}, 500);
+				}
+			});
+		};
+		launch();
 		var base = 'http://127.0.0.1:' + webPort;
 		await waitFor(async function() {
 			if (!state.server) {
@@ -146,6 +164,7 @@ async function start() {
 			}
 			return (await fetch(base + '/api')).ok;
 		}, 'the server on ' + base, 60000);
+		state.started = true;
 
 		// Seed. Admins can only sign up from the server address
 		for (var key of ['admin', 'tfa']) {
@@ -153,11 +172,19 @@ async function start() {
 		}
 		var admin = await api(base, 'POST', '/auth/login', {user: JSON.stringify({name: users.admin.name, password: PASSWORD, role: 'admin'})});
 		var created = {};
-		for (key of ['teacher', 'student1', 'student2']) {
-			created[key] = await api(base, 'POST', '/api/v1/users/', {user: JSON.stringify(Object.assign({password: PASSWORD, language: 'en', color: {stroke: '#FF0000', fill: '#0000FF'}}, users[key]))}, admin);
+		var userBody = function(key, extra) {
+			return {user: JSON.stringify(Object.assign({password: PASSWORD, language: 'en', color: {stroke: '#FF0000', fill: '#0000FF'}}, users[key], extra))};
+		};
+		for (key of ['student1', 'student2']) {
+			created[key] = await api(base, 'POST', '/api/v1/users/', userBody(key), admin);
 		}
+		var classroom = await api(base, 'POST', '/api/v1/classrooms/', {classroom: JSON.stringify({name: 'E2E Class', color: {stroke: '#FF0000', fill: '#0000FF'}, students: [created.student1._id, created.student2._id]})}, admin);
+		// A teacher sees (journals, users) the students of the classrooms assigned to the teacher
+		created.teacher = await api(base, 'POST', '/api/v1/users/', userBody('teacher', {classrooms: [classroom._id]}), admin);
 		var teacher = await api(base, 'POST', '/auth/login', {user: JSON.stringify({name: users.teacher.name, password: PASSWORD, role: 'teacher'})});
-		var classroom = await api(base, 'POST', '/api/v1/classrooms/', {classroom: JSON.stringify({name: 'E2E Class ' + stamp, color: {stroke: '#FF0000', fill: '#0000FF'}, students: [created.student1._id, created.student2._id]})}, admin);
+		// Two-factor authentication on for the tfa admin: the dashboard login then asks for the code
+		var tfa = await api(base, 'POST', '/auth/login', {user: JSON.stringify({name: users.tfa.name, password: PASSWORD, role: 'admin'})});
+		await api(base, 'PUT', '/api/v1/dashboard/profile/enable2FA', {userToken: otplib.authenticator.generate(users.tfa.uniqueSecret)}, tfa);
 		var workId = 'ffffffff-ffff-ffff-ffff-fffffffffff1';
 		await api(base, 'POST', '/api/v1/journal/' + teacher.user.private_journal, {journal: JSON.stringify({
 			objectId: workId,
@@ -165,7 +192,7 @@ async function start() {
 			metadata: {user_id: teacher.user._id, title: 'E2E work', timestamp: Date.now(), activity: 'org.olpcfrance.PaintActivity'}
 		})}, teacher);
 		var assignment = await api(base, 'POST', '/api/v1/assignments/', {assignment: JSON.stringify({
-			name: 'E2E Assignment ' + stamp,
+			name: 'E2E Assignment',
 			assignedWork: workId,
 			color: {stroke: '#FF0000', fill: '#0000FF'},
 			instructions: 'Draw something',
@@ -174,7 +201,7 @@ async function start() {
 			dueDate: String(Date.now() + 7 * 24 * 3600 * 1000)
 		})}, teacher);
 		await api(base, 'GET', '/api/v1/assignments/launch/' + assignment._id, null, teacher);
-		var chart = await api(base, 'POST', '/api/v1/charts/', {chart: JSON.stringify({title: 'E2E Chart ' + stamp, key: 'how-users-are-active', type: 'pie', hidden: false})}, admin);
+		var chart = await api(base, 'POST', '/api/v1/charts/', {chart: JSON.stringify({title: 'E2E Chart', key: 'how-users-are-active', type: 'pie', hidden: false})}, admin);
 
 		return {
 			state: state,
@@ -219,6 +246,7 @@ async function stop(state) {
 	if (!state) {
 		return;
 	}
+	state.stopping = true;
 	await kill(state.server);
 	if (state.dbName && !state.dbDir) {
 		// shared MongoDB: drop only the throwaway database

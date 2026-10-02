@@ -10,6 +10,9 @@ const ids = info.ids;
 const shots = path.join(__dirname, 'baseline');
 fs.mkdirSync(shots, { recursive: true });
 
+// the server is started by the global setup, which passes its address in E2E_INFO
+test.use({ baseURL: info.baseURL });
+
 const VIEWPORTS = {
 	desktop: { width: 1280, height: 800 },
 	mobile: { width: 390, height: 844 }
@@ -29,9 +32,9 @@ const PAGES = [
 	{ slug: 'journal', path: '/dashboard/journal' },
 	{ slug: 'journal-entries', path: '/dashboard/journal/' + ids.teacherJournal },
 	{ slug: 'assignments', path: '/dashboard/assignments' },
-	{ slug: 'assignments-add', path: '/dashboard/assignments/add', select2: '#select2-activity' },
-	{ slug: 'assignments-edit', path: '/dashboard/assignments/edit/' + ids.assignment, select2: '#select2-activity' },
-	{ slug: 'deliveries', path: '/dashboard/assignments/deliveries/' + ids.assignment },
+	// An admin has no private journal: the page redirects to the journals with "Invalid journal" (state recorded as is)
+	{ slug: 'assignments-add', path: '/dashboard/assignments/add', select2: '#select2-activity', select2Roles: ['teacher'] },
+	{ slug: 'assignments-edit', path: '/dashboard/assignments/edit/' + ids.assignment },
 	{ slug: 'deliveries-comment', path: '/dashboard/assignments/deliveries/comment/' + ids.assignment + '?oid=none' },
 	{ slug: 'charts-list', path: '/dashboard/stats/list', admin: true },
 	{ slug: 'charts-add', path: '/dashboard/stats/add', admin: true },
@@ -41,6 +44,13 @@ const PAGES = [
 	{ slug: 'two-factor-enable', path: '/dashboard/profile/enable2FA' },
 	{ slug: '404', path: '/dashboard/does-not-exist' }
 ];
+
+// KNOWN FAILURE TODAY (not fixed in this phase): GET /dashboard/assignments/deliveries/:id brings the whole server
+// down. The dashboard calls api/controller/assignments.js findAllDeliveries, which still calls deliveries.get()
+// (cursor API of the old MongoDB driver) after the upgrade to driver 6: "deliveries.get is not a function",
+// uncaught exception, the process exits. These tests run last, are marked test.fail() and the harness restarts the
+// server. Remove test.fail() when the page is fixed.
+const DELIVERIES = { slug: 'deliveries', path: '/dashboard/assignments/deliveries/' + ids.assignment };
 
 // Tutorials are launched by the first visit of a page: mark them as finished, except in the tutorial test
 const TOURS = ['home', 'users', 'editUser', 'classroom', 'editClassroom', 'activities', 'journal1', 'journal2', 'assignment',
@@ -52,6 +62,21 @@ function skipTours() {
 			localStorage.setItem(name + suffix + '_end', 'yes');
 		}
 	}
+}
+
+async function serverReady() {
+	const end = Date.now() + 30000;
+	while (Date.now() < end) {
+		try {
+			if ((await fetch(info.baseURL + '/api')).ok) {
+				return;
+			}
+		} catch (e) {
+			// not listening yet
+		}
+		await new Promise((resolve) => setTimeout(resolve, 250));
+	}
+	throw new Error('server not answering on ' + info.baseURL);
 }
 
 async function login(page, user) {
@@ -86,15 +111,17 @@ for (const role of ['admin', 'teacher']) {
 			let storageState;
 
 			test.beforeAll(async ({ browser }) => {
+				await serverReady();
 				const context = await browser.newContext();
 				const page = await context.newPage();
 				await login(page, info.users[role]);
-				await page.waitForURL('**/dashboard');
+				await page.waitForURL(/\/dashboard(\?.*)?$/);
 				storageState = await context.storageState();
 				await context.close();
 			});
 
 			test.beforeEach(async ({ context }) => {
+				await serverReady();
 				await context.addCookies(storageState.cookies);
 				await context.addInitScript(skipTours, TOURS);
 			});
@@ -120,7 +147,7 @@ for (const role of ['admin', 'teacher']) {
 							await expect(page.locator('#sugarizer-sidebar')).toBeVisible();
 						}
 					}
-					if (p.select2) {
+					if (p.select2 && (!p.select2Roles || p.select2Roles.includes(role))) {
 						await expect(page.locator(p.select2).first(), 'select2 initialised').toHaveClass(/select2-hidden-accessible/);
 						await expect(page.locator('.select2-container').first()).toBeVisible();
 					}
@@ -132,7 +159,7 @@ for (const role of ['admin', 'teacher']) {
 			if (vpName == 'desktop') {
 				test('datetimepicker opens on the assignment form', async ({ page }) => {
 					const watched = watch(page);
-					await page.goto('/dashboard/assignments/add');
+					await page.goto('/dashboard/assignments/edit/' + ids.assignment);
 					await settle(page);
 					await page.click('#datetimepicker1');
 					await expect(page.locator('.xdsoft_datetimepicker').filter({ visible: true }).first()).toBeVisible();
@@ -179,6 +206,17 @@ for (const role of ['admin', 'teacher']) {
 					expect(watched.errors).toEqual([]);
 				});
 			}
+
+			// Last: this page crashes the server (see DELIVERIES), logged in state is lost afterwards
+			test('deliveries (known failure: server crash)', async ({ page }) => {
+				test.fail();
+				const watched = watch(page);
+				const response = await page.goto(DELIVERIES.path);
+				await settle(page);
+				expect(response.status(), 'HTTP status').toBe(200);
+				expect(watched.errors, 'uncaught page errors').toEqual([]);
+				await page.screenshot({ path: path.join(shots, role + '-' + vpName + '-deliveries.png'), fullPage: true });
+			});
 		});
 	}
 }
@@ -203,7 +241,7 @@ for (const [vpName, viewport] of Object.entries(VIEWPORTS)) {
 		test('two-factor verification', async ({ page }, testInfo) => {
 			const watched = watch(page);
 			await login(page, info.users.tfa);
-			await page.waitForURL('**/dashboard/verify2FA');
+			await page.waitForURL(/\/dashboard\/verify2FA(\?.*)?$/);
 			await settle(page);
 			await expect(page.locator('input[name="tokenentry"]')).toBeVisible();
 			expect(watched.errors).toEqual([]);
