@@ -244,8 +244,10 @@ differ by 1.6 % to 18.1 % (see below); they are not migrated.
 
 ### Known breakage left for phase 2b (pages not migrated)
 
-All 66 other screenshots were looked at through the compare index; the pages still load without error and every flow and
-date test passes, but their own markup still uses Bootstrap 3 / Material Dashboard classes:
+I looked in detail at three of the 66 other pages (users, assignments list, add classroom) and at the compare numbers of
+the rest (1.6 % to 18.1 %); I did not go through every one. The pages still load without error and every flow and date
+test passes, but their own markup still uses Bootstrap 3 / Material Dashboard classes, so expect the following (to be
+confirmed page by page in 2b):
 - list pages (users, classrooms, activities, assignments, deliveries, journal, charts list): the search card stacks its
   fields vertically (the `col-xs-*` and `col-md-*` columns, `form-group label-floating` and `material-input` markup), the
   placeholder-label sits at the top left of the card, buttons wrap under the fields, the list header ("Showing results")
@@ -255,7 +257,7 @@ date test passes, but their own markup still uses Bootstrap 3 / Material Dashboa
   the Material check boxes and radios are the browser ones, select elements have no arrow (`form-control` on a `select`);
 - `pull-right`, `pull-left` are kept by a short compatibility block at the end of `main.css` (to remove with 2b), and
   `card-content` still gets its padding from the theme;
-- these pages still carry `$.material`-free but Bootstrap 3 attributes in places (`data-toggle`, `col-xs`, `hidden-*`):
+- other Bootstrap 3 names are still in these views (`data-toggle`, `col-xs-*`, `hidden-*`...):
   `grep -rn "col-xs\|pull-\|form-group\|control-label\|label-floating\|data-toggle\|hidden-" dashboard/views` lists them.
 Their baseline screenshots will be regenerated page by page in 2b, when each is migrated.
 
