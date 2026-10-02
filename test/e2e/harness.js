@@ -23,6 +23,8 @@ var PASSWORD = 'pokemon';
 var users = {
 	admin: {name: 'E2E Admin', role: 'admin'},
 	teacher: {name: 'E2E Teacher', role: 'teacher'},
+	// teacher with no classroom (so no students, no shared journal)
+	teacherNoClass: {name: 'E2E Teacher No Class', role: 'teacher'},
 	student1: {name: 'E2E Student 1', role: 'student'},
 	student2: {name: 'E2E Student 2', role: 'student'},
 	// admin with two-factor authentication enabled (same secret as the API tests)
@@ -181,6 +183,8 @@ async function start() {
 		var classroom = await api(base, 'POST', '/api/v1/classrooms/', {classroom: JSON.stringify({name: 'E2E Class', color: {stroke: '#FF0000', fill: '#0000FF'}, students: [created.student1._id, created.student2._id]})}, admin);
 		// A teacher sees (journals, users) the students of the classrooms assigned to the teacher
 		created.teacher = await api(base, 'POST', '/api/v1/users/', userBody('teacher', {classrooms: [classroom._id]}), admin);
+		created.teacherNoClass = await api(base, 'POST', '/api/v1/users/', userBody('teacherNoClass'), admin);
+		var teacherNoClass = await api(base, 'POST', '/auth/login', {user: JSON.stringify({name: users.teacherNoClass.name, password: PASSWORD, role: 'teacher'})});
 		var teacher = await api(base, 'POST', '/auth/login', {user: JSON.stringify({name: users.teacher.name, password: PASSWORD, role: 'teacher'})});
 		// Two-factor authentication on for the tfa admin: the dashboard login then asks for the code
 		var tfa = await api(base, 'POST', '/auth/login', {user: JSON.stringify({name: users.tfa.name, password: PASSWORD, role: 'admin'})});
@@ -213,6 +217,7 @@ async function start() {
 					admin: admin.user._id,
 					teacher: teacher.user._id,
 					teacherJournal: teacher.user.private_journal,
+					teacherNoClassJournal: teacherNoClass.user.private_journal,
 					student1: created.student1._id,
 					classroom: classroom._id,
 					assignment: assignment._id,

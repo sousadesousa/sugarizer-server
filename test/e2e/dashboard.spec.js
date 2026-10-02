@@ -35,6 +35,7 @@ const PAGES = [
 	// An admin has no private journal: the page redirects to the journals with "Invalid journal" (state recorded as is)
 	{ slug: 'assignments-add', path: '/dashboard/assignments/add', select2: '#select2-activity', select2Roles: ['teacher'] },
 	{ slug: 'assignments-edit', path: '/dashboard/assignments/edit/' + ids.assignment },
+	{ slug: 'deliveries', path: '/dashboard/assignments/deliveries/' + ids.assignment },
 	{ slug: 'deliveries-comment', path: '/dashboard/assignments/deliveries/comment/' + ids.assignment + '?oid=none' },
 	{ slug: 'charts-list', path: '/dashboard/stats/list', admin: true },
 	{ slug: 'charts-add', path: '/dashboard/stats/add', admin: true },
@@ -44,13 +45,6 @@ const PAGES = [
 	{ slug: 'two-factor-enable', path: '/dashboard/profile/enable2FA' },
 	{ slug: '404', path: '/dashboard/does-not-exist' }
 ];
-
-// KNOWN FAILURE TODAY (not fixed in this phase): GET /dashboard/assignments/deliveries/:id brings the whole server
-// down. The dashboard calls api/controller/assignments.js findAllDeliveries, which still calls deliveries.get()
-// (cursor API of the old MongoDB driver) after the upgrade to driver 6: "deliveries.get is not a function",
-// uncaught exception, the process exits. These tests run last, are marked test.fail() and the harness restarts the
-// server. Remove test.fail() when the page is fixed.
-const DELIVERIES = { slug: 'deliveries', path: '/dashboard/assignments/deliveries/' + ids.assignment };
 
 // Tutorials are launched by the first visit of a page: mark them as finished, except in the tutorial test
 const TOURS = ['home', 'users', 'editUser', 'classroom', 'editClassroom', 'activities', 'journal1', 'journal2', 'assignment',
@@ -206,20 +200,36 @@ for (const role of ['admin', 'teacher']) {
 					expect(watched.errors).toEqual([]);
 				});
 			}
-
-			// Last: this page crashes the server (see DELIVERIES), logged in state is lost afterwards
-			test('deliveries (known failure: server crash)', async ({ page }) => {
-				test.fail();
-				const watched = watch(page);
-				const response = await page.goto(DELIVERIES.path);
-				await settle(page);
-				expect(response.status(), 'HTTP status').toBe(200);
-				expect(watched.errors, 'uncaught page errors').toEqual([]);
-				await page.screenshot({ path: path.join(shots, role + '-' + vpName + '-deliveries.png'), fullPage: true });
-			});
 		});
 	}
 }
+
+// A teacher with no classroom has no students, so no shared journal: the journal pages used to redirect to
+// themselves forever (ERR_TOO_MANY_REDIRECTS). They now show the page with a message.
+test.describe('teacher without classroom', () => {
+	test.use({ viewport: VIEWPORTS.desktop });
+
+	for (const [slug, journalPath] of [['journal', '/dashboard/journal'], ['journal-entries', '/dashboard/journal/' + ids.teacherNoClassJournal]]) {
+		test(slug + ' shows the page with a message instead of redirecting', async ({ page }) => {
+			await serverReady();
+			await page.context().addInitScript(skipTours, TOURS);
+			const watched = watch(page);
+			await login(page, info.users.teacherNoClass);
+			await page.waitForURL(/\/dashboard(\?.*)?$/);
+			const response = await page.goto(journalPath);
+			await settle(page);
+			expect(response.status(), 'HTTP status').toBe(200);
+			expect(new URL(page.url()).pathname, 'no redirect loop').toMatch(/^\/dashboard\/journal/);
+			await expect(page.locator('#journal-search-card')).toBeVisible();
+			await expect(page.locator('[data-notify="message"]').first()).toContainText('No shared journal found');
+			// the shared journal box stays unchecked and the user selector usable
+			await expect(page.locator('#journal-type')).not.toBeChecked();
+			await expect(page.locator('#users-select2')).toBeEnabled();
+			expect(watched.errors, 'uncaught page errors').toEqual([]);
+			await page.screenshot({ path: path.join(shots, 'teacher-no-classroom-desktop-' + slug + '.png'), fullPage: true });
+		});
+	}
+});
 
 // Pages without a session
 for (const [vpName, viewport] of Object.entries(VIEWPORTS)) {

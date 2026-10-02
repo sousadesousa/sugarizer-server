@@ -1,8 +1,8 @@
 # Phase 1 report: Playwright baseline of the dashboard (Bootstrap 3 -> 5)
 
-**Status: DONE.** `npm run test:e2e` is green (87 passed, 4 of them known failures marked `test.fail()`), the baseline
-screenshots are committed in `test/e2e/baseline/` (76 files, 3 MB), `npm run lint` has 0 errors and `npm test` passes
-(162 passing). No dashboard code, styling or CI workflow was changed.
+**Status: DONE.** `npm run test:e2e` is green (89 passed), the baseline
+screenshots are committed in `test/e2e/baseline/` (82 files, 3 MB), `npm run lint` has 0 errors and `npm test` passes
+(168 passing after the hotfix). No dashboard code, styling or CI workflow was changed.
 
 ## How MongoDB was obtained
 
@@ -21,7 +21,8 @@ For `npm test` a mongod was started on 27017 (no change to `env/test.ini`) and s
 - Harness: own `mongod` on a free port (or the existing MongoDB), throwaway `env/e2e-<port>.ini` (copy of
   `env/test.ini`, throwaway database, free web and presence ports; git-ignored; removed at the end; `env/test.ini`
   untouched), the server, seed through the API, cleanup. If the server crashes during the run, the harness starts it
-  again on the same database (sessions are lost, so every describe group logs in again after the crash).
+  again on the same database (sessions are lost, so every describe group logs in again after a crash; no page crashes it
+  any more since the hotfix, this stays as a safety net).
 - Seed (fixed names, so screenshots are comparable between runs): 2 students, a classroom with them, a teacher
   with that classroom assigned, an admin, an admin with two-factor authentication enabled (TOTP through the API), a
   journal entry, a launched assignment and a chart.
@@ -36,27 +37,24 @@ For `npm test` a mongod was started on 27017 (no change to `env/test.ini`) and s
   them as finished (`<name>_end = yes` in localStorage); the help button restarts them.
 - Failed same-origin requests (status >= 400) are attached to each test as an annotation: there are none today.
 
-## Pages that error TODAY (not fixed, as asked)
+## Pages that error TODAY
 
-1. **`GET /dashboard/assignments/deliveries/:id` brings the whole server down** (admin and teacher). The dashboard
-   calls `findAllDeliveries` in `api/controller/assignments.js` (line ~457), which still calls `deliveries.get(...)`,
-   the cursor API of the old MongoDB driver, after the upgrade to driver 6: `TypeError: deliveries.get is not a
-   function`, uncaught exception, `process.exit(-1)` in `sugarizer.js`. The browser sees a connection reset. The four
-   `deliveries` tests are marked `test.fail()` with a comment, run last in each group, and there is no screenshot for
-   that page. Remove `test.fail()` and add the screenshot when it is fixed.
+Update after the hotfix (`fix/deliveries-and-journal-loop`, merged into this branch, see `REPORT-hotfix.md` there):
+
+1. **Deliveries page crash**: FIXED by the hotfix. The four `test.fail()` marks are gone, the page is in the normal
+   page list and has screenshots (`*-deliveries.png`).
 2. **Admin, `/dashboard/assignments/add`**: redirects to `/dashboard/journal` with the error "Invalid journal" (an
-   admin has no private journal, the journal id is `undefined`). The screenshot records that state; the select2 check
-   of this page is only done for the teacher.
-3. Not asserted, seen while building the seed: a **teacher with no classroom** (so no students) gets
-   `ERR_TOO_MANY_REDIRECTS` on `/dashboard/journal` and `/dashboard/journal/:id`: `getSharedJournalId`
-   (`dashboard/controller/journal/util`) redirects to `/dashboard/journal` when the API returns no shared journal,
-   which is the page that calls it. With a classroom assigned (as in the seed) the pages work.
+   admin has no private journal, the journal id is `undefined`). Known behaviour, deliberately not changed. The
+   screenshot records that state; the select2 check of this page is only done for the teacher.
+3. **Teacher with no classroom, journal redirect loop**: FIXED by the hotfix. A seeded teacher without classroom is
+   covered by two e2e tests (journal and journal entries: page shown, message "No shared journal found", no redirect
+   loop) and screenshots (`teacher-no-classroom-desktop-*.png`; the notification is visible in them).
 
 ## Test summary
 
-- `npm run test:e2e`: 87 passed (83 plain, 4 expected failures), about 2.8 minutes, one worker.
+- `npm run test:e2e`: 89 passed, about 2.9 minutes, one worker.
 - `npm run lint`: 0 errors, 1 warning that was already there (an unused eslint-disable directive).
-- `npm test`: 162 passing.
+- `npm test`: 168 passing (162 + the 6 deliveries tests of the hotfix).
 
 ## Open questions
 
