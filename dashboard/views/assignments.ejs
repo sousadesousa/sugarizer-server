@@ -1,7 +1,7 @@
 <%- include('includes/header') %>
 <div class="wrapper">
     <%- include('includes/sidebar') %>
-    <div class="main-panel">
+    <div class="main-area">
         <%- include('includes/navbar') %>
         <div class="content">
             <div class="container-fluid">
@@ -18,7 +18,7 @@
                                 </div>
                                 <div class="col-lg-3"> 
                                     <div class="search-field">
-                                        <select class="form-control" id="select-status-select2" name="status" value="<% if(query.isAssigned){ %><%= query.isAssigned %><% } %>">
+                                        <select class="form-select" id="select-status-select2" name="status" value="<% if(query.isAssigned){ %><%= query.isAssigned %><% } %>">
                                             <option data-l10n-id="statusAll" value="">All status</option>
                                             <option data-l10n-id="statusAssigned" value="true">Assigned</option>
                                             <option data-l10n-id="statusCreated" value="false">Created</option>
@@ -64,7 +64,7 @@
                                     <table class="table">
                                         <thead class="text-muted">
                                             <tr>
-                                                <th class="text-muted"><input type="checkbox" id="checkAll" onclick="checkAll()"></th>
+                                                <th class="text-muted"><input type="checkbox" class="form-check-input" id="checkAll" onclick="checkAll()"></th>
                                                 <th>#</th>
                                                 <th data-l10n-id="activity">Activity</th>
                                                 <th><button data-l10n-id="name" id="name-column" onclick="sortBy('name')"></button></th>
@@ -76,7 +76,7 @@
                                         <tbody>
                                             <% for(var i=0; i < data.assignments.length; i++) { %>
                                             <tr id="assignment-card">
-                                                <td><input type="checkbox" class="assignments-checkbox" aid="<%= data.assignments[i]._id %>"></td>
+                                                <td><input type="checkbox" class="form-check-input assignments-checkbox" aid="<%= data.assignments[i]._id %>"></td>
                                                 <td><%= data.offset + i + 1 %></td>
                                                 <td>
                                                     <div class="color" id="<%= 'ic'+i+data.assignments[i].assignedWork.objectId %>">

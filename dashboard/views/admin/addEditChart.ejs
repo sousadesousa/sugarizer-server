@@ -1,7 +1,7 @@
 <%- include('../includes/header') %>
   <div class="wrapper">
   	<%- include('../includes/sidebar') %>
-    	<div class="main-panel">
+    	<div class="main-area">
     	<%- include('../includes/navbar') %>
     		<div class="content">
     			<div class="container-fluid">
@@ -89,9 +89,9 @@
                             <div class="col-12">
                                 <div class="mb-3">
                                     <label class="form-label" data-l10n-id="display"></label>
-                                    <div class="display-check" >
-                                        <input type="checkbox" id="scales" name="hidden" <% if(typeof chart == 'object' && chart.hidden == true){ %> checked <% } %>>
-                                        <label for="hidden" data-l10n-id="hidden"></label>
+                                    <div class="display-check form-check">
+                                        <input type="checkbox" class="form-check-input" id="scales" name="hidden" <% if(typeof chart == 'object' && chart.hidden == true){ %> checked <% } %>>
+                                        <label class="form-check-label" for="scales" data-l10n-id="hidden"></label>
                                     </div>
                                 </div>
                             </div>

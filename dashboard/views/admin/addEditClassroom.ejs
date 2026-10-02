@@ -1,7 +1,7 @@
 <%- include('../includes/header') %>
   <div class="wrapper">
   	<%- include('../includes/sidebar') %>
-    	<div class="main-panel">
+    	<div class="main-area">
     	<%- include('../includes/navbar') %>
     		<div class="content">
     			<div class="container-fluid">
@@ -22,7 +22,7 @@
                             <div class="col-12">
                                 <div class="mb-3" style="margin-top: -15px;">
                                     <label class="form-label" data-l10n-id="students"></label>
-                                    <select id="select-students-select2" multiple="multiple" name="students" class="form-control">
+                                    <select id="select-students-select2" multiple="multiple" name="students" class="form-select">
                                         <% if(typeof classroom == 'object') { %>
                                             <% for(var i=0; i < classroom.students.length; i++) { %>
                                                 <option selected value='<%= classroom.students[i]._id %>'><%= classroom.students[i].name %></option>
@@ -85,11 +85,13 @@
                                     <div class="classroom-activities" style="max-height: 260px; overflow-y: auto; border: 1px solid #ddd; border-radius: 4px; padding: 8px;">
                                         <% var assigned = (typeof classroom == 'object' && Array.isArray(classroom.activities)) ? classroom.activities : []; %>
                                         <% for (var i = 0; i < activities.length; i++) { %>
-                                            <label style="display: inline-block; width: 220px; margin: 4px 8px; font-weight: normal; vertical-align: middle;">
-                                                <input type="checkbox" name="activities" value="<%= activities[i].id %>" <% if (assigned.indexOf(activities[i].id) != -1) { %>checked<% } %>>
+                                            <div class="form-check form-check-inline" style="width: 220px; margin: 4px 8px;">
+                                            <input class="form-check-input" id="activity-<%= activities[i].id %>" type="checkbox" name="activities" value="<%= activities[i].id %>" <% if (assigned.indexOf(activities[i].id) != -1) { %>checked<% } %>>
+                                            <label class="form-check-label" for="activity-<%= activities[i].id %>">
                                                 <img src="/<%= activities[i].directory %>/<%= activities[i].icon %>" alt="" style="width: 24px; height: 24px; margin: 0 6px;">
                                                 <%= activities[i].name %>
                                             </label>
+                                        </div>
                                         <% } %>
                                     </div>
                                 </div>
@@ -99,7 +101,7 @@
                             <div class="col-12">
                                 <div class="mb-3">
                                     <label class="form-label" data-l10n-id="color"></label>
-                                    <select class="form-control" name="color" id="color-select2">
+                                    <select class="form-select" name="color" id="color-select2">
                                         <% if(typeof classroom == "undefined") var random=Math.floor(Math.random()*xocolors.length); %>
                                         <% for(var i=0; i< xocolors.length; i++){ %>
                                           <% if(typeof classroom == 'object' && (typeof classroom.color == 'object' && xocolors[i].stroke == classroom.color.stroke && xocolors[i].fill == classroom.color.fill) || (random == i)) { %>

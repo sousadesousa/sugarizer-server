@@ -1,7 +1,7 @@
 <%- include('includes/header') %>
 <div class="wrapper">
 	<%- include('includes/sidebar') %>
-	<div class="main-panel">
+	<div class="main-area">
 	<%- include('includes/navbar') %>
 		<div class="content">
 			<div class="container-fluid">
@@ -55,7 +55,7 @@
                             <table class="table">
                                 <thead class="text-muted">
                                     <tr>
-                                        <th class="text-muted"><input type="checkbox" id="checkAll" onclick="checkAll()"></th>
+                                        <th class="text-muted"><input type="checkbox" class="form-check-input" id="checkAll" onclick="checkAll()"></th>
                                         <th>#</th>
                                         <th data-l10n-id="icon">Icon</th>
                                         <th><button data-l10n-id="name" id="name-column" onclick="sortBy('name')"></button></th>
@@ -67,7 +67,7 @@
                                 <tbody>
                                     <% for(var i=0; i < data.classrooms.length; i++) { %>
                                       <tr id="classroom-card">
-                                          <td><input type="checkbox" class="classrooms-checkbox" cid="<%= data.classrooms[i]._id %>"></td>
+                                          <td><input type="checkbox" class="form-check-input classrooms-checkbox" cid="<%= data.classrooms[i]._id %>"></td>
                                           <td><%= data.offset + i + 1 %></td>
                                           <td>
                                               <div class="color" id="<%= data.classrooms[i]._id %>">

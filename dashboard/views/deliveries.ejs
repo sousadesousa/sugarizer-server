@@ -1,7 +1,7 @@
 <%- include('includes/header') %>
 <div class="wrapper">
     <%- include('includes/sidebar') %>
-    <div class="main-panel">
+    <div class="main-area">
         <%- include('includes/navbar') %>
         <div class="content">
             <div class="container-fluid">
@@ -18,7 +18,7 @@
                                 </div>
                                 <div class="col-lg-3"> 
                                     <div class="search-field">
-                                        <select class="form-control" id="select-status-select2" name="status" value="<% if(query.Delivered){ %><%= query.Delivered %><% } %>">
+                                        <select class="form-select" id="select-status-select2" name="status" value="<% if(query.Delivered){ %><%= query.Delivered %><% } %>">
                                             <option data-l10n-id="statusAll" value="">All status</option>
                                             <option data-l10n-id="statusExpected" value="false">Assigned</option>
                                             <option data-l10n-id="statusDelivered" value="true">Delivered</option>
@@ -58,7 +58,7 @@
                                     <table class="table">
                                         <thead class="text-muted">
                                             <tr>
-                                                <th class="text-muted"><input type="checkbox" id="checkAll" onclick="checkAll()"></th>
+                                                <th class="text-muted"><input type="checkbox" class="form-check-input" id="checkAll" onclick="checkAll()"></th>
                                                 <th>#</th>
                                                 <th data-l10n-id="icon">Activity</th>
                                                 <th><button data-l10n-id="name" id="name-column" onclick="sortBy('name')"></button></th>
@@ -72,7 +72,7 @@
                                         <tbody>
                                             <% for(var i=0; i < data.deliveries.length; i++) { %>
                                             <tr id="deliveries-card">
-                                                <td><input type="checkbox" class="deliveries-checkbox" cid="<%= data.deliveries[i]._id %>"></td>
+                                                <td><input type="checkbox" class="form-check-input deliveries-checkbox" cid="<%= data.deliveries[i]._id %>"></td>
                                                 <td><%= data.offset + i + 1 %></td>
                                                 <td>
                                                     <div class="color" id="<%= data.deliveries[i].content[0].objectId %>">

@@ -1,7 +1,7 @@
 <%- include('includes/header') %>
       <div class="wrapper">
       <%- include('includes/sidebar') %>
-        <div class="main-panel">
+        <div class="main-area">
             <%- include('includes/navbar') %>
             <div class="content">
                 <div class="container-fluid">
@@ -25,7 +25,7 @@
                                         </div>
                                         <div class="mb-3" id="editAssignment-activity">
                                             <label class="form-label" data-l10n-id="assignedWork"></label>
-                                            <select  id="select2-activity" class="form-control" disabled name="Assign work"> 
+                                            <select  id="select2-activity" class="form-select" disabled name="Assign work"> 
                                                 <option selected  value='<%= assignment.assignedWork.objectId %>'><%= assignment.assignedWork.metadata.title %></option>
                                             </select>
                                             <script>
@@ -106,7 +106,7 @@
                                         </div>
                                         <div class="col-lg-3">
                                             <div class="mb-3">
-                                                <input class="form-control" id="timepicker" name="time" value="" type="text" placeholder="Time" autocomplete="off" >
+                                                <input class="form-control" id="timepicker" name="time" value="" type="text" placeholder="Time" autocomplete="off" ></div>
                                             </div>
                                             <input id="dueTimestamp" name="dueTimestamp" style="visibility: hidden;" value=""/>
                                         </div>
@@ -171,8 +171,8 @@
                                         </script>
                                         <div class="col-lg-3">
                                             <div class="mb-3">
-                                                <label data-l10n-id="lateTurnIn"></label>
-                                                <input type="checkbox" class="btn-check" name="lateTurnIn"  id="checkbox-outlined" <% if(typeof assignment == 'object'){ %><% if(assignment.lateTurnIn){ %> checked <% } %><% } %> autocomplete="off" >
+                                                <label class="form-label" data-l10n-id="lateTurnIn"></label>
+                                                <div class="form-check"><input type="checkbox" class="form-check-input" name="lateTurnIn"  id="checkbox-outlined" <% if(typeof assignment == 'object'){ %><% if(assignment.lateTurnIn){ %> checked <% } %><% } %> autocomplete="off" ></div>
                                             </div>
                                         </div>
                                     </div>
@@ -181,7 +181,7 @@
                                     <div class="col-12">
                                         <div class="mb-3" style="margin-top: -15px;" >
                                             <label class="form-label" data-l10n-id="classrooms"></label>
-                                            <select id='searchable-select-classrooms' multiple='multiple' name="classrooms" class="form-control">
+                                            <select id='searchable-select-classrooms' multiple='multiple' name="classrooms" class="form-select">
                                                 <% for(var i=0; i < classrooms.length; i++) { %>
                                                     <option <% if(classrooms[i].is_member) { %> selected <% } %> value='<%= classrooms[i]._id %>'><%= "class_" + classrooms[i]._id %></option>
                                                 <% } %>

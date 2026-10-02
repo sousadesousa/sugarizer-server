@@ -1,7 +1,7 @@
 <%- include('includes/header') %>
 <div class="wrapper">
 	<%- include('includes/sidebar') %>
-	<div class="main-panel">
+	<div class="main-area">
 	<%- include('includes/navbar') %>
 		<div class="content">
 			<div class="container-fluid">
@@ -13,7 +13,7 @@
 <div class="row mx-0 search-row">
 								<div class="col-lg-4">
 									<div class="search-field">
-											<select class="form-control" id="users-select2" name="uid">
+											<select class="form-select" id="users-select2" name="uid">
 												<% if(user && user._id){%>
 												 <option data-id="<%= user._id %>"
 													 data-private_journal="<%= user.private_journal %>"
@@ -30,8 +30,8 @@
 								</div>
 								<div class="col-lg-4">
 									<div class="search-field journal-check">
-										<input type="checkbox" id="journal-type" onclick="changeJournalType()">
-										<label for="journal-type" data-l10n-id="sharedJournals"></label>
+										<input type="checkbox" class="form-check-input" id="journal-type" onclick="changeJournalType()">
+										<label class="form-check-label" for="journal-type" data-l10n-id="sharedJournals"></label>
 										<script>
 											function changeJournalType() {
 												var checkBox = document.getElementById("journal-type");
@@ -102,7 +102,7 @@
 										<table class="table">
 												<thead class="text-danger">
 														<tr>
-																<th class="text-muted"><input type="checkbox" id="checkAll" onclick="checkAll()"></th>
+																<th class="text-muted"><input type="checkbox" class="form-check-input" id="checkAll" onclick="checkAll()"></th>
 																<th class="text-muted">#</th>
 																<th data-l10n-id="icon" class="text-muted"></th>
 																<th class="text-muted"><button data-l10n-id="title" id="journal-title" onclick="sortBy('title')"></button></th>
@@ -114,7 +114,7 @@
 												<tbody>
 														<% for(var i=0; i < entries.entries.length; i++) { %>
 															<tr id="journal-entry-card">
-																	<td><input type="checkbox" class="journal-checkbox" jid="<%= query.journal %>" oid="<%= entries.entries[i].objectId %>" uid="<%= entries.entries[i].metadata.user_id %>" aid="<%= entries.entries[i].metadata.activity %>" currPage="<%= entries.links.curr_page %>" title="<%= entries.entries[i].metadata.title %>"></td>
+																	<td><input type="checkbox" class="form-check-input journal-checkbox" jid="<%= query.journal %>" oid="<%= entries.entries[i].objectId %>" uid="<%= entries.entries[i].metadata.user_id %>" aid="<%= entries.entries[i].metadata.activity %>" currPage="<%= entries.links.curr_page %>" title="<%= entries.entries[i].metadata.title %>"></td>
 																	<td><%= entries.offset + i + 1 %></td>
 																	<td>
 																		<div class="color" id="<%= entries.entries[i].objectId %>">

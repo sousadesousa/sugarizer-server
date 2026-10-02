@@ -21,23 +21,23 @@ function sugarizerTour(currentView, role, mode) {
 			onNext: function (tour) {
 				if (currentView == "home") {
 					if (tour._current == "3" || tour._current == "4") {
-						$('.main-panel').animate({
-							scrollTop: (document.getElementsByClassName('main-panel')[0].scrollHeight)
+						$('.main-area').animate({
+							scrollTop: (document.getElementsByClassName('main-area')[0].scrollHeight)
 						}, 500);
 					}
 					if (tour._current == "5") {
-						$('.main-panel').animate({
+						$('.main-area').animate({
 							scrollTop: 0
 						}, 500);
 					}
 				} else if (currentView == "editUser") {
 					if (tour._current == "5") {
-						$('.main-panel').animate({
-							scrollTop: (document.getElementsByClassName('main-panel')[0].scrollHeight)
+						$('.main-area').animate({
+							scrollTop: (document.getElementsByClassName('main-area')[0].scrollHeight)
 						}, 500);
 					}
 					if (tour._current == "8") {
-						$('.main-panel').animate({
+						$('.main-area').animate({
 							scrollTop: 0
 						}, 500);
 					}
@@ -46,18 +46,18 @@ function sugarizerTour(currentView, role, mode) {
 			onPrev: function (tour) {
 				if (currentView == "home") {
 					if (tour._current == "4") {
-						$('.main-panel').animate({
+						$('.main-area').animate({
 							scrollTop: 0
 						}, 500);
 					}
 					if (tour._current == "5" || tour._current == "6") {
-						$('.main-panel').animate({
-							scrollTop: (document.getElementsByClassName('main-panel')[0].scrollHeight)
+						$('.main-area').animate({
+							scrollTop: (document.getElementsByClassName('main-area')[0].scrollHeight)
 						}, 500);
 					}
 				} else if (currentView == "editUser") {
 					if (tour._current == "6") {
-						$('.main-panel').animate({
+						$('.main-area').animate({
 							scrollTop: 0
 						}, 500);
 					}
@@ -67,7 +67,7 @@ function sugarizerTour(currentView, role, mode) {
 				if (currentView == "home") {
 					unlockScroll();
 				} else if (currentView == "editUser") {
-					$('.main-panel').animate({
+					$('.main-area').animate({
 						scrollTop: 0
 					}, 500);
 				}

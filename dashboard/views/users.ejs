@@ -1,7 +1,7 @@
 <%- include('includes/header') %>
 <div class="wrapper">
 	<%- include('includes/sidebar') %>
-	<div class="main-panel">
+	<div class="main-area">
 	<%- include('includes/navbar') %>
 		<div class="content">
 			<div class="container-fluid">
@@ -18,7 +18,7 @@
                         </div>
                         <div class="col-lg-2">
                           <div class="search-field">
-                              <select class="form-control" id="user-type-select2" name="role">
+                              <select class="form-select" id="user-type-select2" name="role">
                                 <option data-l10n-id="student" value="student" <% if(query.role=='student'){ %>selected="selected"<% } %> >Student</option>
                                 <% if (account.user && account.user.role=="admin") { %>
                                 <option data-l10n-id="teacher" value="teacher" <% if(query.role=='teacher'){ %>selected="selected"<% } %> >Teacher</option>
@@ -31,7 +31,7 @@
                         <input name="classroom_id" type="text" style="display:none" %>" value="<% if(classroom_id) { %><%= classroom_id %><% } %>" />
                         <div class="col-lg-2">
                           <div class="search-field classroom_input">
-                                <select class="form-control" id="classroom_select" name="classid">
+                                <select class="form-select" id="classroom_select" name="classid">
                                     <option data-l10n-id="selectclassroom" value="" selected="selected" disabled></option>
                                     <option id="allClassrooms" data-l10n-id="allClassrooms" value="" <% if(classroom_id == "allClassrooms") { %>selected="selected"<% } %>></option>
                                     <% for(var i=0; i < classrooms.length; i++) { %>
@@ -174,7 +174,7 @@
                                 <table class="table">
                                     <thead class="text-muted">
                                         <tr>
-                                            <th class="text-muted"><input type="checkbox" id="checkAll" onclick="checkAll()"></th>
+                                            <th class="text-muted"><input type="checkbox" class="form-check-input" id="checkAll" onclick="checkAll()"></th>
                                             <th>#</th>
                                                                                   <% if(query.role != 'admin'){ %><th data-l10n-id="buddy">Buddy</th><% } %>
                                             <th><button id="name-column" data-l10n-id="username" onclick="sortBy('name')"></button></th>
@@ -187,7 +187,7 @@
                                     <tbody>
                                         <% for(var i=0; i < data.users.length; i++) { %>
                                           <tr>
-                                              <td><input type="checkbox" class="users-checkbox" uid="<%= data.users[i]._id %>"></td>
+                                              <td><input type="checkbox" class="form-check-input users-checkbox" uid="<%= data.users[i]._id %>"></td>
                                               <td><%= data.offset + i + 1 %></td>
                                                                                       <% if(query.role != 'admin'){ %>
                                                                                           <td>

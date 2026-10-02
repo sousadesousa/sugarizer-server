@@ -552,11 +552,11 @@ function highlight(text) {
 
 	//scroll
 	if ($(window).width() < 992) {
-		$('.main-panel').animate({
+		$('.main-area').animate({
 			scrollTop: (offset - 86)
 		}, 500);
 	} else {
-		$('.main-panel').animate({
+		$('.main-area').animate({
 			scrollTop: (offset - 30)
 		}, 500);
 	}
@@ -981,7 +981,7 @@ function toggleMobileMenu() {
 		closeMobileMenu();
 		return;
 	}
-	var panel = $('.main-panel');
+	var panel = $('.main-area');
 	var layer = $('<div class="close-layer"></div>').css('height', panel[0].scrollHeight + 'px').appendTo(panel);
 	setTimeout(function() {
 		layer.addClass('visible');
