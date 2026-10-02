@@ -432,6 +432,104 @@ describe('Assignments', () => {
         });
     });
 
+    //get the deliveries of a launched assignment ---GET/deliveries/:id---
+    describe('/GET/deliveries/:id assignment', () => {
+
+        var firstOnPage = null;
+
+        it('it should do nothing on invalid assignment', (done) => {
+            chai.request(server)
+                .get('/api/v1/assignments/deliveries/' + 'invalid')
+                .set('x-access-token', fake.teacher1.token)
+                .set('x-key', fake.teacher1.user._id)
+                .end((err, res) => {
+                    res.should.have.status(401);
+                    res.body.code.should.be.eql(35);
+                    done();
+                });
+        });
+
+        it('it should return the deliveries of the launched assignment', (done) => {
+            chai.request(server)
+                .get('/api/v1/assignments/deliveries/' + fake.assignment1._id)
+                .set('x-access-token', fake.teacher1.token)
+                .set('x-key', fake.teacher1.user._id)
+                .end((err, res) => {
+                    res.should.have.status(200);
+                    res.body.should.be.an('object');
+                    // one delivery journal for each of the two students of the classroom
+                    res.body.should.have.property('total').eql(2);
+                    res.body.should.have.property('offset').eql(0);
+                    res.body.should.have.property('limit').eql(10);
+                    res.body.should.have.property('sort').eql('buddy_name(asc)');
+                    res.body.should.have.property('links').be.an('object');
+                    res.body.deliveries.should.be.an('array').with.lengthOf(2);
+                    res.body.deliveries.forEach((delivery) => {
+                        delivery.should.have.property('content').be.an('array').with.lengthOf(1);
+                        delivery.content[0].metadata.should.have.property('assignmentId').eql(fake.assignment1._id);
+                    });
+                    done();
+                });
+        });
+
+        it('it should paginate with limit and offset', (done) => {
+            chai.request(server)
+                .get('/api/v1/assignments/deliveries/' + fake.assignment1._id + '?limit=1&offset=0')
+                .set('x-access-token', fake.teacher1.token)
+                .set('x-key', fake.teacher1.user._id)
+                .end((err, res) => {
+                    res.should.have.status(200);
+                    res.body.should.have.property('total').eql(2);
+                    res.body.should.have.property('offset').eql(0);
+                    res.body.should.have.property('limit').eql(1);
+                    res.body.deliveries.should.be.an('array').with.lengthOf(1);
+                    res.body.links.should.have.property('next_page').eql('?limit=1&offset=1');
+                    res.body.links.should.not.have.property('prev_page');
+                    firstOnPage = res.body.deliveries[0]._id;
+                    done();
+                });
+        });
+
+        it('it should return the next page', (done) => {
+            chai.request(server)
+                .get('/api/v1/assignments/deliveries/' + fake.assignment1._id + '?limit=1&offset=1')
+                .set('x-access-token', fake.teacher1.token)
+                .set('x-key', fake.teacher1.user._id)
+                .end((err, res) => {
+                    res.should.have.status(200);
+                    res.body.should.have.property('total').eql(2);
+                    res.body.should.have.property('offset').eql(1);
+                    res.body.deliveries.should.be.an('array').with.lengthOf(1);
+                    res.body.deliveries[0]._id.should.not.eql(firstOnPage);
+                    res.body.links.should.have.property('prev_page').eql('?limit=1&offset=0');
+                    res.body.links.should.not.have.property('next_page');
+                    done();
+                });
+        });
+
+        it('it should return nothing after the last delivery', (done) => {
+            chai.request(server)
+                .get('/api/v1/assignments/deliveries/' + fake.assignment1._id + '?limit=1&offset=2')
+                .set('x-access-token', fake.teacher1.token)
+                .set('x-key', fake.teacher1.user._id)
+                .end((err, res) => {
+                    res.should.have.status(200);
+                    res.body.should.have.property('total').eql(2);
+                    res.body.deliveries.should.be.an('array').with.lengthOf(0);
+                    done();
+                });
+        });
+
+        it('it should keep the server up', (done) => {
+            chai.request(server)
+                .get('/api')
+                .end((err, res) => {
+                    res.should.have.status(200);
+                    done();
+                });
+        });
+    });
+
     // add comment to assignment ---POST/:id/comments---
     describe('/POST/:id/comments assignments', () => {
 
