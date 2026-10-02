@@ -122,7 +122,7 @@ for (const role of ['admin', 'teacher']) {
 					await page.goto('/dashboard');
 					await settle(page);
 					await page.click('#navbar-help');
-					await expect(page.locator('.popover.tour').first()).toBeVisible();
+					await expect(page.locator('.introjs-tooltip').first()).toBeVisible();
 					expect(watched.errors).toEqual([]);
 				});
 			}
