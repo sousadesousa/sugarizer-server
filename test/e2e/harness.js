@@ -133,6 +133,9 @@ async function start() {
 		settings.database.port = String(state.mongoPort);
 		settings.database.name = state.dbName;
 		settings.security.secret = 'e2e.sugarizer.server.key';
+		// A small fixed client (a few activities): the activities that the dashboard counts and lists, and the
+		// icons it shows, do not depend on the Sugarizer client that is checked out next to the server
+		settings.client.path = path.join(__dirname, 'fixtures/client') + '/';
 		var envName = 'e2e-' + webPort;
 		state.iniFile = path.join(root, 'env', envName + '.ini');
 		fs.writeFileSync(state.iniFile, ini.stringify(settings));
