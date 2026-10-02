@@ -860,6 +860,76 @@ function sortBy(params) {
 	window.location.href = url;
 }
 
+// Date format of the date pickers, from the region of the browser and not from the language of the dashboard
+// (a user of the English dashboard in Switzerland wants 22.03.2035, not 03-22-2035).
+// Returns the format in the syntax of the date picker: 'd.m.Y' (de-CH, fr-CH), 'm/d/Y' (en-US), 'd/m/Y' (pt-PT),
+// 'Y/m/d' (ja-JP). Digits are Latin and the calendar is Gregorian whatever the region, as the picker is.
+function regionDateFormat() {
+	var languages = (navigator.languages && navigator.languages.length) ? navigator.languages : [navigator.language || 'en-US'];
+	var tokens = { day: 'd', month: 'm', year: 'Y' };
+	for (var i = 0; i < languages.length; i++) {
+		try {
+			// 25 November 2001: every part has a different value
+			var parts = new Intl.DateTimeFormat(languages[i], {
+				year: 'numeric', month: '2-digit', day: '2-digit', calendar: 'gregory', numberingSystem: 'latn'
+			}).formatToParts(new Date(2001, 10, 25));
+			var format = '';
+			var found = '';
+			for (var j = 0; j < parts.length; j++) {
+				if (tokens[parts[j].type]) {
+					format += tokens[parts[j].type];
+					found += tokens[parts[j].type];
+				} else if (parts[j].type == 'literal') {
+					// no invisible direction marks in the format
+					format += parts[j].value.replace(/[\u200e\u200f\u061c]/g, '');
+				}
+			}
+			if (found.length == 3 && found.indexOf('d') != -1 && found.indexOf('m') != -1 && found.indexOf('Y') != -1) {
+				return format;
+			}
+		} catch (e) {
+			// unknown language tag: try the next one
+		}
+	}
+	return 'm/d/Y';
+}
+
+// First day of the week in the region of the browser, as the date picker wants it (0 Sunday ... 6 Saturday),
+// or undefined when the browser does not tell (the picker then keeps its own default)
+function regionWeekStart() {
+	try {
+		var locale = new Intl.Locale((navigator.languages && navigator.languages[0]) || navigator.language);
+		var info = locale.getWeekInfo ? locale.getWeekInfo() : locale.weekInfo;
+		if (info && info.firstDay) {
+			return info.firstDay % 7;
+		}
+	} catch (e) {
+		// not supported
+	}
+	return undefined;
+}
+
+// Text of a date in a date picker format ('d', 'm' and 'Y' are replaced, the rest is kept), in the time zone of the browser
+function formatPickerDate(date, format) {
+	function two(value) {
+		return (value < 10 ? '0' : '') + value;
+	}
+	var text = '';
+	for (var i = 0; i < format.length; i++) {
+		var token = format.charAt(i);
+		if (token == 'd') {
+			text += two(date.getDate());
+		} else if (token == 'm') {
+			text += two(date.getMonth() + 1);
+		} else if (token == 'Y') {
+			text += date.getFullYear();
+		} else {
+			text += token;
+		}
+	}
+	return text;
+}
+
 function launchTutorial() {
 	if (window.currTour && typeof window.currTour.restart == "function") {
 		if (window.location.pathname.substr(0, 19) == "/dashboard/journal/") {

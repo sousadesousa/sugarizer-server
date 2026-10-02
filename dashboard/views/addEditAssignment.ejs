@@ -102,48 +102,77 @@
                                         </div>
                                         <div class="col-md-3">
                                             <div class="form-group form-black label-floating">
-                                                <input id="datetimepicker1"   name="dueDate" placeholder="Date" class="form-control" value="<% if(typeof assignment == 'object' && assignment.dueDate){ %><%= new Date(assignment.dueDate).toLocaleString(common.l10n.getLanguage(), {year: "numeric", month:"numeric", day:"numeric"})%><% } %>" type="text" autocomplete="off" />
+                                                <input id="datetimepicker1" name="dueDate" placeholder="Date" class="form-control" type="text" autocomplete="off" <% if(typeof assignment == 'object' && assignment.dueDate){ %>data-due="<%= assignment.dueDate %>"<% } %> />
                                                 <span class="material-input"></span>
                                             </div>
-                                            <input id="dueDatestamp" name="dueDatestamp" style="visibility: hidden;" value="<% if(typeof assignment == 'object' && assignment.dueDate) { let ldate = new Date(assignment.dueDate); %><%= new Date(ldate.getFullYear(), ldate.getMonth(), ldate.getDate(), 0, 0, 0).getTime()%><% } %>"/>
+                                            <input id="dueDatestamp" name="dueDatestamp" style="visibility: hidden;" value=""/>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="form-group form-black label-floating">
+                                                <input class="form-control" id="timepicker" name="time" value="" type="text" placeholder="Time" autocomplete="off" >
+                                                <span class="material-input"></span>
+                                            </div>
+                                            <input id="dueTimestamp" name="dueTimestamp" style="visibility: hidden;" value=""/>
                                         </div>
                                         <script>
+                                        // The date and the time are shown, picked and computed in the browser: in its region (order of the date)
+                                        // and its time zone. The server only receives the two numbers dueDatestamp (midnight of the day) and
+                                        // dueTimestamp (time since midnight), whose sum is the due date.
                                         $(document).ready(function() {
                                             $.datetimepicker.setLocale('<%= common.l10n.getLanguage() %>');
-                                            $('#datetimepicker1').datetimepicker({
-                                                timepicker : false,
-                                                format: '<%= (moment().creationData().locale._longDateFormat.L == "DD/MM/YYYY" ?"d-m-Y":"m-d-Y") %>',
-                                                onChangeDateTime:function(dp,$input){
-                                                    var dates = $input.val().split("-");
-                                                    <% if (moment().creationData().locale._longDateFormat.L == "DD/MM/YYYY") { %>
-                                                    var udate = new Date(dates[2], dates[1]-1, dates[0]);
-                                                    <% } else { %>
-                                                    var udate = new Date(dates[2], dates[0]-1, dates[1]);
-                                                    <% } %>
-                                                    $("#dueDatestamp").val(udate.getTime());
+                                            var dateInput = $('#datetimepicker1');
+                                            var timeInput = $('#timepicker');
+                                            var dateFormat = regionDateFormat();
+                                            var picked = { day: null, minutes: null };
+
+                                            // both numbers of the form, or none while the date or the time is missing
+                                            function updateStamps() {
+                                                if (picked.day === null || picked.minutes === null) {
+                                                    $('#dueDatestamp').val('');
+                                                    $('#dueTimestamp').val('');
+                                                    return;
+                                                }
+                                                var year = picked.day.getFullYear(), month = picked.day.getMonth(), day = picked.day.getDate();
+                                                var midnight = new Date(year, month, day, 0, 0, 0, 0).getTime();
+                                                var due = new Date(year, month, day, Math.floor(picked.minutes / 60), picked.minutes % 60, 0, 0).getTime();
+                                                $('#dueDatestamp').val(midnight);
+                                                $('#dueTimestamp').val(due - midnight);
+                                            }
+
+                                            // edit: the date of the assignment (a timestamp) in the browser
+                                            var due = new Date(Number(dateInput.attr('data-due')));
+                                            if (dateInput.attr('data-due') && !isNaN(due.getTime())) {
+                                                picked.day = new Date(due.getFullYear(), due.getMonth(), due.getDate());
+                                                picked.minutes = due.getHours() * 60 + due.getMinutes();
+                                                dateInput.val(formatPickerDate(due, dateFormat));
+                                                timeInput.val((due.getHours() < 10 ? '0' : '') + due.getHours() + ':' + (due.getMinutes() < 10 ? '0' : '') + due.getMinutes());
+                                                updateStamps();
+                                            }
+
+                                            var dateOptions = {
+                                                timepicker: false,
+                                                format: dateFormat,
+                                                // the date comes from the picker, never from the text of the field
+                                                onChangeDateTime: function(date) {
+                                                    picked.day = date ? new Date(date.getFullYear(), date.getMonth(), date.getDate()) : null;
+                                                    updateStamps();
+                                                }
+                                            };
+                                            var weekStart = regionWeekStart();
+                                            if (weekStart !== undefined) {
+                                                dateOptions.dayOfWeekStart = weekStart;
+                                            }
+                                            dateInput.datetimepicker(dateOptions);
+                                            timeInput.datetimepicker({
+                                                datepicker: false,
+                                                format: 'H:i',
+                                                onChangeDateTime: function(time) {
+                                                    picked.minutes = time ? time.getHours() * 60 + time.getMinutes() : null;
+                                                    updateStamps();
                                                 }
                                             });
                                         });
                                         </script>
-                                        <div class="col-md-3">
-                                            <div class="form-group form-black label-floating">
-                                                <input class="form-control" id="timepicker" name="time"  value="<% if(typeof assignment == 'object' && assignment.dueDate){ %><%= new Date(assignment.dueDate).toLocaleString("en-US", {hour: '2-digit', minute: '2-digit', hourCycle: 'h23'}) %><% } %>" type="text" placeholder="Time" autocomplete="off" >
-                                                <span class="material-input"></span>
-                                                </div>
-                                                <input id="dueTimestamp" name="dueTimestamp" style="visibility: hidden;"  value="<% if(typeof assignment == 'object' && assignment.dueDate){ let hours = new Date(assignment.dueDate).toLocaleString("en-US", {hour: '2-digit', minute: '2-digit', hourCycle: 'h23'}); var times = hours.split(":"); %><%= times[0]*3600000+times[1]*60000 %><% } %>"/>
-                                                <script>
-                                                $(document).ready(function() {
-                                                $('#timepicker').datetimepicker({
-                                                        datepicker:false,
-                                                        format:'H:i',
-                                                        onChangeDateTime:function(dp,$input){
-                                                            var times = $input.val().split(":");
-                                                            $("#dueTimestamp").val(times[0]*3600000+times[1]*60000);
-                                                        }
-                                                    });
-                                                });
-                                            </script>
-                                        </div>
                                         <div class="col-md-3">
                                             <div class="form-group form-black label-floating">
                                                 <label data-l10n-id="lateTurnIn"></label>
