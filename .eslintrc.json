@@ -70,6 +70,7 @@
                 "url": "writable",
                 "headers": "writable",
                 "icon": "readonly",
+                "bootstrap": "readonly",
                 "Chart": "readonly",
                 "QRCode": "readonly",
                 "saveAs": "readonly",
@@ -78,6 +79,9 @@
         },
         {
             "files": ["dashboard/public/js/tutorial.js"],
+            "globals": {
+                "introJs": "readonly"
+            },
             "rules": {
                 "no-unused-vars": "off"
             }

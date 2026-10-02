@@ -15,44 +15,9 @@ function sugarizerTour(currentView, role, mode) {
 		var prevString = document.webL10n.get("TutoPrev");
 		var nextString = document.webL10n.get("TutoNext");
 		var endString = document.webL10n.get("TutoEnd");
-		tour = new window.Tour({
+		tour = createTour({
 			name: tutorialName,
-			template: "\
-			<div class='popover tour popover-tour'>\
-				<div class='arrow'></div>\
-				<h3 class='popover-title tutorial-title'></h3>\
-				<table><tr><td style='vertical-align:top;'><div id='icon-tutorial' style='visibility:hidden;display:inline-block;'></div>\
-				</td><td><div class='popover-content'></div></td></tr></table>\
-				<div class='popover-navigation' style='display: flex; flex-wrap:wrap; justify-content: center; align-items: center'>\
-					<div class='tutorial-prev-icon icon-button' data-role='prev'>\
-						<div class='tutorial-prev-icon1 web-activity'>\
-							<div class='tutorial-prev-icon2 web-activity-icon'></div>\
-							<div class='tutorial-prev-icon3 web-activity-disable'></div>\
-						</div>\
-						<div class='icon-tutorial-text'>"+ prevString + "</div>\
-					</div>\
-					<span data-role='separator' style='margin: 4px'>|</span>\
-					<div class='tutorial-next-icon icon-button' data-role='next'>\
-						<div class='tutorial-next-icon1 web-activity'>\
-							<div class='tutorial-next-icon2 web-activity-icon'></div>\
-							<div class='tutorial-next-icon3 web-activity-disable'></div>\
-						</div>\
-						<div class='icon-tutorial-text'>"+ nextString + "</div>\
-					</div>\
-					<div class='tutorial-end-icon icon-button' data-role='end'>\
-						<div class='tutorial-end-icon1 web-activity'>\
-							<div class='tutorial-end-icon2 web-activity-icon'></div>\
-							<div class='tutorial-end-icon3 web-activity-disable'></div>\
-						</div>\
-						<div class='icon-tutorial-text'>"+ endString + "</div>\
-					</div>\
-				</div>\
-			</div>",
-			storage: window.localStorage,
-			backdrop: true,
-			autoscroll: true,
-			steps: [],
-			keyboard: true,
+			labels: { prev: prevString, next: nextString, end: endString },
 			onNext: function (tour) {
 				if (currentView == "home") {
 					if (tour._current == "3" || tour._current == "4") {
@@ -277,6 +242,85 @@ function sugarizerTour(currentView, role, mode) {
 	tutorial.isLaunched = function () {
 		return launched;
 	};
+
+	// The tour of a view, on Intro.js. It has the interface that the code above uses (addStep, init, start) and keeps the
+	// state in localStorage like the previous library did: <name>_end = "yes" when finished, <name>_current_step.
+	// options: name, labels {prev, next, end}, onNext(tour), onPrev(tour), onEnd(); tour._current is the index
+	// (in the list of steps) of the step that is left when onNext and onPrev are called.
+	function createTour(options) {
+		var steps = [];
+		var tour = { _current: 0 };
+
+		tour.addStep = function (step) {
+			steps.push(step);
+		};
+
+		tour.init = function () {};
+
+		tour.start = function () {
+			// steps whose element is not on the page, or not visible, are skipped, except the ones without element
+			var shown = [];
+			for (var i = 0; i < steps.length; i++) {
+				if (steps[i].orphan || (steps[i].element && $(steps[i].element).filter(':visible').length)) {
+					shown.push({ index: i, step: steps[i] });
+				}
+			}
+			if (!shown.length) {
+				return;
+			}
+			var last = shown[0].index;
+			var finished = false;
+			var intro = introJs();
+			intro.setOptions({
+				steps: shown.map(function (item) {
+					var step = { title: item.step.title, intro: item.step.content, position: item.step.placement || 'bottom' };
+					if (item.step.element) {
+						step.element = item.step.element;
+					}
+					return step;
+				}),
+				nextLabel: options.labels.next,
+				prevLabel: options.labels.prev,
+				doneLabel: options.labels.end,
+				skipLabel: options.labels.end,
+				showBullets: false,
+				showProgress: false,
+				showStepNumbers: false,
+				exitOnOverlayClick: false,
+				disableInteraction: true,
+				scrollToElement: true,
+				scrollPadding: 30,
+				tooltipClass: 'sugarizer-tour'
+			});
+			intro.onchange(function () {
+				var current = shown[this.currentStep()].index;
+				tour._current = last;
+				if (current > last && options.onNext) {
+					options.onNext(tour);
+				} else if (current < last && options.onPrev) {
+					options.onPrev(tour);
+				}
+				last = current;
+				tour._current = current;
+				localStorage.setItem(options.name + "_current_step", current);
+			});
+			var end = function () {
+				if (finished) {
+					return;
+				}
+				finished = true;
+				localStorage.setItem(options.name + "_end", "yes");
+				if (options.onEnd) {
+					options.onEnd();
+				}
+			};
+			intro.oncomplete(end);
+			intro.onexit(end);
+			intro.start();
+		};
+
+		return tour;
+	}
 
 	function getStep(view, element, placement, step, orphan) {
 		var step = {

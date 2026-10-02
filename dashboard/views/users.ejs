@@ -89,30 +89,9 @@
                                                         classroom : "classroom"
                                                     };
                                                     exportCSVFile(headers, res.data, 'UserExport');
-                                                    $.notify({
-                                                        icon: "notifications",
-                                                        message: res.msg
-
-                                                    },{
-                                                        type: 'success',
-                                                        timer: 2000,
-                                                        placement: {
-                                                            from: 'top',
-                                                            align: 'right'
-                                                        }
-                                                    });
+                                                    notify(res.msg, 'success');
                                                 } else {
-                                                    $.notify({
-                                                        icon: "error",
-                                                        message: res.msg
-                                                    },{
-                                                        type: 'danger',
-                                                        timer: 2000,
-                                                        placement: {
-                                                            from: 'top',
-                                                            align: 'right'
-                                                        }
-                                                    });
+                                                    notify(res.msg, 'danger');
                                                 }
                                             }
                                         });
@@ -150,30 +129,9 @@
                                                         classroom : "classroom"
                                                     };
                                                     exportCSVFile(headers, res.data, 'UploadedUsers');
-                                                    $.notify({
-                                                        icon: "notifications",
-                                                        message: res.msg
-
-                                                    },{
-                                                        type: 'success',
-                                                        timer: timer,
-                                                        placement: {
-                                                            from: 'top',
-                                                            align: 'right'
-                                                        }
-                                                    });
+                                                    notify(res.msg, 'success');
                                                 } else {
-                                                    $.notify({
-                                                        icon: "error",
-                                                        message: res.msg
-                                                    },{
-                                                        type: 'danger',
-                                                        timer: timer,
-                                                        placement: {
-                                                            from: 'top',
-                                                            align: 'right'
-                                                        }
-                                                    });
+                                                    notify(res.msg, 'danger');
                                                 }
                                                 setTimeout(function () {
                                                     location.reload();
