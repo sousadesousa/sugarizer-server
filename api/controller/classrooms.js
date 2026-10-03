@@ -29,6 +29,8 @@ exports.init = function(settings, database) {
  * @apiSuccess {String} color.stroke classroom strike color
  * @apiSuccess {String} color.fill classroom fill color
  * @apiSuccess {Array} students List of students
+ * @apiSuccess {String} [toolbarMode] Default toolbar mode ("simple" or "full")
+ * @apiSuccess {Object} [toolbarOverrides] Per-activity toolbar mode overrides
  * @apiSuccess {Number} created_time when the classroom was created on the server
  * @apiSuccess {Number} timestamp when the classroom last accessed the server
  *
@@ -43,6 +45,10 @@ exports.init = function(settings, database) {
  *         "fill"      : "#00B20D"
  *       },
  *       "students"     : [592d4445cc8be9187abb284f, 592d4445cc8be9187abb284f, 592d4445cc8be9187abb284f,...],
+ *       "toolbarMode"  : "simple",
+ *       "toolbarOverrides" : {
+ *         "org.sugarlabs.Blockrain" : "full"
+ *       },
  *       "created_time"    : 6712213121,
  *       "timestamp"       : 6712375127,
  *      }
@@ -65,6 +71,38 @@ function cleanActivities(classroom, defaultValue) {
 	});
 }
 
+// Validate toolbar mode and overrides in place
+function cleanToolbar(classroom) {
+	// Clean toolbarMode: keep only if exactly "simple" or "full"
+	if (classroom.toolbarMode !== undefined && classroom.toolbarMode !== "simple" && classroom.toolbarMode !== "full") {
+		delete classroom.toolbarMode;
+	}
+
+	// Clean toolbarOverrides: must be a plain object
+	if (classroom.toolbarOverrides !== undefined) {
+		if (typeof classroom.toolbarOverrides !== 'object' || classroom.toolbarOverrides === null || Array.isArray(classroom.toolbarOverrides)) {
+			delete classroom.toolbarOverrides;
+			return;
+		}
+
+		// Filter entries: keep only valid string keys with value "simple" or "full"
+		var cleaned = {};
+		for (var key in classroom.toolbarOverrides) {
+			if (Object.prototype.hasOwnProperty.call(classroom.toolbarOverrides, key)) {
+				var value = classroom.toolbarOverrides[key];
+				// Key must be non-empty string, value must be "simple" or "full"
+				if (typeof key === 'string' && key.length > 0 && (value === "simple" || value === "full")) {
+					// Drop the override of an activity the classroom does not have (when the list is known)
+					if (!Array.isArray(classroom.activities) || classroom.activities.indexOf(key) !== -1) {
+						cleaned[key] = value;
+					}
+				}
+			}
+		}
+		classroom.toolbarOverrides = cleaned;
+	}
+}
+
 exports.addClassroom = function(req, res) {
 	//validate
 	if (!req.body.classroom) {
@@ -78,6 +116,7 @@ exports.addClassroom = function(req, res) {
 	//parse user details
 	var classroom = JSON.parse(req.body.classroom);
 	cleanActivities(classroom, []);
+	cleanToolbar(classroom);
 
 	//add timestamp & language
 	classroom.created_time = +new Date();
@@ -419,13 +458,15 @@ exports.findById = function(req, res) {
  * @apiHeader {String} x-access-token User access token.
  *
  * @apiParam {String} id Unique classroom id
- * 
+ *
  * @apiSuccess {String} _id Unique classroom id
  * @apiSuccess {String} name classroom name
  * @apiSuccess {Object} color classroom color
  * @apiSuccess {String} color.stroke classroom strike color
  * @apiSuccess {String} color.fill classroom fill color
  * @apiSuccess {Array} students List of students
+ * @apiSuccess {String} [toolbarMode] Default toolbar mode ("simple" or "full")
+ * @apiSuccess {Object} [toolbarOverrides] Per-activity toolbar mode overrides
  * @apiSuccess {Number} created_time when the classroom was created on the server
  * @apiSuccess {Number} timestamp when the classroom last accessed the server
  *
@@ -469,6 +510,10 @@ exports.findById = function(req, res) {
  *    		},
  * 			...
  * 		],
+ *       "toolbarMode"  : "simple",
+ *       "toolbarOverrides" : {
+ *         "org.sugarlabs.Blockrain" : "full"
+ *       },
  *       "created_time"    : 6712213121,
  *       "timestamp"       : 6712375127,
  *      }
@@ -494,6 +539,7 @@ exports.updateClassroom = function(req, res) {
 	var classid = req.params.classid;
 	var classroom = JSON.parse(req.body.classroom);
 	cleanActivities(classroom);
+	cleanToolbar(classroom);
 
 	//add timestamp & language
 	classroom.timestamp = +new Date();
@@ -679,3 +725,5 @@ exports.findStudents = function(classID) {
 		}
 	});
 };
+
+exports.cleanToolbar = cleanToolbar;
