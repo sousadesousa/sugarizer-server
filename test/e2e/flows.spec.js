@@ -276,8 +276,7 @@ test.describe('teacher assignment', () => {
 		await settle(page);
 		await page.fill('input[name="comment"]', 'Well done');
 		await page.click('button[type="submit"]');
-		// KNOWN: the locales have no CommentAdded string, so the message is the key itself (a dashboard bug, not fixed here)
-		await expectFlash(page, 'CommentAdded');
+		await expectFlash(page, 'Comment has been successfully added!');
 		await settle(page);
 		await expect(page.locator('#deliveries-card').filter({ hasText: student })).toContainText('Well done');
 	});
