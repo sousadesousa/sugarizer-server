@@ -2,7 +2,8 @@
 #   docker compose -f docker-compose.yml -f docker-compose.pi.yml up -d
 #
 # MONGO_CACHE_GB sets the MongoDB WiredTiger cache (default 1, use 2 on an 8 GB Pi, 0.5 on a 2 GB one).
-# The database lives in the named volume "sugarizer-db" instead of ./docker/db.
+# NODE_HEAP_MB sets the Node.js heap limit of the server in MB (default 1024, use 512 on a 2 GB Pi).
+# The database stays in ./docker/db, exactly as in docker-compose.yml, so an existing install keeps its data.
 
 x-logging: &logging
   driver: json-file
@@ -15,16 +16,10 @@ services:
     command: ["mongod", "--wiredTigerCacheSizeGB", "${MONGO_CACHE_GB:-1}"]
     restart: unless-stopped
     logging: *logging
-    # volumes are merged by compose on the target path: !override replaces the bind mount
-    volumes: !override
-      - sugarizer-db:/data/db
 
   server:
     restart: unless-stopped
     logging: *logging
-    # keep Node.js below the memory of a 4 GB Pi shared with MongoDB
+    # keep Node.js below the memory of a Pi shared with MongoDB
     environment:
-      - NODE_OPTIONS=--max-old-space-size=512
-
-volumes:
-  sugarizer-db:
+      - NODE_OPTIONS=--max-old-space-size=${NODE_HEAP_MB:-1024}

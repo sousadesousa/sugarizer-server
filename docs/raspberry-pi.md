@@ -15,7 +15,7 @@ Check your system with `uname -m` (must print `aarch64`).
 
 ## Install
 
-1. Install Docker (includes the Compose plugin; Compose 2.24 or later is required):
+1. Install Docker (includes the Compose plugin):
 
 		curl -fsSL https://get.docker.com | sh
 		sudo usermod -aG docker $USER
@@ -34,11 +34,13 @@ Check your system with `uname -m` (must print `aarch64`).
 
 	On an 8 GB Pi you can also give MongoDB a larger cache with `echo "MONGO_CACHE_GB=2" >> .env` (default is 1).
 
+	The Node.js heap limit of the server is `NODE_HEAP_MB` (default 1024). On a 2 GB Pi use `echo "NODE_HEAP_MB=512" >> .env` (and `MONGO_CACHE_GB=0.5`).
+
 4. Build and start (the first build takes a few minutes on a Pi):
 
 		docker compose -f docker-compose.yml -f docker-compose.pi.yml up -d --build
 
-	`docker-compose.pi.yml` adds on top of the default configuration: a MongoDB cache limit (`--wiredTigerCacheSizeGB`), `restart: unless-stopped` so Sugarizer starts again after a reboot, log rotation (3 files of 10 MB per container) so logs do not fill the disk, and the database in a named volume (`sugarizer-db`).
+	`docker-compose.pi.yml` adds on top of the default configuration: a MongoDB cache limit (`--wiredTigerCacheSizeGB`), `restart: unless-stopped` so Sugarizer starts again after a reboot, log rotation (3 files of 10 MB per container) so logs do not fill the disk, and a Node.js heap limit. The database stays in `./docker/db`, exactly as with the default `docker-compose.yml`.
 
 	To avoid typing the two `-f` options each time, add `COMPOSE_FILE=docker-compose.yml:docker-compose.pi.yml` to the `.env` file.
 
@@ -59,7 +61,9 @@ Check your system with `uname -m` (must print `aarch64`).
 
 ## Backup and restore
 
-The database is in the Docker volume `sugarizer-server_sugarizer-db`. Make a dump with:
+The database is in the `docker/db` directory of the server, the same place as with the default `docker-compose.yml`. **Switching an existing install to the Pi override keeps its data**: the override deliberately does not move the database to a Docker named volume, as a new volume would be empty and an existing install would look like it lost all its users and journal entries. You can add `-f docker-compose.pi.yml` to a running stack without migrating anything.
+
+Make a dump with:
 
 	docker compose -f docker-compose.yml -f docker-compose.pi.yml exec -T mongodb mongodump --archive --gzip --db sugarizer > sugarizer-$(date +%F).archive.gz
 
@@ -81,4 +85,5 @@ The database volume is kept. Read the [Migration guide](migrate.md) when upgradi
 
 - `docker compose logs -f server` / `logs -f mongodb` show the logs.
 - MongoDB restarting with `Illegal instruction`: the CPU is not a Pi 5 (see Requirements).
-- Out-of-memory kills on a 4 GB Pi: lower `MONGO_CACHE_GB` (e.g. `0.5`) and check `docker stats`.
+- Out-of-memory kills on a 4 GB Pi: lower `MONGO_CACHE_GB` (e.g. `0.5`) and `NODE_HEAP_MB` (e.g. `512`) and check `docker stats`.
+- `JavaScript heap out of memory` in the server logs (for example on a big CSV import): raise `NODE_HEAP_MB` (e.g. `2048` on an 8 GB Pi).
