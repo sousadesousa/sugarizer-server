@@ -105,7 +105,10 @@ exists (fails before on `CommentAdded` and `AssignmentInstructionsInvalid`); `fl
   parses with PyYAML. Actions cannot be run here, so the job itself is **untested**; one thing to watch: the baseline PNGs
   come from this container, so on the runner the compare report will show font differences (a report only).
 
-## 9. N8 (optional) (see the last commit)
+## 9. N8 (optional): reverted
+
+**Reverted after testing.** The Tester found that `containment: 'document'` breaks drags lower in a long list when the viewport is tall and the page is not scrolled (the page scrolls inside the layout, so the document is only as tall as the window). That case works on master, while N8 itself is not a regression (master cannot do that move either). The commit was reverted, so the sortable list behaves as on master and N8 stays a known limitation. Original notes below.
+
 
 Reproduced with a new widgets test (5th card onto the 6th, `waitForResponse` times out). Cause: `containment: 'parent'`
 keeps the dragged card inside the list, so it never overlaps the last card enough. `containment: 'document'` fixes
