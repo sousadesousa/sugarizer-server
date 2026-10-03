@@ -520,6 +520,99 @@ describe('Assignments', () => {
                 });
         });
 
+        // GET the deliveries of the launched assignment with a query string
+        function getDeliveries(query, callback) {
+            chai.request(server)
+                .get('/api/v1/assignments/deliveries/' + fake.assignment1._id + query)
+                .set('x-access-token', fake.teacher1.token)
+                .set('x-key', fake.teacher1.user._id)
+                .end(callback);
+        }
+        function names(res) {
+            return res.body.deliveries.map((delivery) => delivery.content[0].metadata.buddy_name);
+        }
+
+        it('it should filter the deliveries by buddy_name', (done) => {
+            getDeliveries('', (err, res) => {
+                var all = names(res);
+                all.should.have.lengthOf(2);
+                var wanted = all[1];
+                getDeliveries('?buddy_name=' + encodeURIComponent(wanted), (err, res) => {
+                    res.should.have.status(200);
+                    res.body.should.have.property('total').eql(1);
+                    names(res).should.eql([wanted]);
+                    // partial and case insensitive
+                    getDeliveries('?buddy_name=' + encodeURIComponent(wanted.toUpperCase()), (err, res) => {
+                        res.body.should.have.property('total').eql(1);
+                        names(res).should.eql([wanted]);
+                        getDeliveries('?buddy_name=nobody_has_this_name', (err, res) => {
+                            res.should.have.status(200);
+                            res.body.should.have.property('total').eql(0);
+                            res.body.deliveries.should.be.an('array').with.lengthOf(0);
+                            done();
+                        });
+                    });
+                });
+            });
+        });
+
+        it('it should not break on a buddy_name that is not a valid regular expression', (done) => {
+            getDeliveries('?buddy_name=' + encodeURIComponent('(['), (err, res) => {
+                res.should.have.status(200);
+                res.body.should.have.property('total').eql(0);
+                done();
+            });
+        });
+
+        it('it should apply the sort', (done) => {
+            getDeliveries('?sort=' + encodeURIComponent('+buddy_name'), (err, res) => {
+                res.should.have.status(200);
+                res.body.should.have.property('sort').eql('buddy_name(asc)');
+                var ascending = names(res);
+                ascending.should.have.lengthOf(2);
+                (ascending[0].toLowerCase() < ascending[1].toLowerCase()).should.eql(true);
+                getDeliveries('?sort=-buddy_name', (err, res) => {
+                    res.should.have.status(200);
+                    res.body.should.have.property('sort').eql('buddy_name(desc)');
+                    names(res).should.eql(ascending.slice().reverse());
+                    // sorted before the pagination
+                    getDeliveries('?sort=-buddy_name&limit=1', (err, res) => {
+                        names(res).should.eql([ascending[1]]);
+                        done();
+                    });
+                });
+            });
+        });
+
+        it('it should use the default sort for an unknown sort field', (done) => {
+            getDeliveries('?sort=-password', (err, res) => {
+                res.should.have.status(200);
+                res.body.should.have.property('sort').eql('buddy_name(desc)');
+                res.body.deliveries.should.be.an('array').with.lengthOf(2);
+                done();
+            });
+        });
+
+        it('it should replace an invalid limit and offset by the default values', (done) => {
+            var queries = ['?limit=0', '?limit=-3', '?limit=abc', '?offset=-1', '?offset=abc', '?limit=-1&offset=-1'];
+            var next = () => {
+                if (queries.length == 0) {
+                    return done();
+                }
+                var query = queries.shift();
+                getDeliveries(query, (err, res) => {
+                    res.should.have.status(200, query);
+                    res.body.should.have.property('limit').eql(10);
+                    res.body.should.have.property('offset').eql(0);
+                    res.body.deliveries.should.be.an('array').with.lengthOf(2);
+                    res.body.links.should.not.have.property('prev_page');
+                    res.body.links.should.not.have.property('next_page');
+                    next();
+                });
+            };
+            next();
+        });
+
         it('it should keep the server up', (done) => {
             chai.request(server)
                 .get('/api')
