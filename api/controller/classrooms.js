@@ -588,9 +588,15 @@ function getOptions(req, count, def_sort) {
 		limit: req.query.limit || 10
 	};
 
-	//cast to int
+	//cast to int: a limit under 1 or an offset under 0 (or not a number) is replaced by its default
 	options.skip = parseInt(options.skip);
 	options.limit = parseInt(options.limit);
+	if (!(options.skip >= 0)) {
+		options.skip = 0;
+	}
+	if (!(options.limit >= 1)) {
+		options.limit = 10;
+	}
 
 	//return
 	return options;

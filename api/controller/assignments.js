@@ -79,6 +79,11 @@ exports.addAssignment = function (req, res) {
 	}
 	//parse assignment details
 	var assignment = JSON.parse(req.body.assignment);
+	//lateTurnIn is a boolean and dueDate a number
+	var invalid = normalizeAssignment(assignment);
+	if (invalid) {
+		return res.status(400).send(invalid);
+	}
 	//add timestamps
 	assignment.created_time = +new Date();
 	assignment.timestamp = +new Date();
@@ -416,7 +421,12 @@ exports.findAllDeliveries = function (req, res) {
 	}
 	//find all deliveries with filters and pagination
 	var query = {"metadata.assignmentId": assignmentId};
-	query = addQuery("buddy_name", req.query, query);
+	// the name of the student is in the metadata of the delivery
+	if (typeof req.query.buddy_name === "string" && req.query.buddy_name != "") {
+		query["metadata.buddy_name"] = {
+			$regex: new RegExp(escapeRegExp(req.query.buddy_name), "i")
+		};
+	}
 	query = addQuery("Delivered", req.query, query);
 	{
 		const collection = db.collection(journalCollection);
@@ -425,6 +435,10 @@ exports.findAllDeliveries = function (req, res) {
 			var params = JSON.parse(JSON.stringify(req.query));
 			var route = req.route.path;
 			var options = getOptions(req, count, "+buddy_name");
+			// only the fields of a delivery can be used to sort
+			var sortField = deliverySortFields[options.sort[0][0]] ? options.sort[0][0] : "buddy_name";
+			options.sort[0][0] = sortField;
+			var sortDirection = options.sort[0][1] == "desc" ? -1 : 1;
 			//find all entries which matches with assignment id using aggregation
 			dbutil.cursor(collection.aggregate([
 				{
@@ -443,8 +457,19 @@ exports.findAllDeliveries = function (req, res) {
 					}
 				},
 				{
+					$addFields: {
+						deliverySortKey: deliverySortFields[sortField]
+					}
+				},
+				{
 					$sort: {
-						"content.metadata.buddy_name": 1
+						deliverySortKey: sortDirection,
+						_id: 1
+					}
+				},
+				{
+					$project: {
+						deliverySortKey: 0
 					}
 				}
 			]), function(err, deliveries) {
@@ -987,6 +1012,11 @@ exports.updateAssignment = function (req, res) {
 	}
 	var assignmentId = req.params.assignmentId;
 	var assignment = JSON.parse(req.body.assignment);
+	//lateTurnIn is a boolean and dueDate a number
+	var invalid = normalizeAssignment(assignment);
+	if (invalid) {
+		return res.status(400).send(invalid);
+	}
 	//add timestamp
 	assignment.timestamp = +new Date();
 	//find assignment by id
@@ -1025,19 +1055,68 @@ exports.updateAssignment = function (req, res) {
 };
 
 //private function for filtering and sorting
+// Store lateTurnIn as a boolean (true/"true"/"on" and false/"false"/"off" are accepted) and dueDate as a
+// number (a numeric string is converted), the way the dashboard reads them. Returns the error to send
+// when a value is not valid, nothing otherwise.
+function normalizeAssignment(assignment) {
+	if (typeof assignment.lateTurnIn !== "undefined") {
+		var late = assignment.lateTurnIn;
+		if (late === true || late === "true" || late === "on") {
+			assignment.lateTurnIn = true;
+		} else if (late === false || late === "false" || late === "off") {
+			assignment.lateTurnIn = false;
+		} else {
+			return {
+				'error': "Invalid late turn in value",
+				'code': 43
+			};
+		}
+	}
+	if (typeof assignment.dueDate !== "undefined") {
+		var due = assignment.dueDate;
+		if (typeof due === "string" && /^\s*\d+(\.\d+)?\s*$/.test(due)) {
+			due = Number(due);
+		}
+		if (typeof due !== "number" || !isFinite(due)) {
+			return {
+				'error': "Invalid due date",
+				'code': 44
+			};
+		}
+		assignment.dueDate = due;
+	}
+}
+
+// sort key of each field that can sort the deliveries (names are compared without case)
+var deliverySortFields = {
+	buddy_name: { $toLower: { $arrayElemAt: ["$content.metadata.buddy_name", 0] } },
+	title: { $toLower: { $arrayElemAt: ["$content.metadata.title", 0] } },
+	timestamp: { $arrayElemAt: ["$content.metadata.timestamp", 0] },
+	isSubmitted: { $arrayElemAt: ["$content.metadata.isSubmitted", 0] }
+};
+
+function escapeRegExp(text) {
+	return text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
 function getOptions(req, count, def_sort) {
-	//prepare options
-	var sort_val = typeof req.query.sort === "string" ? req.query.sort : def_sort;
-	var sort_type = sort_val.indexOf("-") == 0 ? "desc" : "asc";
+	//prepare options: the sort is "-field" (descending) or "+field" or "field" (ascending),
+	//a "+" in an url is read as a space
+	var sort_val = typeof req.query.sort === "string" && req.query.sort.trim() != "" ? req.query.sort : def_sort;
+	var sort_type = sort_val.charAt(0) == "-" ? "desc" : "asc";
 	var options = {
-		sort: [[sort_val.substring(1), sort_type]],
-		skip: req.query.offset || 0,
+		sort: [[sort_val.replace(/^[-+\s]/, ""), sort_type]],
+		skip: parseInt(req.query.offset),
 		total: count,
-		limit: req.query.limit || 10
+		limit: parseInt(req.query.limit)
 	};
-	//cast to int
-	options.skip = parseInt(options.skip);
-	options.limit = parseInt(options.limit);
+	//a limit under 1 or an offset under 0 (or not a number) is replaced by its default
+	if (!(options.skip >= 0)) {
+		options.skip = 0;
+	}
+	if (!(options.limit >= 1)) {
+		options.limit = 10;
+	}
 	//return
 	return options;
 }

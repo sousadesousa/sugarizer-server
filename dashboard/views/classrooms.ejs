@@ -79,7 +79,7 @@
                                           </script>
                                           <td><%= data.classrooms[i].name %></td>
                                           <td><%= data.classrooms[i].students.length %></td>
-                                          <td><%= moment(data.classrooms[i].timestamp).calendar() %></td>
+                                          <td><time data-local-time="<%= data.classrooms[i].timestamp %>"><%= moment(data.classrooms[i].timestamp).calendar() %></time></td>
                                           <td>
                                               <% if(Array.isArray(data.classrooms[i].students) && data.classrooms[i].students.length > 0) { %>
                                                   <a data-l10n-id="viewStudents" title="View Students" href="/dashboard/users?role=student&classroom_id=<%= data.classrooms[i]._id %>&classid=<%= data.classrooms[i].students.join(",") %>"><span id="classroom-view-students" class="student-icon"></span></a>

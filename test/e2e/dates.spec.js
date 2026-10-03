@@ -210,3 +210,81 @@ test.describe('due date, wrong values', () => {
 		expect(await storedAssignment('E2E Date Past'), 'nothing saved').toBeFalsy();
 	});
 });
+
+// Dates that the server shows (last updated, creation, delivery) are written by the browser, in its own time zone and
+// region. The server runs with TZ=UTC and the clock of the harness (2035-03-15 10:00 UTC, see server-preload.js),
+// so a text written by the server would say 10:00 everywhere.
+test.describe('dates shown in the time zone and region of the browser', () => {
+	test.describe.configure({ mode: 'serial' });
+	const name = 'E2E Local Time';
+	const BROWSERS = [
+		{ id: 'zurich', locale: 'de-CH', timeZone: 'Europe/Zurich', date: /^15\.03\.2035 11:\d\d$/ },
+		{ id: 'new york', locale: 'en-US', timeZone: 'America/New_York', date: /^03\/15\/2035 6:\d\d\sAM$/ },
+		{ id: 'tokyo', locale: 'ja-JP', timeZone: 'Asia/Tokyo', date: /^2035\/03\/15 19:\d\d$/ }
+	];
+	let assignmentId;
+
+	test.beforeAll(async () => {
+		await serverReady();
+		const teacher = await apiLogin(info.users.teacher, 'teacher');
+		const created = await apiCall('POST', '/api/v1/assignments/', {
+			assignment: JSON.stringify({
+				name: name,
+				assignedWork: 'ffffffff-ffff-ffff-ffff-fffffffffff1',
+				color: { stroke: '#FF0000', fill: '#0000FF' },
+				instructions: 'Local time',
+				lateTurnIn: false,
+				classrooms: [info.ids.classroom],
+				dueDate: Date.UTC(2035, 2, 22, 10, 0)
+			})
+		}, teacher);
+		assignmentId = created._id;
+		await apiCall('GET', '/api/v1/assignments/launch/' + assignmentId, null, teacher);
+		// a student hands in the work (as the Sugarizer client does)
+		const deliveries = (await apiCall('GET', '/api/v1/assignments/deliveries/' + assignmentId, null, teacher)).deliveries;
+		const delivery = deliveries[0].content[0];
+		const studentKey = delivery.metadata.buddy_name == info.users.student1.name ? 'student1' : 'student2';
+		const student = await apiLogin(info.users[studentKey], 'student');
+		await apiCall('PUT', '/api/v1/assignments/deliveries/submit/' + assignmentId + '?oid=' + delivery.objectId, {}, student);
+	});
+
+	for (const b of BROWSERS) {
+		test('last updated and delivery dates, ' + b.id + ' (' + b.locale + ', ' + b.timeZone + ')', async ({ browser }) => {
+			const { context, page } = await teacherPage(browser, { locale: b.locale, timezoneId: b.timeZone });
+			const watched = watch(page);
+			try {
+				// "Last updated" of the assignments list
+				await page.goto('/dashboard/assignments');
+				await settle(page);
+				await expect(page.locator('tr').filter({ hasText: name }).locator('time[data-local-time]')).toHaveText(b.date);
+
+				// "Last updated" of the classrooms and users lists
+				await page.goto('/dashboard/classrooms');
+				await settle(page);
+				await expect(page.locator('tr time[data-local-time]').first()).toHaveText(b.date);
+				await page.goto('/dashboard/users');
+				await settle(page);
+				await expect(page.locator('tr time[data-local-time]').first()).toHaveText(b.date);
+
+				// delivery date of the deliveries page
+				await page.goto('/dashboard/assignments/deliveries/' + assignmentId);
+				await settle(page);
+				await expect(page.locator('#deliveries-card time[data-local-time]')).toHaveCount(1);
+				await expect(page.locator('#deliveries-card time[data-local-time]')).toHaveText(b.date);
+
+				// creation and last update of a user, in read only fields
+				await page.goto('/dashboard/users');
+				await settle(page);
+				await page.locator('a[title="Edit User"]').first().click();
+				await settle(page);
+				const fields = page.locator('input[readonly][data-local-time]');
+				await expect(fields).toHaveCount(2);
+				await expect(fields.first()).toHaveValue(b.date);
+				await expect(fields.nth(1)).toHaveValue(b.date);
+			} finally {
+				expect(watched.errors).toEqual([]);
+				await context.close();
+			}
+		});
+	}
+});

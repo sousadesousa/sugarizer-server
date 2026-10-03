@@ -1,26 +1,28 @@
 //include libraries
 var superagent = require('superagent'),
-	common = require('../../helper/common');
+	common = require('../../helper/common'),
+	assignmentName = require('./assignmentName');
 
 module.exports = function launchAssignment(req, res) {
 	if (req.params.assignmentId) {
-		var name = req.query.name || 'assignment';
-		superagent
-			.get(common.getAPIUrl(req) + 'api/v1/assignments/launch/' + req.params.assignmentId)
-			.set(common.getHeaders(req))
-			.end(function (error, response) {
-				if (response.statusCode == 200) {
-					// send to assignments page
-					req.flash('success', {
-						msg: common.l10n.get('AssignmentLaunched', { name: name })
-					});
-				} else {
-					req.flash('errors', {
-						msg: common.l10n.get('ErrorCode' + response.body.code)
-					});
-				}
-				return res.redirect('/dashboard/assignments');
-			});
+		assignmentName(req, req.params.assignmentId, function (name) {
+			superagent
+				.get(common.getAPIUrl(req) + 'api/v1/assignments/launch/' + req.params.assignmentId)
+				.set(common.getHeaders(req))
+				.end(function (error, response) {
+					if (response.statusCode == 200) {
+						// send to assignments page
+						req.flash('success', {
+							msg: common.l10n.get('AssignmentLaunched', { name: name })
+						});
+					} else {
+						req.flash('errors', {
+							msg: common.l10n.get('ErrorCode' + response.body.code)
+						});
+					}
+					return res.redirect('/dashboard/assignments');
+				});
+		});
 	} else {
 		req.flash('errors', {
 			msg: common.l10n.get('ThereIsError')

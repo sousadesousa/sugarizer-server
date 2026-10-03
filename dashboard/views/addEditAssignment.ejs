@@ -244,7 +244,7 @@
                                     <div class="col-12">
                                         <div class="mb-3">
                                             <label class="form-label" data-l10n-id="lastUpdated"></label>
-                                            <input class="form-control" readonly value="<%= moment(classroom.timestamp).calendar() %>" type="text">
+                                            <input class="form-control" readonly value="<%= moment(classroom.timestamp).calendar() %>" data-local-time="<%= classroom.timestamp %>" type="text">
                                         </div>
                                     </div>
                                 </div>

@@ -20,6 +20,8 @@ module.exports = function editAssignment(req, res) {
 			if (typeof req.body.classrooms == 'string') {
 				req.body.classrooms = [req.body.classrooms];
 			}
+			// a ticked check box is sent as "on", an unticked one is not sent at all
+			req.body.lateTurnIn = !!req.body.lateTurnIn;
 			// the due date is the sum of two numbers computed by the browser (midnight of the day, time since midnight)
 			let computedDate = parseInt(req.body.dueTimestamp, 10) + parseInt(req.body.dueDatestamp, 10);
 			if (!req.body.dueDate || !req.body.time || isNaN(computedDate)) {

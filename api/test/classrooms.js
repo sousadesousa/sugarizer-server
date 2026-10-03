@@ -272,6 +272,32 @@ describe('Classrooms', function() {
 	});
 
 	describe('/GET classrooms', () => {
+		it('it should replace an invalid limit and offset by the default values', (done) => {
+			var queries = ['?limit=0', '?limit=-3', '?limit=abc', '?offset=-1', '?offset=abc', '?limit=-1&offset=-1'];
+			var next = () => {
+				if (queries.length == 0) {
+					return done();
+				}
+				var query = queries.shift();
+				chai.request(server)
+					.get('/api/v1/classrooms' + query)
+					.set('x-access-token', fake.admin.token)
+					.set('x-key', fake.admin.user._id)
+					.end((err, res) => {
+						res.should.have.status(200, query);
+						res.body.should.have.property('limit').eql(10);
+						res.body.should.have.property('offset').eql(0);
+						res.body.classrooms.should.be.an('array');
+						(res.body.links.prev_page === undefined).should.be.true;
+						if (res.body.links.next_page !== undefined) {
+							res.body.links.next_page.should.not.contain('-');
+						}
+						next();
+					});
+			};
+			next();
+		});
+
 		it('it should return all the classrooms', (done) => {
 
 			chai.request(server)

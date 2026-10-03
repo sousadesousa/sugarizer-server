@@ -251,12 +251,41 @@ test.describe('teacher assignment', () => {
 		await expect(exactCell(page, name), 'the old name is gone').toHaveCount(0);
 	});
 
+	test('late turn in is stored as a boolean, ticked and unticked', async () => {
+		const teacher = await apiLogin(info.users.teacher, 'teacher');
+		const stored = async () => {
+			const list = await apiCall('GET', '/api/v1/assignments?name=' + encodeURIComponent(renamed), null, teacher);
+			return list.assignments[0];
+		};
+		async function saveWith(ticked) {
+			await row(page, renamed).locator('a[title="Edit Assignment"]').click();
+			await settle(page);
+			await page.locator('input[name="lateTurnIn"]').setChecked(ticked);
+			await page.click('button[type="submit"]');
+			await expectFlash(page, 'Assignment ' + renamed + ' has been successfully updated!');
+			await settle(page);
+		}
+		await saveWith(true);
+		expect((await stored()).lateTurnIn, 'ticked').toBe(true);
+		await row(page, renamed).locator('a[title="Edit Assignment"]').click();
+		await settle(page);
+		await expect(page.locator('input[name="lateTurnIn"]')).toBeChecked();
+		await page.goto('/dashboard/assignments');
+		await settle(page);
+		await saveWith(false);
+		expect((await stored()).lateTurnIn, 'unticked').toBe(false);
+		await row(page, renamed).locator('a[title="Edit Assignment"]').click();
+		await settle(page);
+		await expect(page.locator('input[name="lateTurnIn"]')).not.toBeChecked();
+		await page.goto('/dashboard/assignments');
+		await settle(page);
+	});
+
 	test('launch the assignment and open its deliveries', async () => {
 		const launch = row(page, renamed).locator('a[title="Launch Assignment"]');
 		assignmentId = (await launch.getAttribute('href')).split('/').pop();
 		await launch.click();
-		// the launch link has no ?name=, so the message says "assignment" instead of the name of the assignment
-		await expectFlash(page, 'has been successfully launched!');
+		await expectFlash(page, 'Assignment ' + renamed + ' has been successfully launched!');
 		await settle(page);
 		await expect(row(page, renamed)).toContainText('Assigned');
 
@@ -276,8 +305,7 @@ test.describe('teacher assignment', () => {
 		await settle(page);
 		await page.fill('input[name="comment"]', 'Well done');
 		await page.click('button[type="submit"]');
-		// KNOWN: the locales have no CommentAdded string, so the message is the key itself (a dashboard bug, not fixed here)
-		await expectFlash(page, 'CommentAdded');
+		await expectFlash(page, 'Comment has been successfully added!');
 		await settle(page);
 		await expect(page.locator('#deliveries-card').filter({ hasText: student })).toContainText('Well done');
 	});
@@ -296,7 +324,7 @@ test.describe('teacher assignment', () => {
 		const handedIn = page.locator('#deliveries-card').filter({ hasText: delivery.metadata.buddy_name });
 		await expect(handedIn).toContainText('Delivered');
 		await handedIn.locator('a[title="Return"]').click();
-		await expectFlash(page, 'has been successfully returned!');
+		await expectFlash(page, 'Assignment ' + renamed + ' has been successfully returned!');
 		await settle(page);
 		await expect(page.locator('#deliveries-card').filter({ hasText: delivery.metadata.buddy_name })).toContainText('Expected');
 		await expect(page.locator('#deliveries-card').filter({ hasText: delivery.metadata.buddy_name }).locator('.returnAssignment-icon-inactive')).toHaveCount(1);
