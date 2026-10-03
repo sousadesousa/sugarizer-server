@@ -4,7 +4,8 @@ var superagent = require('superagent'),
 	common = require('../../helper/common'),
 	xocolors = require('../../helper/xocolors')(),
 	emoji = require('../../public/js/emoji'),
-	journal_utils = require('../journal/util/index');
+	journal_utils = require('../journal/util/index'),
+	toolbar = require('./toolbar');
 
 var classroom = require('./index');
 
@@ -19,7 +20,7 @@ module.exports = function editClassroom(req, res) {
 			// validate
 			req.body.name = req.body.name.trim();
 			req.body.students = req.body.students || [];
-			
+
 			if (typeof req.body.students == 'string') {
 				req.body.students = [req.body.students];
 			}
@@ -28,6 +29,13 @@ module.exports = function editClassroom(req, res) {
 			if (typeof req.body.activities == 'string') {
 				req.body.activities = [req.body.activities];
 			}
+
+			// Parse and normalize toolbar settings
+			req.body.toolbarOverrides = toolbar.parseToolbarOverrides(req.body.toolbarOverrides, req.body.activities);
+			if (req.body.toolbarMode !== 'simple' && req.body.toolbarMode !== 'full') {
+				req.body.toolbarMode = 'full';
+			}
+
 			req.body.color = JSON.parse(req.body.color);
 			req.assert('name', common.l10n.get('UsernameInvalid')).matches(/^[a-z0-9 ]+$/i);
 

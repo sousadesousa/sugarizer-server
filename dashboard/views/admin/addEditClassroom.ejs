@@ -84,16 +84,34 @@
                                     <p class="text-muted" data-l10n-id="classroomActivitiesHint"></p>
                                     <div class="classroom-activities" style="max-height: 260px; overflow-y: auto; border: 1px solid #ddd; border-radius: 4px; padding: 8px;">
                                         <% var assigned = (typeof classroom == 'object' && Array.isArray(classroom.activities)) ? classroom.activities : []; %>
+                                        <% var toolbarOverrides = (typeof classroom == 'object' && classroom.toolbarOverrides) ? classroom.toolbarOverrides : {}; %>
                                         <% for (var i = 0; i < activities.length; i++) { %>
-                                            <div class="form-check form-check-inline" style="width: 220px; margin: 4px 8px;">
+                                            <div class="form-check form-check-inline" style="width: 360px; margin: 4px 8px;">
                                             <input class="form-check-input" id="activity-<%= activities[i].id %>" type="checkbox" name="activities" value="<%= activities[i].id %>" <% if (assigned.indexOf(activities[i].id) != -1) { %>checked<% } %>>
                                             <label class="form-check-label" for="activity-<%= activities[i].id %>">
                                                 <img src="/<%= activities[i].directory %>/<%= activities[i].icon %>" alt="" style="width: 24px; height: 24px; margin: 0 6px;">
                                                 <%= activities[i].name %>
                                             </label>
+                                            <select class="form-select form-select-sm" name="toolbarOverrides" style="width:auto; display:inline-block; margin-left: 8px;" data-activity-id="<%= activities[i].id %>">
+                                                <option value="" <% if (typeof toolbarOverrides[activities[i].id] === 'undefined') { %>selected<% } %> data-l10n-id="toolbarClassDefault"></option>
+                                                <option value="<%= activities[i].id %>=simple" <% if (toolbarOverrides[activities[i].id] === 'simple') { %>selected<% } %> data-l10n-id="toolbarSimple"></option>
+                                                <option value="<%= activities[i].id %>=full" <% if (toolbarOverrides[activities[i].id] === 'full') { %>selected<% } %> data-l10n-id="toolbarFull"></option>
+                                            </select>
                                         </div>
                                         <% } %>
                                     </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row" id="editClassroom-toolbar">
+                            <div class="col-12">
+                                <div class="mb-3">
+                                    <label class="form-label" data-l10n-id="classroomToolbar"></label>
+                                    <p class="text-muted" data-l10n-id="classroomToolbarHint"></p>
+                                    <select class="form-select" name="toolbarMode" id="toolbarMode">
+                                        <option value="full" <% if (!(typeof classroom == 'object' && classroom.toolbarMode === 'simple')) { %>selected<% } %> data-l10n-id="toolbarFull"></option>
+                                        <option value="simple" <% if (typeof classroom == 'object' && classroom.toolbarMode === 'simple') { %>selected<% } %> data-l10n-id="toolbarSimple"></option>
+                                    </select>
                                 </div>
                             </div>
                         </div>
@@ -138,6 +156,25 @@
                         <a class="btn float-end btn-round" href="/dashboard/classrooms" data-l10n-id="cancel"></a>
                         <div class="clearfix"></div>
                     </form>
+                    <script>
+                        // Toggle toolbar override visibility based on checkbox state
+                        function toggleToolbarOverrideVisibility() {
+                            document.querySelectorAll('input[name="activities"]').forEach(function(checkbox) {
+                                var activityId = checkbox.value;
+                                var overrideSelect = document.querySelector('select[name="toolbarOverrides"][data-activity-id="' + activityId + '"]');
+                                if (overrideSelect) {
+                                    overrideSelect.style.display = checkbox.checked ? 'inline-block' : 'none';
+                                }
+                            });
+                        }
+
+                        document.addEventListener('DOMContentLoaded', function() {
+                            toggleToolbarOverrideVisibility();
+                            document.querySelectorAll('input[name="activities"]').forEach(function(checkbox) {
+                                checkbox.addEventListener('change', toggleToolbarOverrideVisibility);
+                            });
+                        });
+                    </script>
                 </div>
               </div>
           </div>
