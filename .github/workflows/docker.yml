@@ -3,6 +3,7 @@ name: Docker
 on:
   push:
   pull_request:
+  workflow_dispatch:
 
 jobs:
   compose:
@@ -29,3 +30,46 @@ jobs:
       - name: Stop
         if: always()
         run: docker compose down
+
+  # The image must also build for the Raspberry Pi (linux/arm64). Build only, nothing is pushed.
+  # docker/Dockerfile is built on every push and pull request.
+  multiarch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-qemu-action@v3
+        with:
+          platforms: arm64
+      - uses: docker/setup-buildx-action@v3
+      - name: Build for linux/amd64 and linux/arm64
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: docker/Dockerfile
+          platforms: linux/amd64,linux/arm64
+          push: false
+          cache-from: type=gha,scope=docker/Dockerfile
+          cache-to: type=gha,mode=max,scope=docker/Dockerfile
+
+  # docker/Dockerfile-standalone is slow under QEMU (and clones the client from GitHub),
+  # so it is built only when the workflow is started by hand (workflow_dispatch).
+  multiarch-standalone:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-qemu-action@v3
+        with:
+          platforms: arm64
+      - uses: docker/setup-buildx-action@v3
+      - name: Build the standalone image for linux/amd64 and linux/arm64
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: docker/Dockerfile-standalone
+          platforms: linux/amd64,linux/arm64
+          push: false
+          cache-from: type=gha,scope=docker/Dockerfile-standalone
+          cache-to: type=gha,mode=max,scope=docker/Dockerfile-standalone

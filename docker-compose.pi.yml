@@ -1,0 +1,25 @@
+# Raspberry Pi 5 override, use it on top of docker-compose.yml:
+#   docker compose -f docker-compose.yml -f docker-compose.pi.yml up -d
+#
+# MONGO_CACHE_GB sets the MongoDB WiredTiger cache (default 1, use 2 on an 8 GB Pi, 0.5 on a 2 GB one).
+# NODE_HEAP_MB sets the Node.js heap limit of the server in MB (default 1024, use 512 on a 2 GB Pi).
+# The database stays in ./docker/db, exactly as in docker-compose.yml, so an existing install keeps its data.
+
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+services:
+  mongodb:
+    command: ["mongod", "--wiredTigerCacheSizeGB", "${MONGO_CACHE_GB:-1}"]
+    restart: unless-stopped
+    logging: *logging
+
+  server:
+    restart: unless-stopped
+    logging: *logging
+    # keep Node.js below the memory of a Pi shared with MongoDB
+    environment:
+      - NODE_OPTIONS=--max-old-space-size=${NODE_HEAP_MB:-1024}

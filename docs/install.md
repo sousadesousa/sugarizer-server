@@ -12,7 +12,7 @@ To run Sugarizer Server using Docker and Docker Compose:
 
 	curl -fsSL https://get.docker.com/ | sh
 
-This also installs the Docker Compose plugin (`docker compose`). The images used by Sugarizer Server work on x86-64 and 64-bit ARM (arm64, for example Raspberry Pi 4 or 5 with a 64-bit OS).
+This also installs the Docker Compose plugin (`docker compose`). The images used by Sugarizer Server work on x86-64 and 64-bit ARM (arm64, for example a Raspberry Pi 5 with a 64-bit OS; MongoDB 8 needs an ARMv8.2 CPU, so it does not run on a Raspberry Pi 4 or older).
 
 You can find more details about the installation of **Docker** [here](https://docker.github.io/engine/installation/)
 
@@ -139,7 +139,7 @@ If incase you want to check where does the data directory lives in finder, you c
 
 ## Run Sugarizer on a RaspberryPI
 
-To deploy Sugarizer Server on a Raspberry Pi, you could use instructions above to deploy on Linux or to deploy on Docker.
+To deploy Sugarizer Server on a Raspberry Pi 5 with Docker, follow the [Raspberry Pi 5 guide](raspberry-pi.md). Otherwise, you could use instructions above to deploy on Linux or to deploy on Docker.
 
 A specific packaging name [Sugarizer Schoolbox](https://github.com/llaske/sugarizer-school-box) is also available [here](https://github.com/llaske/sugarizer-school-box) but is currently **deprecated**.
 
