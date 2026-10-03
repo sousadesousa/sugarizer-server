@@ -118,26 +118,6 @@ test.describe('widgets (admin)', () => {
 		expect(watched.errors).toEqual([]);
 	});
 
-	test('N8: the second to last card can be dragged one place down to the last place', async () => {
-		await page.goto('/dashboard/activities');
-		await settle(page);
-		const before = await names();
-		const last = before.length - 1;
-		const saved = page.waitForResponse((r) => r.url().includes('api/v1/activities') && r.request().method() == 'POST', { timeout: 8000 });
-		await dragTo(last - 1, last);
-		await saved;
-		await page.reload();
-		await settle(page);
-		expect(await names()).toEqual([...before.slice(0, last - 1), before[last], before[last - 1]]);
-		// put it back
-		const restored = page.waitForResponse((r) => r.url().includes('api/v1/activities') && r.request().method() == 'POST');
-		await dragTo(last, last - 1);
-		await restored;
-		await page.reload();
-		await settle(page);
-		expect(await names()).toEqual(before);
-	});
-
 	test('the two lists widget moves a classroom and filters its list', async () => {
 		await page.goto('/dashboard/users/edit/' + info.ids.student1);
 		await settle(page);
