@@ -1,18 +1,18 @@
 <%- include('includes/header') %>
 <div class="wrapper">
 	<%- include('includes/sidebar') %>
-	<div class="main-panel">
+	<div class="main-area">
 	<%- include('includes/navbar') %>
 		<div class="content">
 			<div class="container-fluid">
 				<%- include('includes/flash-errors') %>
 				<div class="row" id="dashboard-home-cards">
-					<div class="col-lg-3 col-md-3 col-sm-3">
+					<div class="col-lg-3">
 						<div class="card card-stats">
 							<div class="card-header" data-background-color="black">
 								<p class="custom-icon xo-icon"></p>
 							</div>
-							<div class="card-content">
+							<div class="card-body">
 								<p class="category" data-l10n-id="students">Students</p>
 								<h3 class="title"><%= data.users.total %></h3>
 							</div>
@@ -23,12 +23,12 @@
 							</div>
 						</div>
 					</div>
-					<div class="col-lg-3 col-md-3 col-sm-3">
+					<div class="col-lg-3">
 						<div class="card card-stats">
 							<div class="card-header" data-background-color="black">
 								<p class="custom-icon activity-icon"></p>
 							</div>
-							<div class="card-content">
+							<div class="card-body">
 								<p class="category" data-l10n-id="activities">Activities</p>
 								<h3 class="title"><%= data.activities.length %></h3>
 							</div>
@@ -39,12 +39,12 @@
 							</div>
 						</div>
 					</div>
-					<div class="col-lg-3 col-md-3 col-sm-3">
+					<div class="col-lg-3">
 						<div class="card card-stats">
 							<div class="card-header" data-background-color="black">
 								<p class="custom-icon journal-icon"></p>
 							</div>
-							<div class="card-content">
+							<div class="card-body">
 								<p class="category" data-l10n-id="journals">Journal</p>
 								<h3 class="title"><%= data.journal.totalEntries %></h3>
 							</div>
@@ -55,12 +55,12 @@
 							</div>
 						</div>
 					</div>
-					<div class="col-lg-3 col-md-3 col-sm-3">
+					<div class="col-lg-3">
 						<div class="card card-stats">
 							<div class="card-header" data-background-color="black">
 								<p class="custom-icon classroom-icon"></p>
 							</div>
-							<div class="card-content">
+							<div class="card-body">
 								<p class="category" data-l10n-id="classrooms">Classrooms</p>
 								<h3 class="title"><%= data.classrooms.total %></h3>
 							</div>
@@ -73,9 +73,9 @@
 					</div>
 				</div>
 				<div class="row">
-					<div class="col-md-6">
+					<div class="col-lg-6">
 						<div class="card" style="margin-top:0px;" id="top-contributor-chart-parent">
-							<div class="card-content">
+							<div class="card-body">
 								<p class="title text-muted" data-l10n-id="TopContributors"></p>
 								<canvas onload="" id="top-contributor-chart" width="400" height="250"></canvas>
 							</div>
@@ -86,9 +86,9 @@
 							</div>
 						</div>
 					</div>
-					<div class="col-md-6">
+					<div class="col-lg-6">
 						<div class="card" style="margin-top:0px;" id="top-activities-chart-parent">
-							<div class="card-content">
+							<div class="card-body">
 								<p class="title text-muted" data-l10n-id="TopActivities"></p>
 								<canvas id="top-activities-chart" width="400" height="250"></canvas>
 							</div>
@@ -102,9 +102,9 @@
 				</div>
 
 				<div class="row">
-					<div class="col-md-6">
+					<div class="col-lg-6">
 						<div class="card" style="margin-top:0px;" id="recent-users-table-parent">
-							<div class="card-content table-responsive">
+							<div class="card-body table-responsive">
 								<p class="title text-muted dashboard-table-title" data-l10n-id="RecentStudents"></p>
 								<table class="table table-hover dashboard-table" id="recent-students-table">
 									<thead class="text-muted">
@@ -121,9 +121,9 @@
 							</div>
 						</div>
 					</div>
-					<div class="col-md-6">
+					<div class="col-lg-6">
 						<div class="card" style="margin-top:0px;" id="recent-activities-table-parent">
-							<div class="card-content table-responsive">
+							<div class="card-body table-responsive">
 								<p class="title text-muted dashboard-table-title" data-l10n-id="RecentEntries"></p>
 								<table class="table table-hover dashboard-table"  id="recent-activities-table">
 									<thead class="text-muted">

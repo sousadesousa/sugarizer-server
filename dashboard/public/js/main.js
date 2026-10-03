@@ -149,12 +149,7 @@ function launch_activity(callurl) {
 
 	$.get((callurl), function (response) {
 		if (response.error) {
-			$.notify({
-				icon: "error",
-				message: response.error
-			}, {
-				type: 'danger'
-			});
+			notify(response.error, 'danger');
 		}
 
 		var metadata = {};
@@ -226,12 +221,7 @@ function launch_activity(callurl) {
 						}
 					};
 				} else {
-					$.notify({
-						icon: "error",
-						message: document.webL10n.get('CantOpenWindow')
-					}, {
-						type: 'danger'
-					});
+					notify(document.webL10n.get('CantOpenWindow'), 'danger');
 				}
 			}
 		};
@@ -276,17 +266,7 @@ function updateActivities() {
 		x_key: headers['x-key'],
 		access_token: headers['x-access-token']
 	}))), data, function (response) {
-		$.notify({
-			icon: "notifications",
-			message: document.webL10n.get('successActivityUpdate')
-		}, {
-			type: 'success',
-			timer: 2000,
-			placement: {
-				from: 'top',
-				align: 'right'
-			}
-		});
+		notify(document.webL10n.get('successActivityUpdate'), 'success');
 	});
 }
 
@@ -324,17 +304,7 @@ function updateChartOrder() {
 		type: 'PUT',
 		data: data,
 		success: function (result) {
-			$.notify({
-				icon: "notifications",
-				message: document.webL10n.get('successChartUpdate')
-			}, {
-				type: 'success',
-				timer: 2000,
-				placement: {
-					from: 'top',
-					align: 'right'
-				}
-			});
+			notify(document.webL10n.get('successChartUpdate'), 'success');
 		}
 	});
 }
@@ -359,17 +329,7 @@ function updateChart(chartid) {
 		type: 'PUT',
 		data: data,
 		success: function (result) {
-			$.notify({
-				icon: "notifications",
-				message: document.webL10n.get('successChartUpdate')
-			}, {
-				type: 'success',
-				timer: 2000,
-				placement: {
-					from: 'top',
-					align: 'right'
-				}
-			});
+			notify(document.webL10n.get('successChartUpdate'), 'success');
 		}
 	});
 }
@@ -583,25 +543,20 @@ function highlight(text) {
 
 	//show error
 	if (offset === -1 && text !== '') {
-		$('.control-label').removeClass('hidden');
-		$('.search_query')
-			.parent()
-			.addClass('label-floating has-error is-focused')
-			.removeClass('form-black is-empty');
+		$('.search-notfound').removeClass('d-none');
+		$('.search_query').addClass('is-invalid');
 	} else {
-		$('.control-label').addClass('hidden');
-		$('.search_query')
-			.parent()
-			.removeClass('label-floating has-error is-focused');
+		$('.search-notfound').addClass('d-none');
+		$('.search_query').removeClass('is-invalid');
 	}
 
 	//scroll
 	if ($(window).width() < 992) {
-		$('.main-panel').animate({
+		$('.main-area').animate({
 			scrollTop: (offset - 86)
 		}, 500);
 	} else {
-		$('.main-panel').animate({
+		$('.main-area').animate({
 			scrollTop: (offset - 30)
 		}, 500);
 	}
@@ -610,7 +565,8 @@ function highlight(text) {
 //hide label when input is empty
 function hideLabel(value) {
 	if (value === '') {
-		$('.control-label').addClass('hidden');
+		$('.search-notfound').addClass('d-none');
+		$('.search_query').removeClass('is-invalid');
 		highlight('');
 	}
 }
@@ -618,9 +574,12 @@ function hideLabel(value) {
 // localization
 function onLocalized() {
 	var l10n = document.webL10n;
-	var lang = document.getElementById('languageSelection');
-
-	if (lang != null) {
+	// the language selector of the navbar and, on small screens, its copy in the sidebar
+	['languageSelection', 'languageSelectionMobile'].forEach(function (id) {
+		var lang = document.getElementById(id);
+		if (lang == null) {
+			return;
+		}
 		if (lang.selectedIndex == -1) {
 			lang.value = l10n.getLanguage();
 		} else if (localStorage.getItem("languageSelection") == null) {
@@ -629,6 +588,7 @@ function onLocalized() {
 			l10n.setLanguage(localStorage.getItem("languageSelection"));
 			lang.value = localStorage.getItem("languageSelection");
 		}
+		document.documentElement.lang = lang.value || l10n.getLanguage() || document.documentElement.lang;
 		lang.onchange = function () {
 			localStorage.setItem("languageSelection", this.value);
 			var searchQuery = location.search;
@@ -644,7 +604,7 @@ function onLocalized() {
 			}
 			location.href = window.location.pathname + searchQuery;
 		};
-	}
+	});
 }
 document.webL10n.ready(onLocalized);
 
@@ -930,6 +890,117 @@ function formatPickerDate(date, format) {
 	return text;
 }
 
+// Notification (flash message) on a Bootstrap toast, at the top right of the page.
+// type: 'success' or 'danger' (also 'warning' and 'info'). The message is text, never HTML.
+function notify(message, type) {
+	type = type || 'info';
+	var container = document.getElementById('notify-container');
+	if (!container) {
+		container = document.createElement('div');
+		container.id = 'notify-container';
+		container.className = 'toast-container position-fixed top-0 end-0 p-3';
+		document.body.appendChild(container);
+	}
+	var toast = document.createElement('div');
+	toast.className = 'toast notify notify-' + type;
+	toast.setAttribute('role', type == 'danger' ? 'alert' : 'status');
+	toast.setAttribute('aria-live', type == 'danger' ? 'assertive' : 'polite');
+	toast.setAttribute('aria-atomic', 'true');
+	toast.setAttribute('data-notify', 'container');
+	var body = document.createElement('div');
+	body.className = 'toast-body d-flex align-items-center';
+	var icon = document.createElement('i');
+	icon.className = 'material-icons';
+	icon.setAttribute('aria-hidden', 'true');
+	icon.textContent = (type == 'danger' || type == 'warning') ? 'error' : 'notifications';
+	var text = document.createElement('span');
+	text.className = 'notify-message';
+	text.setAttribute('data-notify', 'message');
+	text.textContent = message;
+	var close = document.createElement('button');
+	close.type = 'button';
+	close.className = 'btn-close btn-close-white ms-auto';
+	close.setAttribute('data-bs-dismiss', 'toast');
+	close.setAttribute('aria-label', 'Close');
+	body.appendChild(icon);
+	body.appendChild(text);
+	body.appendChild(close);
+	toast.appendChild(body);
+	container.appendChild(toast);
+	toast.addEventListener('hidden.bs.toast', function() {
+		toast.remove();
+	});
+	bootstrap.Toast.getOrCreateInstance(toast, { delay: 5000 }).show();
+}
+
+// Small screens (992px and less): the language and user menu of the navbar move to the top of the sidebar,
+// which slides in from the right when the toggler of the navbar is used. Pages without sidebar (login) use the
+// collapse of the navbar instead.
+var mobileMenu = { built: false, visible: false };
+
+function initMobileMenu() {
+	var wrapper = $('.sidebar-wrapper');
+	if (!wrapper.length) {
+		$('#navbar-toggle').attr({ 'data-bs-toggle': 'collapse', 'data-bs-target': '.navbar-collapse' });
+		return;
+	}
+	var small = $(window).width() <= 991;
+	if (small && !mobileMenu.built) {
+		var items = '';
+		$('.navbar .navbar-collapse').first().clone(true).children('ul').each(function() {
+			items += $(this).html();
+		});
+		var menu = $('<ul class="nav flex-column nav-mobile-menu"></ul>').html(items);
+		var form = $('.navbar .navbar-form').first().clone(true);
+		form.find('#languageSelection').attr('id', 'languageSelectionMobile');
+		menu.insertBefore(wrapper.children('.nav').first());
+		form.insertBefore(menu);
+		mobileMenu.built = true;
+		document.webL10n.ready(onLocalized);
+	} else if (!small && mobileMenu.built) {
+		wrapper.find('.navbar-form, .nav-mobile-menu').remove();
+		mobileMenu.built = false;
+		closeMobileMenu();
+	}
+}
+
+function closeMobileMenu() {
+	if (!mobileMenu.visible) {
+		return;
+	}
+	$('html').removeClass('nav-open');
+	var layer = $('.close-layer').removeClass('visible');
+	setTimeout(function() {
+		layer.remove();
+	}, 400);
+	$('#navbar-toggle').removeClass('toggled');
+	mobileMenu.visible = false;
+}
+
+function toggleMobileMenu() {
+	if (mobileMenu.visible) {
+		closeMobileMenu();
+		return;
+	}
+	var panel = $('.main-area');
+	var layer = $('<div class="close-layer"></div>').css('height', panel[0].scrollHeight + 'px').appendTo(panel);
+	setTimeout(function() {
+		layer.addClass('visible');
+	}, 100);
+	layer.on('click', closeMobileMenu);
+	$('#navbar-toggle').addClass('toggled');
+	$('html').addClass('nav-open');
+	mobileMenu.visible = true;
+}
+
+$(function() {
+	initMobileMenu();
+	if ($('.sidebar-wrapper').length) {
+		$('#navbar-toggle').on('click', toggleMobileMenu);
+	}
+	$(window).on('resize', initMobileMenu);
+});
+
 function launchTutorial() {
 	if (window.currTour && typeof window.currTour.restart == "function") {
 		if (window.location.pathname.substr(0, 19) == "/dashboard/journal/") {
@@ -946,10 +1017,7 @@ function generateQRCode() {
 	var qrCode = new QRCode("qrplaceholder", { width: 300, height: 300, colorDark: "#000000", colorLight: "#ffffff", correctLevel: QRCode.CorrectLevel.H });
 	qrCode.clear();
 	qrCode.makeCode(window.location.protocol + "//" + window.location.host);
-	$('#qrpopup').on('show.bs.modal', function () {
-		$(this).find('.modal-dialog').css({ width: '350px', height: '350px' });
-	});
-	$("#qrpopup").modal();
+	bootstrap.Modal.getOrCreateInstance(document.getElementById('qrpopup')).show();
 }
 
 // Decoding functions taken from
@@ -1034,12 +1102,7 @@ function writeFile(metadata, content, callback) {
 function download_activity(callurl) {
 	$.get((callurl), function (response) {
 		if (response.error) {
-			$.notify({
-				icon: "error",
-				message: response.error
-			}, {
-				type: 'danger'
-			});
+			notify(response.error, 'danger');
 		}
 
 		var metadata = {};
@@ -1111,12 +1174,7 @@ function upload_journal(files, journalId, name, user_id, color) {
 				return;
 			}
 			if(metadata.assignmentId){
-				$.notify({
-					icon: "error",
-					message: "Error"
-				}, {
-					type: 'danger'
-				});
+				notify("Error", 'danger');
 				return;
 			}
 			metadata["timestamp"] = new Date().getTime();
@@ -1153,30 +1211,9 @@ function upload_journal(files, journalId, name, user_id, color) {
 			}, function (res) {
 				var timer = 2000;
 				if (res && res.objectId) {
-					$.notify({
-						icon: "notifications",
-						message: document.webL10n.get('journalUploaded', { title: metadata.title })
-
-					}, {
-						type: 'success',
-						timer: timer,
-						placement: {
-							from: 'top',
-							align: 'right'
-						}
-					});
+					notify(document.webL10n.get('journalUploaded', { title: metadata.title }), 'success');
 				} else {
-					$.notify({
-						icon: "error",
-						message: document.webL10n.get('journalUploadError')
-					}, {
-						type: 'danger',
-						timer: timer,
-						placement: {
-							from: 'top',
-							align: 'right'
-						}
-					});
+					notify(document.webL10n.get('journalUploadError'), 'danger');
 				}
 				setTimeout(function () {
 					location.reload();
@@ -1216,41 +1253,11 @@ function deleteMultipleEntries() {
 	function displayNotification(success, failed) {
 		var timer = 2000;
 		if (success > 0 && failed > 0) {
-			$.notify({
-				icon: "notifications",
-				message: document.webL10n.get('deleteSuccessFailEntry', { success: success, failed: failed })
-			}, {
-				type: 'success',
-				timer: timer,
-				placement: {
-					from: 'top',
-					align: 'right'
-				}
-			});
+			notify(document.webL10n.get('deleteSuccessFailEntry', { success: success, failed: failed }), 'success');
 		} else if (failed == 0) {
-			$.notify({
-				icon: "notifications",
-				message: document.webL10n.get('deleteEntrySuccess', { success: success })
-			}, {
-				type: 'success',
-				timer: timer,
-				placement: {
-					from: 'top',
-					align: 'right'
-				}
-			});
+			notify(document.webL10n.get('deleteEntrySuccess', { success: success }), 'success');
 		} else {
-			$.notify({
-				icon: "error",
-				message: document.webL10n.get('deleteEntryFailed')
-			}, {
-				type: 'danger',
-				timer: timer,
-				placement: {
-					from: 'top',
-					align: 'right'
-				}
-			});
+			notify(document.webL10n.get('deleteEntryFailed'), 'danger');
 		}
 		setTimeout(function () {
 			location.reload();
@@ -1282,16 +1289,7 @@ function deleteMultipleEntries() {
 		}
 
 		if (totalSelected == 0) {
-			$.notify({
-				icon: "error",
-				message: document.webL10n.get('noEntriesSelectedDelete')
-			}, {
-				type: 'danger',
-				placement: {
-					from: 'top',
-					align: 'right'
-				}
-			});
+			notify(document.webL10n.get('noEntriesSelectedDelete'), 'danger');
 		} else {
 			var confirmation = confirm(document.webL10n.get('deleteEntryConfirmation', { selected: totalSelected }));
 			if (confirmation) {
@@ -1328,38 +1326,11 @@ function deleteMultipleEntries() {
 function downloadMultipleEntries() {
 	function displayNotification(success, failed) {
 		if (success > 0 && failed > 0) {
-			$.notify({
-				icon: "notifications",
-				message: document.webL10n.get('downloadSuccessFail', { success: success, failed: failed })
-			}, {
-				type: 'success',
-				placement: {
-					from: 'top',
-					align: 'right'
-				}
-			});
+			notify(document.webL10n.get('downloadSuccessFail', { success: success, failed: failed }), 'success');
 		} else if (failed == 0) {
-			$.notify({
-				icon: "notifications",
-				message: document.webL10n.get('downloadSuccess', { success: success })
-			}, {
-				type: 'success',
-				placement: {
-					from: 'top',
-					align: 'right'
-				}
-			});
+			notify(document.webL10n.get('downloadSuccess', { success: success }), 'success');
 		} else {
-			$.notify({
-				icon: "error",
-				message: document.webL10n.get('downloadFailed')
-			}, {
-				type: 'danger',
-				placement: {
-					from: 'top',
-					align: 'right'
-				}
-			});
+			notify(document.webL10n.get('downloadFailed'), 'danger');
 		}
 	}
 	if (document.getElementsByClassName("journal-checkbox").length > 0) {
@@ -1401,16 +1372,7 @@ function downloadMultipleEntries() {
 			}
 		}
 		if (totalSelected == 0) {
-			$.notify({
-				icon: "error",
-				message: document.webL10n.get('noEntriesSelectedDownload')
-			}, {
-				type: 'danger',
-				placement: {
-					from: 'top',
-					align: 'right'
-				}
-			});
+			notify(document.webL10n.get('noEntriesSelectedDownload'), 'danger');
 		} else {
 			var confirmation = confirm(document.webL10n.get('downloadEntryConfirmation', { selected: totalSelected }));
 			if (confirmation) {
@@ -1446,41 +1408,11 @@ function deleteMultipleUsers() {
 	function displayNotification(success, failed) {
 		var timer = 2000;
 		if (success > 0 && failed > 0) {
-			$.notify({
-				icon: "notifications",
-				message: document.webL10n.get('deleteSuccessFailUser', { success: success, failed: failed })
-			}, {
-				type: 'success',
-				timer: timer,
-				placement: {
-					from: 'top',
-					align: 'right'
-				}
-			});
+			notify(document.webL10n.get('deleteSuccessFailUser', { success: success, failed: failed }), 'success');
 		} else if (failed == 0) {
-			$.notify({
-				icon: "notifications",
-				message: document.webL10n.get('DeleteSuccess', { count: success })
-			}, {
-				type: 'success',
-				timer: timer,
-				placement: {
-					from: 'top',
-					align: 'right'
-				}
-			});
+			notify(document.webL10n.get('DeleteSuccess', { count: success }), 'success');
 		} else {
-			$.notify({
-				icon: "error",
-				message: document.webL10n.get('deleteUserFailed')
-			}, {
-				type: 'danger',
-				timer: timer,
-				placement: {
-					from: 'top',
-					align: 'right'
-				}
-			});
+			notify(document.webL10n.get('deleteUserFailed'), 'danger');
 		}
 		setTimeout(function () {
 			location.reload();
@@ -1504,16 +1436,7 @@ function deleteMultipleUsers() {
 		}
 
 		if (totalSelected == 0) {
-			$.notify({
-				icon: "error",
-				message: document.webL10n.get('noUsersSelectedDelete')
-			}, {
-				type: 'danger',
-				placement: {
-					from: 'top',
-					align: 'right'
-				}
-			});
+			notify(document.webL10n.get('noUsersSelectedDelete'), 'danger');
 		} else {
 			var confirmation = confirm(document.webL10n.get('deleteUserConfirmation', { selected: totalSelected }));
 			if (confirmation) {
@@ -1549,41 +1472,11 @@ function deleteMultipleClassrooms() {
 	function displayNotification(success, failed) {
 		var timer = 2000;
 		if (success > 0 && failed > 0) {
-			$.notify({
-				icon: "notifications",
-				message: document.webL10n.get('deleteSuccessFailClassroom', { success: success, failed: failed })
-			}, {
-				type: 'success',
-				timer: timer,
-				placement: {
-					from: 'top',
-					align: 'right'
-				}
-			});
+			notify(document.webL10n.get('deleteSuccessFailClassroom', { success: success, failed: failed }), 'success');
 		} else if (failed == 0) {
-			$.notify({
-				icon: "notifications",
-				message: document.webL10n.get('deleteClassroomSuccess', { success: success })
-			}, {
-				type: 'success',
-				timer: timer,
-				placement: {
-					from: 'top',
-					align: 'right'
-				}
-			});
+			notify(document.webL10n.get('deleteClassroomSuccess', { success: success }), 'success');
 		} else {
-			$.notify({
-				icon: "error",
-				message: document.webL10n.get('deleteClassroomFailed')
-			}, {
-				type: 'danger',
-				timer: timer,
-				placement: {
-					from: 'top',
-					align: 'right'
-				}
-			});
+			notify(document.webL10n.get('deleteClassroomFailed'), 'danger');
 		}
 		setTimeout(function () {
 			location.reload();
@@ -1607,16 +1500,7 @@ function deleteMultipleClassrooms() {
 		}
 
 		if (totalSelected == 0) {
-			$.notify({
-				icon: "error",
-				message: document.webL10n.get('noClassroomSelectedDelete')
-			}, {
-				type: 'danger',
-				placement: {
-					from: 'top',
-					align: 'right'
-				}
-			});
+			notify(document.webL10n.get('noClassroomSelectedDelete'), 'danger');
 		} else {
 			var confirmation = confirm(document.webL10n.get('deleteClassroomConfirmation', { selected: totalSelected }));
 			if (confirmation) {
@@ -1652,41 +1536,11 @@ function deleteMultipleAssignments() {
 	function displayNotification(success, failed) {
 		var timer = 2000;
 		if (success > 0 && failed > 0) {
-			$.notify({
-				icon: "notifications",
-				message: document.webL10n.get('deleteSuccessFailAssignment', { success: success, failed: failed })
-			}, {
-				type: 'success',
-				timer: timer,
-				placement: {
-					from: 'top',
-					align: 'right'
-				}
-			});
+			notify(document.webL10n.get('deleteSuccessFailAssignment', { success: success, failed: failed }), 'success');
 		} else if (failed == 0) {
-			$.notify({
-				icon: "notifications",
-				message: document.webL10n.get('deleteAssignmentSuccess', { success: success })
-			}, {
-				type: 'success',
-				timer: timer,
-				placement: {
-					from: 'top',
-					align: 'right'
-				}
-			});
+			notify(document.webL10n.get('deleteAssignmentSuccess', { success: success }), 'success');
 		} else {
-			$.notify({
-				icon: "error",
-				message: document.webL10n.get('deleteAssignmentFailed')
-			}, {
-				type: 'danger',
-				timer: timer,
-				placement: {
-					from: 'top',
-					align: 'right'
-				}
-			});
+			notify(document.webL10n.get('deleteAssignmentFailed'), 'danger');
 		}
 		setTimeout(function () {
 			location.reload();
@@ -1710,16 +1564,7 @@ function deleteMultipleAssignments() {
 		}
 
 		if (totalSelected == 0) {
-			$.notify({
-				icon: "error",
-				message: document.webL10n.get('noAssignmentSelectedDelete')
-			}, {
-				type: 'danger',
-				placement: {
-					from: 'top',
-					align: 'right'
-				}
-			});
+			notify(document.webL10n.get('noAssignmentSelectedDelete'), 'danger');
 		}
 		else {
 			var confirmation = confirm(document.webL10n.get('deleteAssignmentConfirmation', { selected: totalSelected }));

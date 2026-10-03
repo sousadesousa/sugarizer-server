@@ -1,29 +1,28 @@
 <%- include('includes/header') %>
   <div class="wrapper">
   	<%- include('includes/sidebar') %>
-    	<div class="main-panel">
+    	<div class="main-area">
     	<%- include('includes/navbar') %>
     		<div class="content">
     			<div class="container-fluid">
-            <div class="col-md-8 col-lg-8 col-sm-12">
+            <div class="col-lg-8">
               <div class="card">
-                <div class="card-content">
+                <div class="card-body">
                     <%- include('includes/flash-errors') %>
                     <form id="user-add-edit-form" method="post" <% if(typeof user == 'object' && module =="profile"){ %> action="/dashboard/profile" <% } else if (typeof user == 'object') { %> action="<%= user._id %>" <% } %>>
                         <div class="row" id="editUser-name">
-                            <div class="col-md-12">
-                                <div class="form-group form-black label-floating">
-                                    <label class="control-label" data-l10n-id="name"></label>
+                            <div class="col-12">
+                                <div class="mb-3">
+                                    <label class="form-label" data-l10n-id="name"></label>
                                     <input class="form-control" name="name" value="<% if(typeof user == 'object'){ %><%= user.name %><% } %>" type="text">
-                                    <span class="material-input"></span>
                                 </div>
                             </div>
                         </div>
                         <div class="row" id="editUser-language">
-                            <div class="col-md-12">
-                                <div class="form-group form-black label-floating">
-                                    <label class="control-label" data-l10n-id="language"></label>
-                                    <select id="language-select" name="language" class="form-control">
+                            <div class="col-12">
+                                <div class="mb-3">
+                                    <label class="form-label" data-l10n-id="language"></label>
+                                    <select id="language-select" name="language" class="form-select">
                                         <option value="en" data-l10n-id="english" <% if(typeof user == 'object' &&  user.language=='en'){ %> selected="selected" <% } %>>English</option>
                                         <option value="es" data-l10n-id="spanish" <% if(typeof user == 'object' &&  user.language=='es'){ %> selected="selected" <% } %>>Spanish</option>
                                         <option value="fr" data-l10n-id="french" <% if(typeof user == 'object' &&  user.language=='fr'){ %> selected="selected" <% } %>>French</option>
@@ -36,16 +35,15 @@
                                         <option value="yor" data-l10n-id="yoruba" <% if(typeof user == 'object' &&  user.language=='yor'){ %> selected="selected" <% } %>>Yoruba</option>
                                         <option value="hi" data-l10n-id="hindi" <% if(typeof user == 'object' &&  user.language=='hi'){ %> selected="selected" <% } %>>Hindi</option>
                                     </select>
-                                    <span class="material-input"></span>
                                 </div>
                             </div>
                         </div>
                         <% if (module != "profile") { %>
                         <div class="row" id="editUser-role">
-                            <div class="col-md-12">
-                                <div class="form-group form-black label-floating">
-                                    <label class="control-label" data-l10n-id="role"></label>
-                                    <select class="form-control" name="role" onchange="show_user_fields(this.value)" <% if (mode == "edit") { %> disabled <% } %> >
+                            <div class="col-12">
+                                <div class="mb-3">
+                                    <label class="form-label" data-l10n-id="role"></label>
+                                    <select class="form-select" name="role" onchange="show_user_fields(this.value)" <% if (mode == "edit") { %> disabled <% } %> >
                                         <option data-l10n-id="student" value="student" <% if(typeof user == 'object' &&  user.role=='student'){ %> selected="selected" <% } %> >Student</option>
                                         <% if (account.user && account.user.role=="admin") { %>
                                         <option data-l10n-id="teacher" value="teacher" <% if(typeof user == 'object' &&  user.role=='teacher'){ %> selected="selected" <% } %> >Teacher</option>
@@ -57,10 +55,10 @@
                         </div>
                         <% } %>
                         <div class="row color_input" id="editUser-colors">
-                            <div class="col-md-12">
-                                <div class="form-group form-black label-floating">
-                                    <label class="control-label" data-l10n-id="color"></label>
-                                    <select class="form-control" name="color" id="color-select2">
+                            <div class="col-12">
+                                <div class="mb-3">
+                                    <label class="form-label" data-l10n-id="color"></label>
+                                    <select class="form-select" name="color" id="color-select2">
                                         <% if(typeof user == "undefined") var random=Math.floor(Math.random()*xocolors.length); %>
                                         <% for(var i=0; i< xocolors.length; i++){ %>
                                           <% if(typeof user == 'object' && (typeof user.color == 'object' && xocolors[i].stroke == user.color.stroke && xocolors[i].fill == user.color.fill) || (random == i)) { %>
@@ -74,35 +72,38 @@
                             </div>
                         </div>
                         <div class="row" id="editUser-password">
-                            <div class="col-md-12">
-                                <div class="form-group form-black label-floating">
-                                    <label class="control-label" data-l10n-id="password"></label>
+                            <div class="col-12">
+                                <div class="mb-3">
+                                    <label class="form-label" data-l10n-id="password"></label>
                                     <input class="form-control" name="password" id="password" value="<% if(typeof user == 'object'){ %><%= user.password || '' %><% } %>" type="text" oninput="document.getElementById('passemoji').innerHTML = getHtmlForEmoji(document.getElementById('password').value);">
                                     <span class="form-control emojis" id="passemoji"><%- (typeof user == 'object') ? emoji.getHtml(user.password || '') : '' %></span>
-                                    <span class="material-input"></span>
                                 </div>
                             </div>
                         </div>
                             <div class="row" id="editUser-twoFactor">
                                 <% if (typeof user == 'object' && (typeof user.tfa === "undefined" || user.tfa === false)) { %>
-                                <div class="col-md-12">
-                                <input type="checkbox" class="btn-check" name="options-outlined" id="danger-outlined" autocomplete="off" disabled>
-                                <label data-l10n-id="2FA"></label>
+                                <div class="col-12">
+                                <div class="form-check">
+                                    <input type="checkbox" class="form-check-input" name="options-outlined" id="danger-outlined" autocomplete="off" disabled>
+                                    <label class="form-check-label" for="danger-outlined" data-l10n-id="2FA"></label>
+                                </div>
                                 </div>
                                 <% } %>
                                 <% if (typeof user == 'object' && user.tfa === true) { %>
-                                    <div class="col-md-12">
-                                        <input type="checkbox" class="btn-check" name="options-outlined" id="success-outlined" autocomplete="off" checked disabled>
-                                        <label data-l10n-id="2FA"></label>
+                                    <div class="col-12">
+                                        <div class="form-check">
+                                            <input type="checkbox" class="form-check-input" name="options-outlined" id="success-outlined" autocomplete="off" checked disabled>
+                                            <label class="form-check-label" for="success-outlined" data-l10n-id="2FA"></label>
+                                        </div>
                                     </div>
                                 <% } %>
                             </div>
                         <% if(typeof classrooms == 'object' && module != "profile") { %>
                         <div class="row" id='searchable-select-classrooms-row'>
-                            <div class="col-md-12">
-                                <div class="form-group form-black" style="margin-top: -15px;" >
-                                    <label class="control-label" data-l10n-id="classrooms"></label>
-                                    <select id='searchable-select-classrooms' multiple='multiple' name="classrooms" class="form-control">
+                            <div class="col-12">
+                                <div class="mb-3" style="margin-top: -15px;" >
+                                    <label class="form-label" data-l10n-id="classrooms"></label>
+                                    <select id='searchable-select-classrooms' multiple='multiple' name="classrooms" class="form-select">
                                         <% for(var i=0; i < classrooms.length; i++) { %>
                                             <option <% if(classrooms[i].is_member) { %> selected <% } %> value='<%= classrooms[i]._id %>'><%= "class_" + classrooms[i]._id %></option>
                                         <% } %>
@@ -164,9 +165,9 @@
                         <% } %>
                         <% if (typeof user == 'object' && user.created_time) { %>
                         <div class="row" id="editUser-created">
-                            <div class="col-md-12">
-                                <div class="form-group form-black label-floating">
-                                    <label class="control-label" data-l10n-id="createdTime"></label>
+                            <div class="col-12">
+                                <div class="mb-3">
+                                    <label class="form-label" data-l10n-id="createdTime"></label>
                                     <input class="form-control" readonly value="<%= moment(user.created_time).calendar() %>" type="text">
                                 </div>
                             </div>
@@ -174,27 +175,27 @@
                         <% } %>
                         <% if (typeof user == 'object' && user.timestamp) { %>
                         <div class="row" id="editUser-lastseen">
-                            <div class="col-md-12">
-                                <div class="form-group form-black label-floating">
-                                    <label class="control-label" data-l10n-id="lastSeen"></label>
+                            <div class="col-12">
+                                <div class="mb-3">
+                                    <label class="form-label" data-l10n-id="lastSeen"></label>
                                     <input class="form-control" readonly value="<%= moment(user.timestamp).calendar() %>" type="text">
                                 </div>
                             </div>
                         </div>
                         <% } %>
-                        <button class="btn pull-right btn-round" type="submit" data-l10n-id="save"></button>
-                        <a class="btn pull-right btn-round" <% if (module=="profile") { %> href="/dashboard/profile" <% } else if (typeof user == 'object' && typeof user.role == 'string') { %>href="/dashboard/users?role=<%= user.role %>"<% } else { %> href="/dashboard/users" <% } %> data-l10n-id="cancel"></a>
+                        <button class="btn float-end btn-round" type="submit" data-l10n-id="save"></button>
+                        <a class="btn float-end btn-round" <% if (module=="profile") { %> href="/dashboard/profile" <% } else if (typeof user == 'object' && typeof user.role == 'string') { %>href="/dashboard/users?role=<%= user.role %>"<% } else { %> href="/dashboard/users" <% } %> data-l10n-id="cancel"></a>
                         <div class="clearfix"></div>
                     </form>
                         <% if (typeof user=='object' && (account.user.role=="admin" || account.user.role=="teacher") && module=="profile" && (typeof user.tfa==="undefined" || user.tfa===false)) { %>
-                            <div class="form-group col-12 text-center">
-                                <a class="btn btn-align btn pull-left btn-round" data-l10n-id="enable2FA" style="margin-top: -63px;"
+                            <div class="col-12 text-center">
+                                <a class="btn btn-align btn float-start btn-round text-nowrap" data-l10n-id="enable2FA"
                                 href="/dashboard/profile/enable2FA"></a>
                             </div>
                             <% } else if(typeof user=='object' && (account.user.role=="admin" || account.user.role=="teacher") && module=="profile" && user.tfa===true) { %>
                                 <form action="/dashboard/profile/disable2FA" method="POST">
-                                    <div class="form-group col-12 text-center">
-                                            <button class="btn btn pull-left btn-align btn-round" data-l10n-id="disable2FA" style="margin-top: -68px;"
+                                    <div class="col-12 text-center">
+                                            <button class="btn btn float-start btn-align btn-round text-nowrap" data-l10n-id="disable2FA"
                                                 data-name="<%= user.name %>" onclick="return confirmWith(this, 'DoYouWantToDisable2FA', 'name')"
                                                 type="submit"></button>
                                     </div>
@@ -217,7 +218,7 @@ function show_user_fields(val) {
     var op = document.getElementById("language-select").options;
 
     if (val == 'admin') {
-        $('.color_input').addClass('hide');
+        $('.color_input').addClass('d-none');
         $('.color_input input').attr('disabled', '');
 
         for (var i = 0; i < op.length; i++) {
@@ -233,11 +234,11 @@ function show_user_fields(val) {
             document.getElementById("language-select").value = "en";
         }
     } else {
-        $('.color_input').removeClass('hide');
+        $('.color_input').removeClass('d-none');
         $('.color_input input').removeAttr('disabled');
     }
     if (val == 'teacher' || val == 'student' || !val) {
-        $('#searchable-select-classrooms-row').removeClass('hide');
+        $('#searchable-select-classrooms-row').removeClass('d-none');
 
         if (val == 'teacher') {
             for (var i = 0; i < op.length; i++) {
@@ -267,7 +268,7 @@ function show_user_fields(val) {
             }
         }
     } else {
-        $('#searchable-select-classrooms-row').addClass('hide');
+        $('#searchable-select-classrooms-row').addClass('d-none');
     }
 }
 show_user_fields('<% if(typeof user == "object"){ %><%= user.role %><% } %>')

@@ -343,7 +343,7 @@
 }
 
 .dashboard-table-title {
-  position: fixed;
+  position: static;
 }
 
 .dashboard-table {
@@ -607,6 +607,24 @@
   margin-right: 15px;
 }
 
+.btn-align {
+  /* the 2FA button of the profile is below the form: pulled up to the line of Cancel and Save, on the left */
+  margin-top: -63px !important;
+}
+
+button.btn-align {
+  margin-top: -68px !important;
+}
+
+@media (max-width: 575.98px) {
+  /* no room on one line: the button goes below Cancel and Save instead of covering them */
+  .btn-align, button.btn-align {
+    float: none !important;
+    display: block;
+    margin: 12px auto 0 !important;
+  }
+}
+
 .journal-check {
   padding-left: 30px;
   padding-top: 0px;
@@ -626,7 +644,7 @@
 }
 
 .tutorial-title {
-	background-color: #808080 !important;
+	background-color: #6f6f6f !important;
 	color: #ffffff !important;
 }
 
@@ -869,9 +887,842 @@
     padding-left: 0px;
   }
   .display-check {
-    padding-left: 0px;
+    /* keeps the room of the check box (it sits 1.5em to the left of the padding of a .form-check) */
+    padding-left: 1.5em;
   }
   .journal-check {
     padding-left: 0px;
+  }
+}
+
+/* =====================================================================
+   Theme of the dashboard, on Bootstrap 5.3.
+   It recreates what Material Dashboard v1 (and Bootstrap 3) gave to the
+   pages: layout, sidebar, navbar, cards, buttons, underlined fields,
+   tables. Material Dashboard is no longer used.
+   ===================================================================== */
+
+/* ---- base: font, colors, headings, links ---- */
+body {
+  --bs-body-font-family: "Roboto", "Helvetica", "Arial", sans-serif;
+  --bs-body-font-size: 14px;
+  --bs-body-font-weight: 300;
+  --bs-body-line-height: 1.5;
+  --bs-body-color: #3C4858;
+  /* the page is grey; what Bootstrap draws from --bs-body-bg (modal, dropdown...) stays white */
+  background-color: #E5E5E5;
+}
+
+h1, h2, h3, h4, h5, h6, .h1, .h2, .h3, .h4, .h5, .h6 {
+  font-family: "Roboto", "Helvetica", "Arial", sans-serif;
+  font-weight: 300;
+  line-height: 1.5em;
+}
+
+h1, .h1 { font-size: 3.8em; line-height: 1.15em; margin: 20px 0 10px; }
+h2, .h2 { font-size: 2.6em; margin: 20px 0 10px; }
+h3, .h3 { font-size: 1.825em; line-height: 1.4em; margin: 20px 0 10px; }
+h4, .h4 { font-size: 1.3em; line-height: 1.4em; margin: 10px 0; }
+h5, .h5 { font-size: 1.25em; line-height: 1.4em; margin: 10px 0 15px; }
+h6, .h6 { font-size: 1em; text-transform: uppercase; font-weight: 500; margin: 10px 0; }
+
+a {
+  color: #4a4a4a;
+  font-weight: 400;
+  text-decoration: none;
+}
+
+a:hover, a:focus {
+  color: #000;
+  text-decoration: none;
+}
+
+.text-muted {
+  color: #777 !important;
+}
+
+.btn .material-icons.text-muted {
+  /* the icon of a round button is white (as on the previous dashboard), not grey on grey */
+  color: inherit !important;
+}
+
+.text-danger {
+  color: #f44336 !important;
+}
+
+/* gutters of 30px, as in Bootstrap 3 */
+.container-fluid, .row {
+  --bs-gutter-x: 30px;
+}
+
+/* login pages: the margin of the first row stays inside (Bootstrap 3 clearfix did that) */
+.main-content {
+  display: flow-root;
+}
+
+/* ---- layout: sidebar and main panel ---- */
+.wrapper {
+  position: relative;
+  top: 0;
+  height: 100vh;
+}
+
+.sidebar {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 1;
+  background: #282828;
+  box-shadow: 0 10px 30px -12px rgba(0, 0, 0, 0.42), 0 4px 25px 0px rgba(0, 0, 0, 0.12), 0 8px 10px -5px rgba(0, 0, 0, 0.2);
+}
+
+.sidebar .sidebar-wrapper {
+  position: relative;
+  overflow: auto;
+  width: 260px;
+  z-index: 4;
+}
+
+.sidebar .logo {
+  position: relative;
+  padding: 15px;
+  z-index: 4;
+  width: 260px;
+}
+
+.sidebar .logo:after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  right: 10%;
+  height: 1px;
+  width: 80%;
+  background-color: rgba(180, 180, 180, 0.3);
+}
+
+.sidebar .logo .simple-text {
+  padding: 5px 0;
+  display: block;
+  font-size: 18px;
+  color: #fff;
+  text-align: center;
+  line-height: 30px;
+}
+
+.sidebar .nav {
+  display: block;
+  margin-top: 35px;
+}
+
+.sidebar .nav .nav-link {
+  display: block;
+  margin: 10px 15px;
+  padding: 10px 15px;
+  border-radius: 3px;
+  color: #fff;
+}
+
+.sidebar .nav .nav-item:hover > .nav-link {
+  background: rgba(200, 200, 200, 0.2);
+  color: #fff;
+}
+
+.sidebar[data-color="black"] .nav .nav-item.active > .nav-link {
+  background-color: #6f6f6f;
+  color: #fff;
+}
+
+.sidebar .nav p {
+  margin: 0;
+  line-height: 30px;
+  font-size: 14px;
+}
+
+.sidebar .nav i {
+  font-size: 24px;
+  float: left;
+  margin-right: 15px;
+  line-height: 30px;
+  width: 30px;
+  text-align: center;
+  color: #fff;
+}
+
+.main-area {
+  position: relative;
+  float: right;
+  z-index: 2;
+  width: calc(100% - 260px);
+  height: 100%;
+  max-height: 100%;
+  min-height: 100%;
+  overflow: auto;
+  background: #E5E5E5;
+  transition: all 0.33s cubic-bezier(0.685, 0.0473, 0.346, 1);
+}
+
+.main-area > .content {
+  display: flow-root;
+  margin-top: 70px;
+  padding: 0 15px;
+  min-height: calc(100% - 123px);
+}
+
+/* ---- navbar (transparent, over the main panel) ---- */
+.navbar {
+  --bs-navbar-padding-y: 0;
+  --bs-navbar-padding-x: 0;
+  border: 0;
+  border-radius: 3px;
+  padding: 10px 0;
+}
+
+.navbar-absolute {
+  position: absolute;
+  width: 100%;
+  padding-top: 10px;
+  z-index: 1029;
+}
+
+.navbar.navbar-transparent {
+  background-color: transparent;
+  box-shadow: none;
+  color: #555;
+}
+
+.navbar .navbar-brand {
+  position: relative;
+  height: 50px;
+  margin: 0;
+  padding: 10px 15px;
+  font-size: 18px;
+  line-height: 30px;
+  color: inherit;
+}
+
+.navbar .navbar-brand:hover, .navbar .navbar-brand:focus {
+  color: inherit;
+}
+
+.navbar .navbar-nav {
+  align-items: center;
+}
+
+.navbar .navbar-nav .nav-link {
+  padding: 15px;
+  color: inherit;
+  font-size: 12px;
+  font-weight: 400;
+  text-transform: uppercase;
+  border-radius: 3px;
+}
+
+.navbar .dropdown-toggle::after {
+  display: none;
+}
+
+.navbar .navbar-toggler {
+  border: 0;
+  padding: 10px;
+  color: #555;
+  box-shadow: none;
+}
+
+.navbar .navbar-toggler .icon-bar {
+  display: block;
+  width: 22px;
+  height: 2px;
+  border-radius: 1px;
+  background-color: currentColor;
+}
+
+.navbar .navbar-toggler .icon-bar + .icon-bar {
+  margin-top: 4px;
+}
+
+.navbar .navbar-form {
+  padding: 0 5px;
+}
+
+.dropdown-menu {
+  --bs-dropdown-border-width: 0;
+  --bs-dropdown-border-radius: 3px;
+  --bs-dropdown-padding-y: 5px;
+  --bs-dropdown-font-size: 13px;
+  --bs-dropdown-min-width: 160px;
+  box-shadow: 0 2px 5px 0 rgba(0, 0, 0, 0.26);
+}
+
+.dropdown-menu .dropdown-item {
+  margin: 0 5px;
+  padding: 10px 20px;
+  width: auto;
+  border-radius: 2px;
+  color: #4a4a4a;
+  font-weight: 400;
+}
+
+.dropdown-menu .dropdown-item:hover, .dropdown-menu .dropdown-item:focus {
+  background-color: #fff;
+  color: #000;
+  box-shadow: 0 8px 10px 1px rgba(0, 0, 0, 0.14), 0 3px 14px 2px rgba(0, 0, 0, 0.12), 0 5px 5px -3px rgba(0, 0, 0, 0.2);
+}
+
+.dropdown-menu .dropdown-item.active {
+  background-color: #fff;
+  color: #555;
+}
+
+/* the language selector: a pill */
+#languageSelection {
+  --bs-form-select-bg-img: none;
+  padding: 0 8px;
+  background-image: none;
+  line-height: 28px;
+  font-weight: 400;
+  color: #555;
+  box-shadow: none;
+}
+
+/* ---- cards ---- */
+.card {
+  --bs-card-border-width: 0;
+  --bs-card-border-radius: 3px;
+  --bs-card-cap-padding-y: 0;
+  --bs-card-cap-padding-x: 0;
+  display: inline-block;
+  position: relative;
+  width: 100%;
+  margin: 25px 0;
+  border: 0;
+  border-radius: 3px;
+  background: #fff;
+  color: rgba(0, 0, 0, 0.87);
+  box-shadow: 0 1px 4px 0 rgba(0, 0, 0, 0.14);
+}
+
+.card .title {
+  margin-top: 0;
+  margin-bottom: 5px;
+}
+
+.card .category {
+  margin-bottom: 0;
+  color: #999;
+}
+
+.card .card-body {
+  padding: 15px 20px;
+}
+
+.card .card-header {
+  margin: -20px 15px 0;
+  padding: 15px;
+  border: 0;
+  border-radius: 3px;
+  background-color: #999;
+  color: #fff;
+  box-shadow: 0 1px 0px -1px rgba(0, 0, 0, 0.42), 0 0px 0px 0px rgba(0, 0, 0, 0.12), 0 2px 5px 0px rgba(0, 0, 0, 0.2);
+}
+
+.card .card-header[data-background-color="black"] {
+  background: #6f6f6f;
+}
+
+.card .card-header a {
+  color: #fff;
+}
+
+.card .card-footer {
+  margin: 0 20px 10px;
+  padding: 10px 0 0;
+  border-top: 1px solid #eee;
+  border-radius: 0;
+  background: transparent;
+}
+
+.card .card-footer div {
+  display: inline-block;
+}
+
+.card .card-footer .stats {
+  line-height: 22px;
+  color: #999;
+  font-size: 12px;
+}
+
+.card .table {
+  margin-bottom: 0;
+}
+
+.card-stats .title {
+  margin: 0;
+}
+
+.card-stats .card-header {
+  float: left;
+  text-align: center;
+}
+
+.card-stats .card-body {
+  text-align: right;
+  padding-top: 10px;
+}
+
+/* ---- buttons: grey, uppercase, with a soft shadow ---- */
+.btn {
+  --bs-btn-padding-x: 30px;
+  --bs-btn-padding-y: 12px;
+  --bs-btn-font-size: 12px;
+  --bs-btn-font-weight: 400;
+  --bs-btn-line-height: 1.42857;
+  --bs-btn-color: #fff;
+  --bs-btn-bg: #999;
+  --bs-btn-border-width: 0;
+  --bs-btn-border-radius: 3px;
+  --bs-btn-hover-color: #fff;
+  --bs-btn-hover-bg: #999;
+  --bs-btn-active-color: #fff;
+  --bs-btn-active-bg: #999;
+  --bs-btn-disabled-color: #fff;
+  --bs-btn-disabled-bg: #999;
+  margin: 10px 1px;
+  letter-spacing: 0;
+  text-transform: uppercase;
+  box-shadow: 0 2px 2px 0 rgba(153, 153, 153, 0.14), 0 3px 1px -2px rgba(153, 153, 153, 0.2), 0 1px 5px 0 rgba(153, 153, 153, 0.12);
+}
+
+.btn:hover, .btn:focus {
+  box-shadow: 0 14px 26px -12px rgba(153, 153, 153, 0.42), 0 4px 23px 0px rgba(0, 0, 0, 0.12), 0 8px 10px -5px rgba(153, 153, 153, 0.2);
+}
+
+.btn-round {
+  border-radius: 30px;
+}
+
+/* ---- fields: a line under the text, black when focused ---- */
+.form-control {
+  height: 36px;
+  padding: 7px 0;
+  border: 0;
+  border-radius: 0;
+  background-color: transparent;
+  background-image: linear-gradient(#D2D2D2, #D2D2D2), linear-gradient(#D2D2D2, #D2D2D2);
+  background-size: 0 2px, 100% 1px;
+  background-repeat: no-repeat;
+  background-position: center bottom, center calc(100% - 1px);
+  box-shadow: none;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.42857;
+  color: #555;
+}
+
+.form-control:focus {
+  background-color: transparent;
+  background-image: linear-gradient(#000, #000), linear-gradient(#D2D2D2, #D2D2D2);
+  background-size: 100% 2px, 100% 1px;
+  box-shadow: none;
+  color: #555;
+}
+
+.form-control::placeholder {
+  color: #AAA;
+  font-weight: 400;
+}
+
+.form-control:disabled, .form-control[readonly] {
+  background-color: transparent;
+  opacity: 1;
+}
+
+textarea.form-control {
+  height: auto;
+}
+
+.form-label {
+  margin: 0;
+  font-size: 11px;
+  line-height: 1.07143;
+  font-weight: 400;
+  color: #AAA;
+}
+
+/* ---- tables ---- */
+.table {
+  --bs-table-bg: transparent;
+  --bs-table-color: inherit;
+  --bs-table-border-color: #ddd;
+  --bs-table-hover-bg: rgba(0, 0, 0, 0.075);
+  --bs-table-hover-color: inherit;
+  margin-bottom: 20px;
+}
+
+.table > :not(caption) > * > * {
+  padding: 12px 8px;
+  vertical-align: middle;
+}
+
+.table > thead > tr > th {
+  padding-bottom: 4px;
+  font-size: 1em;
+  font-weight: 300;
+}
+
+/* ---- modal: the QR code of the server ---- */
+#qrpopup .modal-dialog {
+  max-width: 350px;
+}
+
+#qrpopup .modal-header, #qrpopup .modal-footer {
+  border: 0;
+}
+
+/* ---- notifications (toasts) ---- */
+#notify-container {
+  z-index: 2000;
+}
+
+.toast.notify {
+  --bs-toast-border-width: 0;
+  --bs-toast-border-radius: 3px;
+  --bs-toast-font-size: 14px;
+  min-width: 260px;
+  color: #fff;
+  box-shadow: 0 12px 20px -10px rgba(0, 0, 0, 0.28), 0 4px 20px 0px rgba(0, 0, 0, 0.12), 0 7px 8px -5px rgba(0, 0, 0, 0.2);
+}
+
+.toast.notify .material-icons {
+  margin-right: 12px;
+}
+
+.toast.notify-success { background-color: #2e7d32; }
+.toast.notify-danger { background-color: #d32f2f; }
+.toast.notify-warning { background-color: #b45f00; }
+.toast.notify-info { background-color: #00838f; }
+
+/* ---- tutorials (driver.js) ---- */
+.driver-popover.sugarizer-tour {
+  min-width: 280px;
+  max-width: 340px;
+  padding: 0;
+  border-radius: 6px;
+  background: #fff;
+  color: #3C4858;
+  font-family: "Roboto", "Helvetica", "Arial", sans-serif;
+  font-weight: 400;
+}
+
+.sugarizer-tour .driver-popover-title {
+  display: block;
+  padding: 8px 40px 8px 20px;
+  border-radius: 6px 6px 0 0;
+  background-color: #6f6f6f;
+  color: #fff;
+  font-family: inherit;
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 28px;
+}
+
+.sugarizer-tour .driver-popover-close-btn {
+  top: 8px;
+  right: 8px;
+  width: 28px;
+  height: 28px;
+  color: #fff;
+}
+
+.sugarizer-tour .driver-popover-close-btn:hover, .sugarizer-tour .driver-popover-close-btn:focus {
+  color: #fff;
+  opacity: .7;
+}
+
+.sugarizer-tour .driver-popover-description {
+  margin: 0;
+  padding: 15px 20px;
+  color: #3C4858;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.sugarizer-tour .driver-popover-footer {
+  display: flex;
+  justify-content: flex-end;
+  margin: 0;
+  padding: 0 20px 15px;
+}
+
+.sugarizer-tour .driver-popover-footer button {
+  margin-left: 8px;
+  padding: 6px 20px;
+  border: 2px solid #808080;
+  border-radius: 22px;
+  background: #808080;
+  color: #fff;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.5;
+  text-shadow: none;
+}
+
+.sugarizer-tour .driver-popover-footer button:hover, .sugarizer-tour .driver-popover-footer button:focus {
+  background: #6e6e6e;
+  border-color: #6e6e6e;
+  color: #fff;
+}
+
+.sugarizer-tour .driver-popover-footer button.driver-popover-btn-disabled {
+  background: #f4f4f4;
+  border-color: #f4f4f4;
+  color: #9e9e9e;
+}
+
+/* ---- small screens: the sidebar slides in from the right (the toggler of the navbar) ---- */
+@media (max-width: 991.98px) {
+  .main-area {
+    width: 100%;
+    left: 0;
+  }
+
+  .main-area > .content {
+    margin-top: 36px;
+  }
+
+  .navbar-absolute {
+    position: sticky;
+    top: 0;
+    padding: 15px 0 20px;
+    border-bottom: 1px solid grey;
+    background-color: #e5e5e5;
+  }
+
+  .wrapper .navbar .navbar-collapse {
+    display: none !important;
+  }
+
+  .sidebar {
+    position: fixed;
+    display: block;
+    top: 0;
+    right: 0;
+    left: auto;
+    z-index: 1032;
+    height: 100vh;
+    width: 260px;
+    overflow-y: auto;
+    transform: translate3d(260px, 0, 0);
+    transition: all 0.33s cubic-bezier(0.685, 0.0473, 0.346, 1);
+  }
+
+  .sidebar .nav {
+    margin-top: 0;
+  }
+
+  .sidebar .navbar-form {
+    margin: 10px 15px 0;
+    float: none;
+  }
+
+  .sidebar .nav-mobile-menu .nav-link {
+    margin: 10px 15px;
+    padding: 10px 15px;
+  }
+
+  .nav-open .main-area {
+    transform: translate3d(-260px, 0, 0);
+  }
+
+  .nav-open .sidebar {
+    transform: translate3d(0, 0, 0);
+  }
+
+  .close-layer {
+    position: absolute;
+    top: 0;
+    left: auto;
+    z-index: 9999;
+    width: 100%;
+    height: 100%;
+    overflow-x: hidden;
+    opacity: 0;
+    transition: all 370ms ease-in;
+  }
+
+  .close-layer.visible {
+    opacity: 1;
+  }
+}
+
+@media (min-width: 992px) {
+  .sidebar .navbar-form, .sidebar .nav-mobile-menu {
+    display: none !important;
+  }
+}
+
+/* ---- list pages: search cards, headers of lists ---- */
+.search-row {
+  padding: 6px 0;
+}
+
+.search-row .btn {
+  margin-right: .5px;
+  margin-left: .5px;
+}
+
+.search-field {
+  padding-bottom: 7px;
+  margin: 17px 0 0;
+}
+
+.search-notfound {
+  display: block;
+  color: #f44336;
+  font-size: 11px;
+  line-height: 1.07143;
+}
+
+.search-notfound.d-none {
+  display: none;
+}
+
+.form-control.is-invalid, .form-control.is-invalid:focus {
+  padding-right: 0;
+  background-image: linear-gradient(#f44336, #f44336), linear-gradient(#f44336, #f44336);
+  background-size: 100% 2px, 100% 1px;
+  box-shadow: none;
+}
+
+.table th button {
+  padding: 1px 6px;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+}
+
+.card-plain {
+  background: transparent;
+  box-shadow: none;
+}
+
+.card-plain .row > div {
+  white-space: nowrap;
+}
+
+/* the sortable lists (activities, charts): one compact card per item */
+/* The spacing is inside the items and the list, not a margin of the cards: a margin collapses through the li and the ol,
+   and the box the sortable plugin keeps the dragged item in (containment: parent) then starts at the first card, so
+   the item cannot be dropped in the first place. The margins of the list put it back where it was. */
+ol.simple_with_animation {
+  padding-top: 3.5px;
+  padding-bottom: 3.5px;
+  margin-top: -3.5px;
+  margin-bottom: calc(1rem - 10.5px);
+}
+
+ol.simple_with_animation > li {
+  padding: 3.5px 0;
+}
+
+ol.simple_with_animation .card {
+  margin: 3.5px 0;
+}
+
+ol.simple_with_animation .card-body {
+  padding: 3px 20px;
+}
+
+.btn-white {
+  --bs-btn-bg: #fff;
+  --bs-btn-hover-bg: #fff;
+  --bs-btn-active-bg: #fff;
+  --bs-btn-color: #999;
+  --bs-btn-hover-color: #999;
+  --bs-btn-active-color: #999;
+}
+
+.btn-just-icon {
+  width: 41px;
+  height: 41px;
+  padding: 0;
+  border-radius: 50%;
+  line-height: 41px;
+}
+
+.btn-just-icon .material-icons {
+  line-height: 41px;
+}
+
+/* a column placed directly in the container (not in a row) keeps its gutter */
+.container-fluid > [class*="col-"] {
+  padding-right: 15px;
+  padding-left: 15px;
+}
+
+/* ---- check boxes, radios and selects ---- */
+.form-check-input {
+  --bs-form-check-bg: #fff;
+  border-color: #999;
+  box-shadow: none;
+}
+
+.form-check-input:checked, .form-check-input:indeterminate {
+  background-color: #808080;
+  border-color: #808080;
+}
+
+.form-check-input:focus {
+  border-color: #808080;
+  box-shadow: none;
+}
+
+.form-check-label {
+  color: #555;
+  font-size: 14px;
+}
+
+.table .form-check-input {
+  margin: 0;
+  vertical-align: middle;
+}
+
+.form-select {
+  height: 36px;
+  padding: 7px 24px 7px 0;
+  border: 0;
+  border-radius: 0;
+  background-color: transparent;
+  background-image: var(--bs-form-select-bg-img), linear-gradient(#D2D2D2, #D2D2D2);
+  background-size: 16px 12px, 100% 1px;
+  background-repeat: no-repeat;
+  background-position: right 0 center, center calc(100% - 1px);
+  box-shadow: none;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.42857;
+  color: #555;
+}
+
+.form-select:focus {
+  box-shadow: none;
+  color: #555;
+}
+
+/* ---- login and second factor pages on small screens: the language selector is a wide white pill without border ---- */
+@media (max-width: 991.98px) {
+  body > .navbar-absolute:has(#languageSelection) {
+    padding: 34px 0 27px;
+  }
+
+  body > .navbar-absolute #languageSelection {
+    width: 200px;
+    height: 34px;
+    margin: 0 5px 0 0;
+    border: 0;
+    background-image: none;
+    padding: 7px 12px;
   }
 }

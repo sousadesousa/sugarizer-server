@@ -15,64 +15,29 @@ function sugarizerTour(currentView, role, mode) {
 		var prevString = document.webL10n.get("TutoPrev");
 		var nextString = document.webL10n.get("TutoNext");
 		var endString = document.webL10n.get("TutoEnd");
-		tour = new window.Tour({
+		tour = createTour({
 			name: tutorialName,
-			template: "\
-			<div class='popover tour popover-tour'>\
-				<div class='arrow'></div>\
-				<h3 class='popover-title tutorial-title'></h3>\
-				<table><tr><td style='vertical-align:top;'><div id='icon-tutorial' style='visibility:hidden;display:inline-block;'></div>\
-				</td><td><div class='popover-content'></div></td></tr></table>\
-				<div class='popover-navigation' style='display: flex; flex-wrap:wrap; justify-content: center; align-items: center'>\
-					<div class='tutorial-prev-icon icon-button' data-role='prev'>\
-						<div class='tutorial-prev-icon1 web-activity'>\
-							<div class='tutorial-prev-icon2 web-activity-icon'></div>\
-							<div class='tutorial-prev-icon3 web-activity-disable'></div>\
-						</div>\
-						<div class='icon-tutorial-text'>"+ prevString + "</div>\
-					</div>\
-					<span data-role='separator' style='margin: 4px'>|</span>\
-					<div class='tutorial-next-icon icon-button' data-role='next'>\
-						<div class='tutorial-next-icon1 web-activity'>\
-							<div class='tutorial-next-icon2 web-activity-icon'></div>\
-							<div class='tutorial-next-icon3 web-activity-disable'></div>\
-						</div>\
-						<div class='icon-tutorial-text'>"+ nextString + "</div>\
-					</div>\
-					<div class='tutorial-end-icon icon-button' data-role='end'>\
-						<div class='tutorial-end-icon1 web-activity'>\
-							<div class='tutorial-end-icon2 web-activity-icon'></div>\
-							<div class='tutorial-end-icon3 web-activity-disable'></div>\
-						</div>\
-						<div class='icon-tutorial-text'>"+ endString + "</div>\
-					</div>\
-				</div>\
-			</div>",
-			storage: window.localStorage,
-			backdrop: true,
-			autoscroll: true,
-			steps: [],
-			keyboard: true,
+			labels: { prev: prevString, next: nextString, end: endString },
 			onNext: function (tour) {
 				if (currentView == "home") {
 					if (tour._current == "3" || tour._current == "4") {
-						$('.main-panel').animate({
-							scrollTop: (document.getElementsByClassName('main-panel')[0].scrollHeight)
+						$('.main-area').animate({
+							scrollTop: (document.getElementsByClassName('main-area')[0].scrollHeight)
 						}, 500);
 					}
 					if (tour._current == "5") {
-						$('.main-panel').animate({
+						$('.main-area').animate({
 							scrollTop: 0
 						}, 500);
 					}
 				} else if (currentView == "editUser") {
 					if (tour._current == "5") {
-						$('.main-panel').animate({
-							scrollTop: (document.getElementsByClassName('main-panel')[0].scrollHeight)
+						$('.main-area').animate({
+							scrollTop: (document.getElementsByClassName('main-area')[0].scrollHeight)
 						}, 500);
 					}
 					if (tour._current == "8") {
-						$('.main-panel').animate({
+						$('.main-area').animate({
 							scrollTop: 0
 						}, 500);
 					}
@@ -81,18 +46,18 @@ function sugarizerTour(currentView, role, mode) {
 			onPrev: function (tour) {
 				if (currentView == "home") {
 					if (tour._current == "4") {
-						$('.main-panel').animate({
+						$('.main-area').animate({
 							scrollTop: 0
 						}, 500);
 					}
 					if (tour._current == "5" || tour._current == "6") {
-						$('.main-panel').animate({
-							scrollTop: (document.getElementsByClassName('main-panel')[0].scrollHeight)
+						$('.main-area').animate({
+							scrollTop: (document.getElementsByClassName('main-area')[0].scrollHeight)
 						}, 500);
 					}
 				} else if (currentView == "editUser") {
 					if (tour._current == "6") {
-						$('.main-panel').animate({
+						$('.main-area').animate({
 							scrollTop: 0
 						}, 500);
 					}
@@ -102,7 +67,7 @@ function sugarizerTour(currentView, role, mode) {
 				if (currentView == "home") {
 					unlockScroll();
 				} else if (currentView == "editUser") {
-					$('.main-panel').animate({
+					$('.main-area').animate({
 						scrollTop: 0
 					}, 500);
 				}
@@ -277,6 +242,104 @@ function sugarizerTour(currentView, role, mode) {
 	tutorial.isLaunched = function () {
 		return launched;
 	};
+
+	// The tour of a view, on driver.js. It has the interface that the code above uses (addStep, init, start) and keeps the
+	// state in localStorage like the previous libraries did: <name>_end = "yes" when finished, <name>_current_step.
+	// options: name, labels {prev, next, end}, onNext(tour), onPrev(tour), onEnd(); tour._current is the index
+	// (in the list of steps) of the step that is left when onNext and onPrev are called.
+	function createTour(options) {
+		var steps = [];
+		var tour = { _current: 0 };
+
+		tour.addStep = function (step) {
+			steps.push(step);
+		};
+
+		tour.init = function () {};
+
+		tour.start = function () {
+			// steps whose element is not on the page, or not visible, are skipped, except the ones without element
+			var shown = [];
+			for (var i = 0; i < steps.length; i++) {
+				if (steps[i].orphan || (steps[i].element && $(steps[i].element).filter(':visible').length)) {
+					shown.push({ index: i, step: steps[i] });
+				}
+			}
+			if (!shown.length) {
+				return;
+			}
+			var finished = false;
+			var end = function () {
+				if (finished) {
+					return;
+				}
+				finished = true;
+				localStorage.setItem(options.name + "_end", "yes");
+				if (options.onEnd) {
+					options.onEnd();
+				}
+			};
+			var move = function (driverObj, forward) {
+				var from = shown[driverObj.getActiveIndex()].index;
+				tour._current = from;
+				if (forward && options.onNext) {
+					options.onNext(tour);
+				} else if (!forward && options.onPrev) {
+					options.onPrev(tour);
+				}
+				if (forward) {
+					if (driverObj.hasNextStep()) {
+						driverObj.moveNext();
+					} else {
+						end();
+						driverObj.destroy();
+					}
+				} else {
+					driverObj.movePrevious();
+				}
+				var active = driverObj.getActiveIndex();
+				if (active !== undefined) {
+					tour._current = shown[active].index;
+					localStorage.setItem(options.name + "_current_step", tour._current);
+				}
+			};
+			var driverObj = window.driver.js.driver({
+				steps: shown.map(function (item) {
+					var step = { popover: { title: item.step.title, description: item.step.content, side: item.step.placement || 'bottom' } };
+					if (item.step.element) {
+						step.element = item.step.element;
+					}
+					return step;
+				}),
+				nextBtnText: options.labels.next,
+				prevBtnText: options.labels.prev,
+				doneBtnText: options.labels.end,
+				showProgress: false,
+				allowClose: true,
+				overlayClickBehavior: function () {},
+				disableActiveInteraction: true,
+				smoothScroll: true,
+				stagePadding: 6,
+				popoverClass: 'sugarizer-tour',
+				onNextClick: function () {
+					move(driverObj, true);
+				},
+				onPrevClick: function () {
+					move(driverObj, false);
+				},
+				// the close button, Esc and the end of the last step all come here
+				onDestroyStarted: function () {
+					end();
+					driverObj.destroy();
+				}
+			});
+			tour._current = shown[0].index;
+			localStorage.setItem(options.name + "_current_step", tour._current);
+			driverObj.drive();
+		};
+
+		return tour;
+	}
 
 	function getStep(view, element, placement, step, orphan) {
 		var step = {

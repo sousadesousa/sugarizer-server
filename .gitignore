@@ -21,3 +21,7 @@ env/secret.key
 
 # written by FerretDB when run from this folder
 state.json
+
+# throwaway settings of the dashboard end-to-end tests
+env/e2e-*.ini
+test-results/

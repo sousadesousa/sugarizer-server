@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="<%= typeof htmlLang == 'string' ? htmlLang : 'en' %>">
 
 <head>
   	<meta charset="utf-8" />
@@ -18,16 +18,10 @@
     <!-- Bootstrap core CSS     -->
     <link href="/public/css/bootstrap.min.css" rel="stylesheet" />
 
-    <!-- Bootstrap Tour CSS     -->
-    <link href="/public/css/bootstrap-tour.min.css" rel="stylesheet">
+    <!-- driver.js CSS (tutorials)     -->
+    <link href="/public/css/driver.css" rel="stylesheet" />
 
-    <!--  Material Dashboard CSS    -->
-    <link href="/public/css/material-dashboard.css" rel="stylesheet" />
-
-    <!--     general stylesheets     -->
-    <link type="text/css" rel="stylesheet" href="/public/css/animate.css" />
-
-    <!--     custom stylesheets     -->
+    <!--     custom stylesheets (theme of the dashboard: layout, cards, buttons, forms)     -->
     <link type="text/css" rel="stylesheet" href="/public/css/main.css" />
 
     <!--     Fonts and icons     -->
@@ -35,13 +29,14 @@
     <link href='/public/css/font.css' rel='stylesheet' type='text/css'>
 
     <!--     jquery     -->
-    <script src="/public/js/jquery-3.1.0.min.js" type="text/javascript"></script>
+    <script src="/public/js/jquery-3.7.1.min.js" type="text/javascript"></script>
     <script src="/public/js/jquery-ui-1-11-4.js" type="text/javascript"></script>
     <script src="/public/js/jquery.ui.sortable-animation.js" type="text/javascript"></script>
 
     <!--     select2     -->
     <link href="/public/css/select2.min.css" rel="stylesheet" />
     <script src="/public/js/select2.min.js"></script>
+    <script>$.fn.select2.defaults.set("width", "100%");</script>
 
     <!--     multi-select    -->
     <link href="/public/css/multi-select.css" rel="stylesheet" />
@@ -65,8 +60,15 @@
 
 	<!-- jump to an url with language as argument -->
 	<script>
-	function jumpTo(url) {
-		location.href = url + "?lang="+document.getElementById('languageSelection').value;
+	function jumpTo(url, event) {
+		// let the browser handle ctrl/cmd/shift clicks (new tab or window) with the plain href
+		if (event && (event.ctrlKey || event.metaKey || event.shiftKey || event.button > 0)) {
+			return true;
+		}
+		// the selector of the navbar, or its copy in the sidebar on small screens: the visible one
+		var lang = $('#languageSelection:visible, #languageSelectionMobile:visible').first().val() || $('#languageSelection').val();
+		location.href = url + "?lang=" + lang;
+		return false;
 	}
 	</script>
 </head>

@@ -1,32 +1,31 @@
 <%- include('includes/header') %>
       <div class="wrapper">
       <%- include('includes/sidebar') %>
-        <div class="main-panel">
+        <div class="main-area">
             <%- include('includes/navbar') %>
             <div class="content">
                 <div class="container-fluid">
-                    <div class="col-md-8 col-lg-8 col-sm-12">
+                    <div class="col-lg-8">
                     <div class="card">
-                        <div class="card-content">
+                        <div class="card-body">
                             <%- include('./includes/flash-errors') %>
                             <form id="assignment-add-edit-form" method="post" <% if(typeof assignment == 'object'){ %> action="<%= assignment._id %>" <% } %>>
                                 <div class="row" id="editAssignment-name">
-                                    <div class="col-md-12">
-                                        <div class="form-group form-black label-floating">
-                                            <label class="control-label" data-l10n-id="name"></label>
+                                    <div class="col-12">
+                                        <div class="mb-3">
+                                            <label class="form-label" data-l10n-id="name"></label>
                                             <input class="form-control" name="name" value="<% if(typeof assignment == 'object'){ %><%= assignment.name %><% } %>" type="text">
-                                            <span class="material-input"></span>
                                         </div>
                                     </div>
                                 </div>
                                 <% if(mode =="edit"){%>
-                                    <div class="col-md-6">
+                                    <div class="col-lg-6">
                                         <div class="color" id="<%= assignment.assignedWork.objectId %>" >
                                             <div class='xo-icon'></div>
                                         </div>
-                                        <div class="form-group form-black label-floating" id="editAssignment-activity">
-                                            <label class="control-label" data-l10n-id="assignedWork"></label>
-                                            <select  id="select2-activity" class="form-control" disabled name="Assign work"> 
+                                        <div class="mb-3" id="editAssignment-activity">
+                                            <label class="form-label" data-l10n-id="assignedWork"></label>
+                                            <select  id="select2-activity" class="form-select" disabled name="Assign work"> 
                                                 <option selected  value='<%= assignment.assignedWork.objectId %>'><%= assignment.assignedWork.metadata.title %></option>
                                             </select>
                                             <script>
@@ -38,12 +37,12 @@
                                     </div>
                                 <% } %>
                                 <% if(mode =="add"){%>
-                                    <div class="col-md-2">
+                                    <div class="col-lg-2">
                                         <div id="icon" ></div>
                                     </div>
-                                    <div class="col-md-7" id="editAssignment-activity">
-                                        <div class="form-group form-black label-floating">
-                                            <label class="control-label" data-l10n-id="assignedWork"></label>
+                                    <div class="col-lg-7" id="editAssignment-activity">
+                                        <div class="mb-3">
+                                            <label class="form-label" data-l10n-id="assignedWork"></label>
                                             <select id="select2-activity" name="assignedWork">
                                                 <% for( var i=0; i < entries.length; i++) { %> 
                                                     <option value="<%= entries[i].objectId %>"><%= entries[i].metadata.title %></option>
@@ -70,8 +69,8 @@
                                             </script>
                                         </div>
                                     </div>
-                                    <div class="col-md-2">
-                                        <div class="form-group form-black label-floating">
+                                    <div class="col-lg-2">
+                                        <div class="mb-3">
                                             <a data-l10n-id="deleteAssignment" title="Delete Assignment" id="remove-activity"  class="material-icons remove-activity text-muted">delete_forever</i></a>
                                         </div>
                                         <script>
@@ -86,31 +85,28 @@
                                     </div>
                                     <% } %>
                                     <div class="row">
-                                        <div class="col-md-12" id="editAssignment-instructions">
-                                            <div class="form-group form-black label-floating">
-                                                <label class="control-label" data-l10n-id="instructions"></label>
+                                        <div class="col-12" id="editAssignment-instructions">
+                                            <div class="mb-3">
+                                                <label class="form-label" data-l10n-id="instructions"></label>
                                                 <textarea class="form-control" name="instructions" value="<% if(typeof assignment == 'object'){ %><%= assignment.instructions %><% } %>" type="text"><% if(typeof assignment == 'object'){ %><%= assignment.instructions %><% } %></textarea>
-                                                <span class="material-input"></span>
                                             </div>										
                                         </div>
                                     </div>
                                     <div class="row" id="editAssignment-duedate">
-                                        <div class="col-md-3">
-                                            <div class="form-group form-black label-floating">
+                                        <div class="col-lg-3">
+                                            <div class="mb-3">
                                                 <label data-l10n-id="dueDate"></label>
                                             </div>
                                         </div>
-                                        <div class="col-md-3">
-                                            <div class="form-group form-black label-floating">
+                                        <div class="col-lg-3">
+                                            <div class="mb-3">
                                                 <input id="datetimepicker1" name="dueDate" placeholder="Date" class="form-control" type="text" autocomplete="off" <% if(typeof assignment == 'object' && assignment.dueDate){ %>data-due="<%= assignment.dueDate %>"<% } %> />
-                                                <span class="material-input"></span>
                                             </div>
                                             <input id="dueDatestamp" name="dueDatestamp" style="visibility: hidden;" value=""/>
                                         </div>
-                                        <div class="col-md-3">
-                                            <div class="form-group form-black label-floating">
+                                        <div class="col-lg-3">
+                                            <div class="mb-3">
                                                 <input class="form-control" id="timepicker" name="time" value="" type="text" placeholder="Time" autocomplete="off" >
-                                                <span class="material-input"></span>
                                             </div>
                                             <input id="dueTimestamp" name="dueTimestamp" style="visibility: hidden;" value=""/>
                                         </div>
@@ -173,20 +169,19 @@
                                             });
                                         });
                                         </script>
-                                        <div class="col-md-3">
-                                            <div class="form-group form-black label-floating">
-                                                <label data-l10n-id="lateTurnIn"></label>
-                                                <input type="checkbox" class="btn-check" name="lateTurnIn"  id="checkbox-outlined" <% if(typeof assignment == 'object'){ %><% if(assignment.lateTurnIn){ %> checked <% } %><% } %> autocomplete="off" >
-                                                <span class="material-input"></span>
+                                        <div class="col-lg-3">
+                                            <div class="mb-3">
+                                                <label class="form-label" data-l10n-id="lateTurnIn"></label>
+                                                <div class="form-check"><input type="checkbox" class="form-check-input" name="lateTurnIn"  id="checkbox-outlined" <% if(typeof assignment == 'object'){ %><% if(assignment.lateTurnIn){ %> checked <% } %><% } %> autocomplete="off" ></div>
                                             </div>
                                         </div>
                                     </div>
                                 <% if(typeof classrooms == 'object') { %>
                                 <div class="row" id='searchable-select-classrooms-row'>
-                                    <div class="col-md-12">
-                                        <div class="form-group form-black" style="margin-top: -15px;" >
-                                            <label class="control-label" data-l10n-id="classrooms"></label>
-                                            <select id='searchable-select-classrooms' multiple='multiple' name="classrooms" class="form-control">
+                                    <div class="col-12">
+                                        <div class="mb-3" style="margin-top: -15px;" >
+                                            <label class="form-label" data-l10n-id="classrooms"></label>
+                                            <select id='searchable-select-classrooms' multiple='multiple' name="classrooms" class="form-select">
                                                 <% for(var i=0; i < classrooms.length; i++) { %>
                                                     <option <% if(classrooms[i].is_member) { %> selected <% } %> value='<%= classrooms[i]._id %>'><%= "class_" + classrooms[i]._id %></option>
                                                 <% } %>
@@ -246,16 +241,16 @@
                             <% } %>      
                             <% if(typeof classroom == 'object' && classroom.timestamp) { %>
                                 <div class="row" id="editClassroom-lastupdated">
-                                    <div class="col-md-12">
-                                        <div class="form-group form-black label-floating">
-                                            <label class="control-label" data-l10n-id="lastUpdated"></label>
+                                    <div class="col-12">
+                                        <div class="mb-3">
+                                            <label class="form-label" data-l10n-id="lastUpdated"></label>
                                             <input class="form-control" readonly value="<%= moment(classroom.timestamp).calendar() %>" type="text">
                                         </div>
                                     </div>
                                 </div>
                             <% } %>
-                            <button class="btn pull-right btn-round" type="submit" data-l10n-id="save"></button>
-                            <a class="btn pull-right btn-round" href="/dashboard/assignments" data-l10n-id="cancel"></a>
+                            <button class="btn float-end btn-round" type="submit" data-l10n-id="save"></button>
+                            <a class="btn float-end btn-round" href="/dashboard/assignments" data-l10n-id="cancel"></a>
                             <div class="clearfix"></div>
                             </form>
                         </div>

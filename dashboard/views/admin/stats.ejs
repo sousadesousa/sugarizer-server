@@ -1,28 +1,28 @@
 <%- include('../includes/header') %>
 <div class="wrapper">
 	<%- include('../includes/sidebar') %>
-	<div class="main-panel">
+	<div class="main-area">
 	<%- include('../includes/navbar') %>
 		<div class="content">
 			<div class="container-fluid">
 				<%- include('../includes/flash-errors') %>
 				<div class="row">
-					<div class="col-md-12">
+					<div class="col-12">
 						<div class="card">
 							<form method="get" id="user-form">
-								<div class="col-md-12 col-sm-12 col-xs-12">
-									<a id="stats-addChart" class="btn btn-round pull-right" href="/dashboard/stats/add" data-l10n-id="addChart"><div class="ripple-container"></div></a>
-									<a id="stats-listCharts" class="btn btn-round pull-right" href="/dashboard/stats/list" data-l10n-id="listCharts"><div class="ripple-container"></div></a>
-								</div>
-							</form>
+<div class="row mx-0 search-row"><div class="col-12">
+									<a id="stats-addChart" class="btn btn-round float-end" href="/dashboard/stats/add" data-l10n-id="addChart"></a>
+									<a id="stats-listCharts" class="btn btn-round float-end" href="/dashboard/stats/list" data-l10n-id="listCharts"></a>
+</div></div>
+</form>
 						</div>
 					</div>
 					<% if(typeof charts=='object' && charts.length > 0) { %>
-					<div class="col-md-6">
+					<div class="col-lg-6">
 						<% for(var i=0; i<charts.length; i+=2) { %>
 							<% if (charts[i].type=="table" && !charts[i].hidden) { %>
 								<div class="card" style="margin-top:0px;">
-									<div class="card-content table-responsive">
+									<div class="card-body table-responsive">
 										<% if (charts[i].title) { %>
 											<p class="title text-muted"><%= charts[i].title %></p>
 										<% } else { %>
@@ -46,7 +46,7 @@
 								</div>
 							<% } else if (!charts[i].hidden) { %>
 								<div class="card" style="margin-top:0px;">
-									<div class="card-content">
+									<div class="card-body">
 										<% if (charts[i].title) { %>
 											<p class="title text-muted"><%= charts[i].title %></p>
 										<% } else { %>
@@ -59,11 +59,11 @@
 							<% } %>
 						<% } %>
 					</div>
-					<div class="col-md-6">
+					<div class="col-lg-6">
 						<% for(var i=1; i<charts.length; i+=2) { %>
 							<% if (charts[i].type=="table" && !charts[i].hidden) { %>
 								<div class="card" style="margin-top:0px;">
-									<div class="card-content table-responsive">
+									<div class="card-body table-responsive">
 										<% if (charts[i].title) { %>
 											<p class="title text-muted"><%= charts[i].title %></p>
 										<% } else { %>
@@ -87,7 +87,7 @@
 								</div>
 							<% } else if (!charts[i].hidden) { %>
 								<div class="card" style="margin-top:0px;">
-									<div class="card-content">
+									<div class="card-body">
 										<% if (charts[i].title) { %>
 											<p class="title text-muted"><%= charts[i].title %></p>
 										<% } else { %>
@@ -101,41 +101,41 @@
 						<% } %>
 					</div>
 					<% } else { %>
-					<div class="col-md-6">
+					<div class="col-lg-6">
 						<div class="card" style="margin-top:0px;">
-							<div class="card-content">
+							<div class="card-body">
 								<p class="title text-muted" data-l10n-id="HowStudentsAreActive"></p><hr>
 								<canvas onload="" id="how-users-are-active-chart" width="400" height="250"></canvas>
 							</div>
 						</div>
 					</div>
-					<div class="col-md-6">
+					<div class="col-lg-6">
 						<div class="card" style="margin-top:0px;">
-							<div class="card-content">
+							<div class="card-body">
 								<p class="title text-muted" data-l10n-id="HowManyEntriesByJournal"></p><hr>
 								<canvas id="how-many-entries-by-journal-chart" width="400" height="250"></canvas>
 							</div>
 						</div>
 					</div>
-					<div class="col-md-6">
+					<div class="col-lg-6">
 						<div class="card" style="margin-top:0px;">
-							<div class="card-content">
+							<div class="card-body">
 								<p class="title text-muted" data-l10n-id="WhatTypeOfClientConnected"></p><hr>
 								<canvas id="what-type-of-client-connected-chart" width="400" height="250"></canvas>
 							</div>
 						</div>
 					</div>
-					<div class="col-md-6">
+					<div class="col-lg-6">
 						<div class="card" style="margin-top:0px;">
-							<div class="card-content">
+							<div class="card-body">
 								<p class="title text-muted" data-l10n-id="HowStudentsAreLaunchingActivities"></p><hr>
 								<canvas onload="" id="how-user-launch-activities-chart" width="400" height="250"></canvas>
 							</div>
 						</div>
 					</div>
-					<div class="col-md-6">
+					<div class="col-lg-6">
 						<div class="card" style="margin-top:0px;">
-							<div class="card-content">
+							<div class="card-body">
 								<p class="title text-muted" data-l10n-id="HowOftenStudentsAreChangingTheirProfileSettings"></p><hr>
 								<canvas id="how-often-user-change-settings-chart" width="400" height="250"></canvas>
 							</div>
