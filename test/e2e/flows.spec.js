@@ -251,6 +251,36 @@ test.describe('teacher assignment', () => {
 		await expect(exactCell(page, name), 'the old name is gone').toHaveCount(0);
 	});
 
+	test('late turn in is stored as a boolean, ticked and unticked', async () => {
+		const teacher = await apiLogin(info.users.teacher, 'teacher');
+		const stored = async () => {
+			const list = await apiCall('GET', '/api/v1/assignments?name=' + encodeURIComponent(renamed), null, teacher);
+			return list.assignments[0];
+		};
+		async function saveWith(ticked) {
+			await row(page, renamed).locator('a[title="Edit Assignment"]').click();
+			await settle(page);
+			await page.locator('input[name="lateTurnIn"]').setChecked(ticked);
+			await page.click('button[type="submit"]');
+			await expectFlash(page, 'Assignment ' + renamed + ' has been successfully updated!');
+			await settle(page);
+		}
+		await saveWith(true);
+		expect((await stored()).lateTurnIn, 'ticked').toBe(true);
+		await row(page, renamed).locator('a[title="Edit Assignment"]').click();
+		await settle(page);
+		await expect(page.locator('input[name="lateTurnIn"]')).toBeChecked();
+		await page.goto('/dashboard/assignments');
+		await settle(page);
+		await saveWith(false);
+		expect((await stored()).lateTurnIn, 'unticked').toBe(false);
+		await row(page, renamed).locator('a[title="Edit Assignment"]').click();
+		await settle(page);
+		await expect(page.locator('input[name="lateTurnIn"]')).not.toBeChecked();
+		await page.goto('/dashboard/assignments');
+		await settle(page);
+	});
+
 	test('launch the assignment and open its deliveries', async () => {
 		const launch = row(page, renamed).locator('a[title="Launch Assignment"]');
 		assignmentId = (await launch.getAttribute('href')).split('/').pop();

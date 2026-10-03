@@ -230,10 +230,147 @@ describe('Assignments', () => {
                     res.body.should.have.property('_id').eql(fake.assignment1._id);
                     res.body.should.have.property('name').eql("assignment_1" + (timestamp.toString()));
                     res.body.should.have.property('instructions').eql("Draw a bulbasaur");
-                    res.body.should.have.property('lateTurnIn').eql('false');
+                    res.body.should.have.property('lateTurnIn').eql(false);
                     res.body.should.have.property('classrooms').be.an('array');
                     done();
                 });
+        });
+    });
+
+    //lateTurnIn is a boolean and dueDate a number, whatever the API receives
+    describe('/POST /PUT assignment value types', () => {
+        var created = [];
+        function post(fields, callback) {
+            var assignment = JSON.parse('{"name":"types_' + (timestamp.toString()) + '","assignedWork":"ffffffff-ffff-ffff-ffff-fffffffffff1","instructions":"Types","classrooms":[]}');
+            Object.assign(assignment, fields);
+            chai.request(server)
+                .post('/api/v1/assignments/')
+                .set('x-access-token', fake.teacher1.token)
+                .set('x-key', fake.teacher1.user._id)
+                .send({ "assignment": JSON.stringify(assignment) })
+                .end((err, res) => {
+                    if (res.body && res.body._id) {
+                        created.push(res.body._id);
+                    }
+                    callback(res);
+                });
+        }
+        function put(id, fields, callback) {
+            chai.request(server)
+                .put('/api/v1/assignments/' + id)
+                .set('x-access-token', fake.teacher1.token)
+                .set('x-key', fake.teacher1.user._id)
+                .send({ assignment: JSON.stringify(fields) })
+                .end((err, res) => callback(res));
+        }
+        function get(id, callback) {
+            chai.request(server)
+                .get('/api/v1/assignments/' + id)
+                .set('x-access-token', fake.teacher1.token)
+                .set('x-key', fake.teacher1.user._id)
+                .end((err, res) => callback(res));
+        }
+        var due = timestamp + 7200000;
+
+        after((done) => {
+            var next = () => {
+                if (created.length == 0) {
+                    return done();
+                }
+                chai.request(server)
+                    .delete('/api/v1/assignments/' + created.shift())
+                    .set('x-access-token', fake.teacher1.token)
+                    .set('x-key', fake.teacher1.user._id)
+                    .end(next);
+            };
+            next();
+        });
+
+        [['on', true], ['true', true], [true, true], ['off', false], ['false', false], [false, false]].forEach(([sent, stored]) => {
+            it('it should store lateTurnIn ' + JSON.stringify(sent) + ' as the boolean ' + stored + ' on create', (done) => {
+                post({ lateTurnIn: sent, dueDate: due }, (res) => {
+                    res.should.have.status(200);
+                    res.body.should.have.property('lateTurnIn').eql(stored);
+                    get(res.body._id, (res) => {
+                        res.body.should.have.property('lateTurnIn').eql(stored);
+                        done();
+                    });
+                });
+            });
+        });
+
+        it('it should store a boolean lateTurnIn on update', (done) => {
+            post({ lateTurnIn: true, dueDate: due }, (res) => {
+                var id = res.body._id;
+                put(id, { lateTurnIn: 'on' }, (res) => {
+                    res.should.have.status(200);
+                    get(id, (res) => {
+                        res.body.should.have.property('lateTurnIn').eql(true);
+                        put(id, { lateTurnIn: 'false' }, (res) => {
+                            res.should.have.status(200);
+                            get(id, (res) => {
+                                res.body.should.have.property('lateTurnIn').eql(false);
+                                done();
+                            });
+                        });
+                    });
+                });
+            });
+        });
+
+        it('it should reject an invalid lateTurnIn', (done) => {
+            post({ lateTurnIn: 'maybe', dueDate: due }, (res) => {
+                res.should.have.status(400);
+                res.body.code.should.be.eql(43);
+                done();
+            });
+        });
+
+        it('it should store a numeric string dueDate as a number', (done) => {
+            post({ lateTurnIn: false, dueDate: String(due) }, (res) => {
+                res.should.have.status(200);
+                res.body.should.have.property('dueDate').eql(due);
+                var id = res.body._id;
+                put(id, { dueDate: String(due + 1000) }, (res) => {
+                    res.should.have.status(200);
+                    get(id, (res) => {
+                        res.body.should.have.property('dueDate').eql(due + 1000);
+                        done();
+                    });
+                });
+            });
+        });
+
+        it('it should keep a numeric dueDate', (done) => {
+            post({ lateTurnIn: false, dueDate: due }, (res) => {
+                res.should.have.status(200);
+                res.body.should.have.property('dueDate').eql(due);
+                done();
+            });
+        });
+
+        ['tomorrow', '12abc', '', 'NaN', null, {}, true].forEach((bad) => {
+            it('it should reject the dueDate ' + JSON.stringify(bad), (done) => {
+                post({ lateTurnIn: false, dueDate: bad }, (res) => {
+                    res.should.have.status(400);
+                    res.body.code.should.be.eql(44);
+                    done();
+                });
+            });
+        });
+
+        it('it should reject an invalid dueDate on update', (done) => {
+            post({ lateTurnIn: false, dueDate: due }, (res) => {
+                var id = res.body._id;
+                put(id, { dueDate: 'soon' }, (res) => {
+                    res.should.have.status(400);
+                    res.body.code.should.be.eql(44);
+                    get(id, (res) => {
+                        res.body.should.have.property('dueDate').eql(due);
+                        done();
+                    });
+                });
+            });
         });
     });
 

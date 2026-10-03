@@ -79,6 +79,11 @@ exports.addAssignment = function (req, res) {
 	}
 	//parse assignment details
 	var assignment = JSON.parse(req.body.assignment);
+	//lateTurnIn is a boolean and dueDate a number
+	var invalid = normalizeAssignment(assignment);
+	if (invalid) {
+		return res.status(400).send(invalid);
+	}
 	//add timestamps
 	assignment.created_time = +new Date();
 	assignment.timestamp = +new Date();
@@ -1007,6 +1012,11 @@ exports.updateAssignment = function (req, res) {
 	}
 	var assignmentId = req.params.assignmentId;
 	var assignment = JSON.parse(req.body.assignment);
+	//lateTurnIn is a boolean and dueDate a number
+	var invalid = normalizeAssignment(assignment);
+	if (invalid) {
+		return res.status(400).send(invalid);
+	}
 	//add timestamp
 	assignment.timestamp = +new Date();
 	//find assignment by id
@@ -1045,6 +1055,38 @@ exports.updateAssignment = function (req, res) {
 };
 
 //private function for filtering and sorting
+// Store lateTurnIn as a boolean (true/"true"/"on" and false/"false"/"off" are accepted) and dueDate as a
+// number (a numeric string is converted), the way the dashboard reads them. Returns the error to send
+// when a value is not valid, nothing otherwise.
+function normalizeAssignment(assignment) {
+	if (typeof assignment.lateTurnIn !== "undefined") {
+		var late = assignment.lateTurnIn;
+		if (late === true || late === "true" || late === "on") {
+			assignment.lateTurnIn = true;
+		} else if (late === false || late === "false" || late === "off") {
+			assignment.lateTurnIn = false;
+		} else {
+			return {
+				'error': "Invalid late turn in value",
+				'code': 43
+			};
+		}
+	}
+	if (typeof assignment.dueDate !== "undefined") {
+		var due = assignment.dueDate;
+		if (typeof due === "string" && /^\s*\d+(\.\d+)?\s*$/.test(due)) {
+			due = Number(due);
+		}
+		if (typeof due !== "number" || !isFinite(due)) {
+			return {
+				'error': "Invalid due date",
+				'code': 44
+			};
+		}
+		assignment.dueDate = due;
+	}
+}
+
 // sort key of each field that can sort the deliveries (names are compared without case)
 var deliverySortFields = {
 	buddy_name: { $toLower: { $arrayElemAt: ["$content.metadata.buddy_name", 0] } },
