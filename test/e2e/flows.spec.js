@@ -255,8 +255,7 @@ test.describe('teacher assignment', () => {
 		const launch = row(page, renamed).locator('a[title="Launch Assignment"]');
 		assignmentId = (await launch.getAttribute('href')).split('/').pop();
 		await launch.click();
-		// the launch link has no ?name=, so the message says "assignment" instead of the name of the assignment
-		await expectFlash(page, 'has been successfully launched!');
+		await expectFlash(page, 'Assignment ' + renamed + ' has been successfully launched!');
 		await settle(page);
 		await expect(row(page, renamed)).toContainText('Assigned');
 
@@ -295,7 +294,7 @@ test.describe('teacher assignment', () => {
 		const handedIn = page.locator('#deliveries-card').filter({ hasText: delivery.metadata.buddy_name });
 		await expect(handedIn).toContainText('Delivered');
 		await handedIn.locator('a[title="Return"]').click();
-		await expectFlash(page, 'has been successfully returned!');
+		await expectFlash(page, 'Assignment ' + renamed + ' has been successfully returned!');
 		await settle(page);
 		await expect(page.locator('#deliveries-card').filter({ hasText: delivery.metadata.buddy_name })).toContainText('Expected');
 		await expect(page.locator('#deliveries-card').filter({ hasText: delivery.metadata.buddy_name }).locator('.returnAssignment-icon-inactive')).toHaveCount(1);
