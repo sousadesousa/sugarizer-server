@@ -890,6 +890,44 @@ function formatPickerDate(date, format) {
 	return text;
 }
 
+// Text of a timestamp (ms) as a date and a time in the time zone and the region of the browser, like the date of
+// the assignment form: '22.03.2035 11:00' (de-CH), '03/22/2035 6:00 AM' (en-US). Empty when it is not a timestamp.
+function formatLocalDateTime(timestamp) {
+	var date = new Date(Number(timestamp));
+	if (timestamp === '' || timestamp === null || timestamp === undefined || isNaN(date.getTime())) {
+		return '';
+	}
+	var languages = (navigator.languages && navigator.languages.length) ? Array.prototype.slice.call(navigator.languages) : [navigator.language || 'en-US'];
+	var time;
+	try {
+		time = new Intl.DateTimeFormat(languages, {
+			hour: 'numeric', minute: '2-digit', calendar: 'gregory', numberingSystem: 'latn'
+		}).format(date);
+	} catch (e) {
+		time = date.toLocaleTimeString();
+	}
+	return formatPickerDate(date, regionDateFormat()) + ' ' + time;
+}
+
+// The server writes the dates in its own time zone (a text that stays as a fallback): write again each date
+// that carries its timestamp in data-local-time, in the time zone and the region of the browser
+function localizeDates(root) {
+	var nodes = (root || document).querySelectorAll('[data-local-time]');
+	for (var i = 0; i < nodes.length; i++) {
+		var text = formatLocalDateTime(nodes[i].getAttribute('data-local-time'));
+		if (text) {
+			if (nodes[i].tagName == 'INPUT') {
+				nodes[i].value = text;
+			} else {
+				nodes[i].textContent = text;
+			}
+		}
+	}
+}
+document.addEventListener('DOMContentLoaded', function () {
+	localizeDates();
+});
+
 // Notification (flash message) on a Bootstrap toast, at the top right of the page.
 // type: 'success' or 'danger' (also 'warning' and 'info'). The message is text, never HTML.
 function notify(message, type) {

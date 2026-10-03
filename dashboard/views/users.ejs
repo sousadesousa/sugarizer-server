@@ -212,7 +212,7 @@
                                               <% if(data.users[i].language =='yor') {%> <td data-l10n-id="yoruba"></td> <%} %>
                                               <% if(data.users[i].language =='hi') {%> <td data-l10n-id="hindi"></td> <%} %>
                                               <td data-l10n-id="<%= data.users[i].role %>">Student</td>
-                                              <td><%= moment(data.users[i].timestamp).calendar() %></td>
+                                              <td><time data-local-time="<%= data.users[i].timestamp %>"><%= moment(data.users[i].timestamp).calendar() %></time></td>
                                               <td>
                                                 <% if(data.users[i].role == 'student' || data.users[i].role == 'teacher') {%>
                                                 <a data-l10n-id="seeJournalEntries" title="See Journal Entries" href="/dashboard/journal/<%= data.users[i].private_journal %>?uid=<%= data.users[i]._id %>&type=private"><span class="journal-icon2" id="seeJournalEntries"></span></a>

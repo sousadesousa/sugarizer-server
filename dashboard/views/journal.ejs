@@ -136,7 +136,7 @@
 																		<% } %>
 																	</script>
 																	<td><%= entries.entries[i].metadata.title %></td>
-																	<td><%= moment(entries.entries[i].metadata.timestamp).calendar() %></td>
+																	<td><time data-local-time="<%= entries.entries[i].metadata.timestamp %>"><%= moment(entries.entries[i].metadata.timestamp).calendar() %></time></td>
 																	<% var size = entries.entries[i].metadata.textsize %>
 																	<% var format = "" %>
 																	<%  if(size > 1048576){

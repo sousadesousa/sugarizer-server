@@ -152,7 +152,7 @@ async function start() {
 		var launch = function() {
 			var child = spawn(process.execPath, ['--require', path.join(__dirname, 'server-preload.js'), 'sugarizer.js'], {
 				cwd: root,
-				env: Object.assign({}, process.env, {NODE_ENV: envName, E2E_CLOCK_OFFSET_MS: String(state.clockOffset), E2E_RANDOM_SEED: '1'}),
+				env: Object.assign({}, process.env, {NODE_ENV: envName, TZ: 'UTC', E2E_CLOCK_OFFSET_MS: String(state.clockOffset), E2E_RANDOM_SEED: '1'}),
 				stdio: ['ignore', 'pipe', 'pipe']
 			});
 			state.server = child;

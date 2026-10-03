@@ -168,7 +168,7 @@
                             <div class="col-12">
                                 <div class="mb-3">
                                     <label class="form-label" data-l10n-id="createdTime"></label>
-                                    <input class="form-control" readonly value="<%= moment(user.created_time).calendar() %>" type="text">
+                                    <input class="form-control" readonly value="<%= moment(user.created_time).calendar() %>" data-local-time="<%= user.created_time %>" type="text">
                                 </div>
                             </div>
                         </div>
@@ -178,7 +178,7 @@
                             <div class="col-12">
                                 <div class="mb-3">
                                     <label class="form-label" data-l10n-id="lastSeen"></label>
-                                    <input class="form-control" readonly value="<%= moment(user.timestamp).calendar() %>" type="text">
+                                    <input class="form-control" readonly value="<%= moment(user.timestamp).calendar() %>" data-local-time="<%= user.timestamp %>" type="text">
                                 </div>
                             </div>
                         </div>

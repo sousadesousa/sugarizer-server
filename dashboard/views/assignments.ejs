@@ -106,7 +106,7 @@
                                                     <% if( data.assignments[i].dueDate >= new Date().getTime() && data.assignments[i].isAssigned == true){ %><%= common.l10n.get('statusAssigned') %><% } %>
                                                     <% if( data.assignments[i].dueDate < new Date().getTime() && data.assignments[i].isAssigned == true ){ %><%= common.l10n.get('statusTerminated') %><% } %>
                                                 </td>
-                                                <td><%= moment(data.assignments[i].timestamp).calendar() %></td>
+                                                <td><time data-local-time="<%= data.assignments[i].timestamp %>"><%= moment(data.assignments[i].timestamp).calendar() %></time></td>
                                                 <td>
                                                     <% if(account.user._id == data.assignments[i].created_by) {%>
                                                         <% if(data.assignments[i].isAssigned == false){ %>
