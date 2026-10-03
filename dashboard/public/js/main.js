@@ -3,7 +3,7 @@ function initDragDrop() {
 	$("ol.simple_with_animation").sortable({
 		handle: '.draggable',
 		axis: 'y',
-		containment: 'parent',
+		containment: 'document',
 		animation: 150,
 		scrollSensitivity: 50,
 		scrollSpeed: 15,
