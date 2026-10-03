@@ -34,8 +34,26 @@ exports.load = function(settings, database) {
 			console.log("ERROR: can't find activity path '"+activitiesPath+"'");
 			throw err;
 		}
+		// The activities are read asynchronously and finish in any order: the order of the directory names
+		// decides the index of the activities that are not in the favorites of the settings
+		files.sort();
+		var position = {};
+		files.forEach(function(file, i) {
+			position[file] = i;
+		});
 		var index = 0;
 		var mergedActivitiesAtEnd = function() {
+			// Number the activities that are not in the favorites of the settings, in the order of the directory
+			activitiesFromDir.sort(function(a0, a1) {
+				return a0.position - a1.position;
+			});
+			activitiesFromDir.forEach(function(activity) {
+				if (activity.index == -1) {
+					activity.index = favoritesLength++;
+				}
+				delete activity.position;
+			});
+
 			// Load activities
 			loadActivities(function(activitiesFromDB) {
 				// Sort activities array by index in .INI favorite property
@@ -91,7 +109,8 @@ exports.load = function(settings, database) {
 								"icon": "activity/" + info.Activity.icon + ".svg",
 								"favorite": favorite,
 								"activityId": null,
-								"index": (favorites.indexOf(info.Activity.bundle_id) == -1 ? favoritesLength++ : favorites.indexOf(info.Activity.bundle_id))
+								"index": favorites.indexOf(info.Activity.bundle_id),
+								"position": position[file]
 							});
 							if (++index == files.length) {
 								mergedActivitiesAtEnd();
