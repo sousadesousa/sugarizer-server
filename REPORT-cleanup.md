@@ -131,3 +131,13 @@ files (the git status shows which); the folder now holds 87 files.
   baseline would show the date text.
 - `users.js` / `classrooms.js` `getOptions` have the limit/offset bug of item 4.
 - Item 6 drops the "Today at" wording (see above).
+
+## Follow-up: limit/offset on users and classrooms (item 4)
+
+- **Fix.** `getOptions` in `api/controller/users.js` and `classrooms.js` now clamps like `assignments.js`: limit under 1 or not a
+  number -> 10, offset under 0 or not a number -> 0 (status stays 200). `limit=0` no longer gives a self-linking `prev_page`,
+  negative values no longer give negative links.
+- **Tests.** `api/test/users.js` and `api/test/classrooms.js`: "it should replace an invalid limit and offset by the default
+  values" (`limit=0`, `-3`, `abc`, `offset=-1`, `abc`, both negative: 200, `limit` 10, `offset` 0, no `prev_page`, no negative
+  link). Before the fix the run dies on the first assertion (`expected +0 to deeply equal 10`, classrooms); after: pass.
+- **Run.** `npm test`: 193 passing; `npm run test:unit`: 66 passing; `npm run lint`: 0 errors, 1 pre-existing warning.
