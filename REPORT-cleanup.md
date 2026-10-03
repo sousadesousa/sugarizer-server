@@ -117,7 +117,13 @@ exact matrix was not run. Only the activities list is changed, not the charts li
 
 ## Results
 
-RESULTS_PLACEHOLDER
+Final state of the branch (before the baseline commit): `npm run lint` 0 errors (the 1 old warning), `npm test` 191 passing
+(168 at the start), `npm run test:unit` 66 passing, `npm run test:e2e` 168 passed (167 + the N8 test; the 163 of the
+migration report grew with the flows, dates and N8 tests), in `E2E_BASELINE=1` mode, 7.6 minutes. Each item was also run
+before its fix as described above. The full e2e run before item 7-9 was 167 passed.
+
+The baseline PNGs were regenerated once (`test:e2e:baseline`): the date cells changed (item 6), which moved `test/e2e/baseline/`
+files (the git status shows which); the folder now holds 87 files.
 
 ## Open points
 
