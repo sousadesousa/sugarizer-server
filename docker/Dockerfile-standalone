@@ -16,8 +16,10 @@ RUN git clone --depth 1 --branch "$CLIENT_REF" "$CLIENT_REPOSITORY" sugarizer \
 WORKDIR /opt/sugarizer
 RUN npm ci --no-audit --no-fund && npx grunt && rm -rf node_modules .git
 WORKDIR /opt/sugarizer-server
-# --force: image optimization needs native tools that may not install, the rest is still minified
-RUN npm ci --no-audit --no-fund && npx grunt --force && cp -r build/* . && rm -rf build node_modules .git \
+# --ignore-scripts: the image optimization tools (gifsicle, optipng, jpegtran) download x86-64 binaries
+# or compile from source, which fails on linux/arm64 (Raspberry Pi) without a C toolchain.
+# --force: image optimization is then skipped, the rest is still minified
+RUN npm ci --ignore-scripts --no-audit --no-fund && npx grunt --force && cp -r build/* . && rm -rf build node_modules .git \
 	&& npm ci --omit=dev --no-audit --no-fund
 
 FROM node:22-bookworm-slim
