@@ -9,7 +9,7 @@ This guide runs Sugarizer Server and MongoDB in Docker on a Raspberry Pi 5, for 
 - An **SSD** (USB 3 or NVMe) is strongly recommended over an SD card. MongoDB writes constantly and SD cards are slow and wear out.
 - A wired network connection for a server used by many students.
 
-Raspberry Pi 4 and older are **not supported**: MongoDB 5 and later need a CPU with ARMv8.2 instructions (the Pi 5 has them, the Pi 4 does not) and the `mongo:8.0` image used here will crash on startup (`Illegal instruction`). The last MongoDB version that runs on a Pi 4 is 4.4. You could pin `mongo:4.4` in the compose file, but 4.4 is end of life and receives no security fixes, so this is **unsupported and not recommended**, and you should not expose such a server to the Internet.
+Raspberry Pi 4 and older are **not supported**: MongoDB 5 and later need a CPU with ARMv8.2 instructions (the Pi 5 has them, the Pi 4 does not) and the `mongo:8.0` image used here will crash on startup (`Illegal instruction`). Only old MongoDB releases run on a Pi 4 (recent 4.4 releases need ARMv8.2 too); they are end of life and receive no security fixes, so running Sugarizer Server on a Pi 4 is **unsupported and not recommended**.
 
 Check your system with `uname -m` (must print `aarch64`).
 
@@ -24,8 +24,8 @@ Check your system with `uname -m` (must print `aarch64`).
 
 2. Clone the client and the server side by side (the compose file mounts `../sugarizer`):
 
-		git clone https://github.com/llaske/sugarizer
-		git clone https://github.com/llaske/sugarizer-server
+		git clone https://github.com/sousadesousa/sugarizer
+		git clone https://github.com/sousadesousa/sugarizer-server
 		cd sugarizer-server
 
 3. Set a fixed secret, so users stay logged in when containers are recreated:
@@ -75,15 +75,16 @@ Copy the dump off the Pi (another disk or computer). Keep also the `.env` file, 
 
 ## Update
 
-	cd sugarizer && git pull && cd ../sugarizer-server
+	git -C ../sugarizer pull
 	git pull
 	docker compose -f docker-compose.yml -f docker-compose.pi.yml up -d --build
 
-The database volume is kept. Read the [Migration guide](migrate.md) when upgrading across major versions, and make a backup first. To follow Docker image updates of MongoDB, run `docker compose ... pull mongodb` then `up -d`.
+Run these commands from the `sugarizer-server` directory. The `docker/db` directory (the database) is kept. Read the [Migration guide](migrate.md) when upgrading across major versions, and make a backup first. To follow Docker image updates of MongoDB, run `docker compose ... pull mongodb` then `up -d`.
 
 ## Troubleshooting
 
 - `docker compose logs -f server` / `logs -f mongodb` show the logs.
-- MongoDB restarting with `Illegal instruction`: the CPU is not a Pi 5 (see Requirements).
+- MongoDB restarting with `Illegal instruction`: the CPU is older than the Pi 5's (ARMv8.2 is needed, see Requirements).
+- MongoDB crashing at startup on a Pi 5 with a memory or page size error: Raspberry Pi OS on the Pi 5 uses a kernel with 16 KB memory pages by default, which some MongoDB builds do not handle. Switch to the 4 KB page kernel by adding `kernel=kernel8.img` to `/boot/firmware/config.txt`, then reboot (`getconf PAGESIZE` prints `4096` afterwards).
 - Out-of-memory kills on a 4 GB Pi: lower `MONGO_CACHE_GB` (e.g. `0.5`) and `NODE_HEAP_MB` (e.g. `512`) and check `docker stats`.
 - `JavaScript heap out of memory` in the server logs (for example on a big CSV import): raise `NODE_HEAP_MB` (e.g. `2048` on an 8 GB Pi).
