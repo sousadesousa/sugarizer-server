@@ -305,7 +305,7 @@ function loadActivitiesFor(req, res, callback) {
 		}
 		activities = activities || [];
 		const collection = db.collection(classroomsCollection);
-		dbutil.callback(collection.find({ students: String(req.user._id) }, { projection: { activities: 1 } }).toArray(), function(err, classrooms) {
+		dbutil.callback(collection.find({ students: String(req.user._id) }, { projection: { activities: 1, toolbarMode: 1, toolbarOverrides: 1 } }).toArray(), function(err, classrooms) {
 			if (err) {
 				console.log(err);
 				return res.status(500).send({
@@ -313,7 +313,14 @@ function loadActivitiesFor(req, res, callback) {
 					'code': 10
 				});
 			}
-			callback(filterAssigned(activities, classrooms));
+			const assigned = filterAssigned(activities, classrooms);
+			// Add toolbarMode property to each activity
+			const withToolbar = assigned.map(function(activity) {
+				return Object.assign({}, activity, {
+					toolbarMode: resolveToolbarMode(activity.id, classrooms)
+				});
+			});
+			callback(withToolbar);
 		});
 	});
 }
@@ -334,6 +341,30 @@ function filterAssigned(activities, classrooms) {
 	});
 }
 exports.filterAssigned = filterAssigned;
+
+// Toolbar mode of an activity in a classroom: the override of the activity, else the default
+// of the classroom, else "full"
+function classroomToolbarMode(classroom, activityId) {
+	const overrides = classroom.toolbarOverrides;
+	let mode = overrides && typeof overrides == 'object' && Object.prototype.hasOwnProperty.call(overrides, activityId) ? overrides[activityId] : undefined;
+	if (mode !== 'simple' && mode !== 'full') {
+		mode = classroom.toolbarMode;
+	}
+	return mode === 'simple' ? 'simple' : 'full';
+}
+
+// Toolbar mode of an activity for a student: "simple" if any classroom that assigns
+// the activity asks for it, else "full"
+function resolveToolbarMode(activityId, classrooms) {
+	for (let i = 0 ; i < classrooms.length ; i++) {
+		const list = classrooms[i].activities;
+		if (Array.isArray(list) && list.indexOf(activityId) != -1 && classroomToolbarMode(classrooms[i], activityId) == 'simple') {
+			return 'simple';
+		}
+	}
+	return 'full';
+}
+exports.resolveToolbarMode = resolveToolbarMode;
 
 // Merge activities list
 function mergeActivities(list1, list2) {

@@ -4,7 +4,8 @@ var superagent = require('superagent'),
 	common = require('../../helper/common'),
 	xocolors = require('../../helper/xocolors')(),
 	emoji = require('../../public/js/emoji'),
-	journal_utils = require('../journal/util/index');
+	journal_utils = require('../journal/util/index'),
+	toolbar = require('./toolbar');
 
 var classroom = require('./index');
 
@@ -25,6 +26,13 @@ module.exports = function addClassroom(req, res) {
 		if (typeof req.body.activities == 'string') {
 			req.body.activities = [req.body.activities];
 		}
+
+		// Parse and normalize toolbar settings
+		req.body.toolbarOverrides = toolbar.parseToolbarOverrides(req.body.toolbarOverrides, req.body.activities);
+		if (req.body.toolbarMode !== 'simple' && req.body.toolbarMode !== 'full') {
+			req.body.toolbarMode = 'full';
+		}
+
 		req.body.color = JSON.parse(req.body.color);
 		req.assert('name', common.l10n.get('UsernameInvalid')).matches(/^[a-z0-9 ]+$/i);
 		req.body.options = { sync: true, stats: true };
