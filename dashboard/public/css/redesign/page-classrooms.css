@@ -1,13 +1,5 @@
 /* Redesign of the pages: classrooms. Only rules for this page group; shared look is in shell.css and components.css. */
 
-/* ---- phone: the main panel takes the full width on the classroom pages ----
-   shell.css keeps `.main-area { width: calc(100% - sidebar) }` below 992px, so the form column was 80px wide at 390px.
-   Scoped to the classroom list and form (the shell rule should get a phone override of its own). */
-@media (max-width: 991.98px) {
-	.main-area:has(#classroom-add-edit-form),
-	.main-area:has(#classroom-serach-row) { width: 100%; }
-}
-
 /* ---- classroom form: activities checklist ----
    Each row has an inline width of 360px and margin 4px 8px in the .ejs: !important beats them.
    The row becomes a wrapping flex line (checkbox, name, per-activity toolbar select), so nothing leaves the box. */
