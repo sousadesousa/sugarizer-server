@@ -41,7 +41,6 @@
 .classroom-activities select[name="toolbarOverrides"] {
 	flex: 0 1 auto;
 	max-width: 100%;
-	width: auto !important; /* beats the inline width:auto, kept for clarity */
 	margin: 0 !important; /* beats the inline margin-left 8px */
 }
 

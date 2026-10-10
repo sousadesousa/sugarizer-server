@@ -4,7 +4,8 @@
 #user-serach-row { padding: 16px 20px; }
 #user-form .search-row { gap: 8px 12px; align-items: flex-end; margin: 0; }
 #user-form .search-row > [class*="col-"] { padding-left: 0; padding-right: 0; }
-#user-form .search-field { margin: 0; padding: 0; }
+/* flex column: the select2 box sits on the field line, without the inline-block gap under it */
+#user-form .search-field { display: flex; flex-direction: column; margin: 0; padding: 0; }
 #user-form .search-row .btn { min-height: 46px; margin: 0 0 0 8px; }
 #users-deleteMultiple .btn { width: 46px; height: 46px; padding: 0; margin: 0 0 0 8px; }
 #users-deleteMultiple .btn .material-icons { font-size: var(--icon-m); }

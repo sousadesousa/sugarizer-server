@@ -188,3 +188,7 @@
 #editChart-display .form-check-label {
 	font: 400 15px/1.4 var(--font-body);
 }
+
+/* ---- statistics (stats.ejs): toolbar with List Charts and Add Chart ---- */
+/* the buttons sit inside the toolbar card with the same gap on the right as on the left (they touched the edge at phone width) */
+.search-row:has(#stats-listCharts) { padding: 8px; }
