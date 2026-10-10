@@ -1,0 +1,18 @@
+/* Redesign of the dashboard: line icons of the sidebar (the Dashboard board of the design), drawn as masks in the colour of the
+   text, so the active item (dark pill) gets white icons. They replace the coloured pictures of main.css. */
+.sidebar .nav .custom-icon {
+	background-image: none !important; /* main.css and icon.js set the picture of each icon */
+	background-color: currentColor;
+	-webkit-mask: var(--rd-icon) center / 22px 22px no-repeat;
+	mask: var(--rd-icon) center / 22px 22px no-repeat;
+}
+.sidebar .nav i { color: inherit; }
+.sidebar .nav .custom-icon.home-icon { --rd-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 11l8-7 8 7v9h-5v-6H9v6H4z'/%3E%3C/svg%3E"); }
+.sidebar .nav .custom-icon.xo-icon { --rd-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9 11a3.5 3.5 0 100-7 3.5 3.5 0 000 7zM3 20c0-3.3 2.7-5.5 6-5.5s6 2.2 6 5.5M16 4.5a3.3 3.3 0 010 6.3M18 14.8c1.8.6 3 2.4 3 5.2'/%3E%3C/svg%3E"); }
+.sidebar .nav .custom-icon.classroom-icon { --rd-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 5h18v11H3zM8 20h8M12 16v4'/%3E%3C/svg%3E"); }
+.sidebar .nav .custom-icon.activity-icon { --rd-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z'/%3E%3C/svg%3E"); }
+.sidebar .nav .custom-icon.journal-icon { --rd-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 3h11a1 1 0 011 1v16a1 1 0 01-1 1H6zM9 8h6M9 12h6M9 16h4'/%3E%3C/svg%3E"); }
+.sidebar .nav .custom-icon.assignment-icon { --rd-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9 4h6l1 2h3v14H5V6h3zM9 13l2 2 4-4'/%3E%3C/svg%3E"); }
+.sidebar .nav .custom-icon.stats-icon { --rd-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 20V10M12 20V4M19 20v-7'/%3E%3C/svg%3E"); }
+.sidebar .nav .custom-icon.shutdown-icon { --rd-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M10 4H6a1 1 0 00-1 1v14a1 1 0 001 1h4M15 8l4 4-4 4M19 12H9'/%3E%3C/svg%3E"); }
+.sidebar .nav .custom-icon.user-icon { --rd-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 12a4 4 0 100-8 4 4 0 000 8zM5 20c0-3.6 3.1-6 7-6s7 2.4 7 6'/%3E%3C/svg%3E"); }
