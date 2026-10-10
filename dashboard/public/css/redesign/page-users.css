@@ -6,19 +6,27 @@
 #user-form .search-row > [class*="col-"] { padding-left: 0; padding-right: 0; }
 /* flex column: the select2 box sits on the field line, without the inline-block gap under it */
 #user-form .search-field { display: flex; flex-direction: column; margin: 0; padding: 0; }
-#user-form .search-row .btn { min-height: 46px; margin: 0 0 0 8px; }
-#users-deleteMultiple .btn { width: 46px; height: 46px; padding: 0; margin: 0 0 0 8px; }
+#user-form .search-row .btn { min-height: 46px; margin: 0; }
+#users-deleteMultiple .btn { width: 46px; height: 46px; padding: 0; margin: 0; }
 #users-deleteMultiple .btn .material-icons { font-size: var(--icon-m); }
-/* filters on one line; the actions take a full line under them, right-aligned; flow-root keeps the floats inside the card */
+/* filters on one line; the actions form their own line under them (right-aligned on desktop).
+   The actions column is a flex box: the view's float-end classes are cancelled, and the bare wrapper div of
+   the CSV import button is taken out of the box (display: contents) so its button is a flex item. */
+#user-form .search-row > .col-lg-5 { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+#user-form .search-row > .col-lg-5 > div:not([class]) { display: contents; }
+#user-form .search-row > .col-lg-5 > *,
+#user-form .search-row > .col-lg-5 > div:not([class]) > * { float: none !important; /* beats the float-end of the view */ }
+#user-form .search-row > .col-lg-5 .btn { flex: 0 0 auto; }
+#user-form .search-row > .col-lg-5 > #users-deleteMultiple { flex: 0 0 46px; }
 @media (min-width: 992px) {
 	#user-form .search-row > .col-lg-2 { flex: 0 0 auto; width: 220px; }
 	#user-form .search-row > .col-lg-3 { flex: 0 0 auto; width: 280px; }
-	#user-form .search-row > .col-lg-5 { flex: 0 0 100%; max-width: 100%; display: flow-root; padding-top: 4px; }
+	#user-form .search-row > .col-lg-5 { flex: 0 0 100%; max-width: 100%; flex-direction: row-reverse; justify-content: flex-start; padding-top: 4px; }
 }
 @media (max-width: 991.98px) {
 	#user-form .search-row > [class*="col-"] { width: 100%; }
-	#user-form .search-row .btn { margin: 0 0 0 8px; }
-	#users-deleteMultiple { margin: 0 0 0 8px; }
+	/* phone: the buttons share the lines, the delete icon keeps its square */
+	#user-form .search-row > .col-lg-5 .btn:not(#users-deleteMultiple .btn) { flex: 1 1 auto; }
 }
 
 /* ---- users list: 'Showing results' bar ---- */
@@ -84,8 +92,11 @@
 #users-userlist > .text-center p { margin: 8px 0 0; font: 500 16px/1.4 var(--font-display); color: var(--ink-soft); }
 
 /* ---- user form: add, edit, profile ---- */
+/* the form card sits in a column with no row: its card was an inline-block and started off the list's left edge */
+.container-fluid > .col-lg-8 { padding: 0; }
+.container-fluid > .col-lg-8 > .card { display: block; width: 100%; }
 #user-add-edit-form .form-label { font-size: 14px; color: var(--ink); }
-#user-add-edit-form .mb-3 { margin-bottom: 18px !important; }
+#user-add-edit-form .mb-3 { margin-bottom: 18px !important; /* beats the .mb-3 utility of Bootstrap (!important) */ }
 /* the password preview is a read-only control: tile surface, text centred on the line */
 #user-add-edit-form #passemoji {
 	display: flex;
@@ -103,6 +114,13 @@
 #editUser-twoFactor .form-check-label { font-size: 15px; }
 #user-add-edit-form .form-control[readonly] { color: var(--ink-soft); }
 #user-add-edit-form .btn.float-end { margin-left: 8px; }
+
+/* the profile's Enable 2FA button is pulled up by main.css (.btn-align, -63px !important) onto the Save line; with
+   the 4px button margin of the redesign that line is 15px lower, so it is set to -48px. Wide screens only: the
+   phone layout of main.css puts this button below Cancel and Save. */
+@media (min-width: 576px) {
+	.col-12.text-center > .btn-align { margin-top: -48px !important; /* beats .btn-align of main.css */ }
+}
 
 /* ---- two-factor setup page (twoFactor.ejs) ---- */
 .tfa-box h4 { font-size: 1.05rem; line-height: 1.5; color: var(--ink); }
