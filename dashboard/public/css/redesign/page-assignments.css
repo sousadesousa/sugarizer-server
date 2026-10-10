@@ -156,10 +156,12 @@
 	font: 500 13px/1.2 var(--font-display);
 	color: var(--ink-soft);
 }
-#editAssignment-duedate > .col-lg-3:first-child > .mb-3 {
-	display: flex;
-	align-items: center;
-	min-height: 46px;
+@media (min-width: 992px) {
+	#editAssignment-duedate > .col-lg-3:first-child > .mb-3 {
+		display: flex;
+		align-items: center;
+		min-height: 46px;
+	}
 }
 /* the two stamp fields are invisible today (visibility hidden) and only hold the computed numbers; they took up space under the date and time */
 #dueDatestamp,

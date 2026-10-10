@@ -1,1 +1,191 @@
 /* Redesign of the pages: stats. Only rules for this page group; shared look is in shell.css and components.css. */
+
+/* ---- chart list (listCharts.ejs): column labels, rows, action targets ---- */
+/* the labels of the columns sit in the card above the list (the list is its next sibling) */
+.col-12:has(+ #listCharts-chartList) .text-muted {
+	font: 500 12px/1.2 var(--font-display);
+	letter-spacing: .06em;
+	text-transform: uppercase;
+	color: var(--ink-soft);
+}
+
+/* the rows keep the padding and margins of ol.simple_with_animation (see main.css): only the inside of the card is set */
+#listCharts-chartList .card { border-color: var(--line); }
+#listCharts-chartList .card-body > .row { min-height: 60px; align-items: center; }
+#listCharts-chartList ol > li::marker {
+	font: 500 13px/1 var(--font-display);
+	color: var(--ink-soft);
+}
+#listCharts-chartList .search_textbox {
+	font: 500 15px/1.3 var(--font-display);
+	color: var(--ink);
+}
+#listCharts-chartList .search_textbox span { font: inherit; }
+
+/* action targets: 44px minimum (the inline style of the links is 40px high with 5px side padding) */
+#listCharts-chartList a[title] {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: var(--target);
+	height: var(--target) !important; /* beats the inline style height:40px of the link */
+	padding: 0 !important; /* beats the inline style padding of the link */
+	margin: 0 2px;
+	border-radius: var(--radius-m);
+	color: var(--ink-soft);
+}
+#listCharts-chartList a[title]:hover { background: var(--tile); color: var(--ink); }
+#listCharts-chartList a[title]:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+#listCharts-chartList a[title] .material-icons { font-size: var(--icon-m); line-height: 1; }
+
+/* the visibility toggle: 44px box, the eye icon drawn at 24px in the middle */
+#listCharts-chartList .hideshowBox {
+	height: var(--target) !important; /* beats the inline style height:40px */
+	padding: 0 !important; /* beats the inline style padding */
+	display: flex;
+	align-items: center;
+}
+#listCharts-chartList .hideshowBox input[type=checkbox] {
+	width: var(--target);
+	height: var(--target);
+	border-radius: var(--radius-m);
+	background-size: var(--icon-m) var(--icon-m);
+}
+#listCharts-chartList .hideshowBox input[type=checkbox]:hover { background-color: var(--tile); }
+#listCharts-chartList .hideshowBox input[type=checkbox]:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+
+/* the search button of the list has a grey disc in its inline style: beaten here */
+.search-row .btn-just-icon[style*="background:#999999"] {
+	background: var(--surface) !important; /* beats the inline style background */
+	color: var(--ink-soft) !important; /* beats the inline style colour */
+	border: 1px solid var(--line-strong) !important;
+}
+
+/* ---- chart form (addEditChart.ejs): chart types, chart list, display ---- */
+/* the groups sit on the same left line as their labels (main.css indents them by 40px on desktop) */
+#editChart-type .type-selector {
+	position: relative;
+	display: flex;
+	flex-wrap: wrap;
+	gap: 12px;
+	padding: 0;
+}
+/* the radio buttons stay in the form (keyboard and screen readers) but are not drawn: the tile is the control */
+#editChart-type .type-selector-input {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	margin: 0;
+	opacity: 0;
+}
+#editChart-type .type-selector-card {
+	width: 120px;
+	height: 88px;
+	margin: 0;
+	padding: 0;
+	box-sizing: border-box;
+	border: 1px solid var(--line-strong);
+	border-radius: var(--radius-l);
+	background-color: var(--surface);
+	background-size: 56px 56px;
+	background-position: center;
+	background-repeat: no-repeat;
+	-webkit-filter: opacity(.6);
+	filter: opacity(.6);
+	transition: border-color 120ms ease-in, background-color 120ms ease-in;
+}
+#editChart-type .type-selector-card:hover {
+	-webkit-filter: none;
+	filter: none;
+	border-color: var(--ink-soft);
+}
+#editChart-type .type-selector-input:checked + .type-selector-card {
+	-webkit-filter: none;
+	filter: none;
+	border-color: var(--ink);
+	background-color: var(--tile);
+	box-shadow: inset 0 0 0 1px var(--ink);
+}
+#editChart-type .type-selector-input:focus-visible + .type-selector-card {
+	outline: 3px solid var(--focus);
+	outline-offset: 2px;
+}
+
+/* the placeholder before a type is picked */
+#editChart-selectchart .chart-list { padding: 0; }
+#editChart-selectchart .chart-list > label:not(:has(input)) {
+	display: block;
+	min-height: var(--target);
+	padding: 10px 0;
+	color: var(--ink-soft);
+}
+/* one row per chart: a 44px target with the radio and the chart name */
+#editChart-selectchart .chart-list label:has(input[type="radio"]) {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	width: 100%;
+	min-height: var(--target);
+	margin: 0 0 8px;
+	padding: 8px 14px;
+	box-sizing: border-box;
+	border: 1px solid var(--line-strong);
+	border-radius: var(--radius-m);
+	background: var(--surface);
+	cursor: pointer;
+}
+#editChart-selectchart .chart-list label:has(input[type="radio"]:checked) {
+	border-color: var(--ink);
+	background: var(--tile);
+	box-shadow: inset 0 0 0 1px var(--ink);
+}
+#editChart-selectchart .chart-list label input[type="radio"] {
+	-webkit-appearance: none;
+	appearance: none;
+	flex: none;
+	float: none;
+	width: 22px;
+	height: 22px;
+	margin: 0;
+	border: 1.5px solid var(--line-strong);
+	border-radius: 50%;
+	background: var(--surface);
+	font-size: 0;
+}
+#editChart-selectchart .chart-list label input[type="radio"]:checked {
+	border-color: var(--ink);
+	background: var(--ink);
+	box-shadow: inset 0 0 0 4px var(--surface);
+}
+#editChart-selectchart .chart-list label input[type="radio"]:focus-visible {
+	outline: 3px solid var(--focus);
+	outline-offset: 2px;
+}
+#editChart-selectchart .chart-list label div {
+	min-width: 0;
+	font: 400 15px/1.4 var(--font-body);
+	color: var(--ink);
+}
+/* the chart key shown next to the picked chart (main.css draws it in blue: beaten here with the tokens) */
+#editChart-selectchart .chart-list label input[type="radio"]:checked + div span {
+	background-color: var(--ink);
+	color: var(--on-ink);
+	border-radius: var(--radius-s);
+	box-shadow: var(--shadow-pop);
+	font: 500 13px/1.2 var(--font-display);
+	padding: 8px 12px;
+}
+#editChart-selectchart .chart-list input[type="radio"]:checked + div span:before {
+	border-bottom-color: var(--ink);
+}
+
+/* the Hidden check box, on the same line as the other labels */
+#editChart-display .display-check {
+	padding: 0 0 0 1.5em;
+}
+#editChart-display .display-check .form-check-input {
+	margin: 0 12px 0 -1.5em;
+}
+#editChart-display .form-check-label {
+	font: 400 15px/1.4 var(--font-body);
+}

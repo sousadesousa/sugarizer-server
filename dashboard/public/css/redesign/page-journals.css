@@ -114,7 +114,15 @@ ol.simple_with_animation .card-body a:focus-visible {
 #journal-search-card .search-row > .col-lg-4.text-end > .btn[type="submit"] { order: 4; }
 
 /* ---- journals: empty states (no user chosen, no entries) ---- */
-.container-fluid > .row > .col-12 > .text-center > .material-icons.dp96 {
+/* journal.ejs opens the results row inside the search row (the markup is not closed in time): the nested row
+   then takes its width from the flex item, 30px narrower than the search card. Full width puts both cards on one edge. */
+.container-fluid > .row > .row {
+	flex: 0 0 100%;
+	width: 100%;
+	margin: 0;
+}
+
+.container-fluid .text-center > .material-icons.dp96 {
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
@@ -126,7 +134,7 @@ ol.simple_with_animation .card-body a:focus-visible {
 	font-size: 64px;
 	line-height: 1;
 }
-.container-fluid > .row > .col-12 > .text-center > p {
+.container-fluid .text-center > p {
 	margin: 16px 0 0;
 	font: 400 16px/1.5 var(--font-body);
 	color: var(--ink-soft);

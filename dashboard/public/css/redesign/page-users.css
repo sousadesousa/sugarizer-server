@@ -1,1 +1,110 @@
 /* Redesign of the pages: users. Only rules for this page group; shared look is in shell.css and components.css. */
+
+/* ---- users list: search card ---- */
+#user-serach-row { padding: 16px 20px; }
+#user-form .search-row { gap: 8px 12px; align-items: flex-end; margin: 0; }
+#user-form .search-row > [class*="col-"] { padding-left: 0; padding-right: 0; }
+#user-form .search-field { margin: 0; padding: 0; }
+#user-form .search-row .btn { min-height: 46px; margin: 0 0 0 8px; }
+#users-deleteMultiple .btn { width: 46px; height: 46px; padding: 0; margin: 0 0 0 8px; }
+#users-deleteMultiple .btn .material-icons { font-size: var(--icon-m); }
+/* filters on one line; the actions take a full line under them, right-aligned; flow-root keeps the floats inside the card */
+@media (min-width: 992px) {
+	#user-form .search-row > .col-lg-2 { flex: 0 0 auto; width: 220px; }
+	#user-form .search-row > .col-lg-3 { flex: 0 0 auto; width: 280px; }
+	#user-form .search-row > .col-lg-5 { flex: 0 0 100%; max-width: 100%; display: flow-root; padding-top: 4px; }
+}
+@media (max-width: 991.98px) {
+	#user-form .search-row > [class*="col-"] { width: 100%; }
+	#user-form .search-row .btn { margin: 0 0 0 8px; }
+	#users-deleteMultiple { margin: 0 0 0 8px; }
+}
+
+/* ---- users list: 'Showing results' bar ---- */
+#users-userlist > .card > .card-header {
+	min-height: 56px;
+	margin: 0;
+	padding: 12px 20px;
+	border-bottom: 1px solid var(--line);
+	border-radius: 16px 16px 0 0;
+	background: var(--tile);
+	color: var(--ink-soft);
+	font: 500 14px/1.4 var(--font-display);
+	align-items: center;
+}
+#users-userlist > .card > .card-header > [class*="col-"] { padding-top: 0; padding-bottom: 0; }
+#users-userlist .page-button {
+	display: inline-flex;
+	align-items: center;
+	min-height: var(--target);
+	padding: 0 14px;
+	border: 1px solid var(--line-strong);
+	border-radius: var(--radius-m);
+	background: var(--surface);
+	color: var(--ink);
+	font: 500 14px var(--font-display);
+	text-decoration: none;
+}
+#users-userlist .page-button:hover { background: var(--tile); color: var(--ink); }
+
+/* ---- users list: table ---- */
+#users-userlist .card-body { padding: 0; }
+#users-userlist .table > tbody > tr { height: 60px; }
+#users-userlist .table > tbody > tr > td { padding-top: 10px; padding-bottom: 10px; }
+#users-userlist .table > tbody > tr:last-child > td { border-bottom: 0; }
+#users-userlist .color .xo-icon { width: 30px; height: 30px; }
+#users-userlist td:last-child { white-space: nowrap; }
+#users-userlist td:last-child > a {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: var(--target);
+	height: var(--target);
+	margin: 0 2px;
+	border-radius: var(--radius-m);
+	color: var(--ink-soft);
+	vertical-align: middle;
+}
+#users-userlist td:last-child > a:hover,
+#users-userlist td:last-child > a:focus-visible { background: var(--tile); color: var(--ink); }
+#users-userlist td:last-child .material-icons { font-size: var(--icon-m); color: inherit; }
+#users-userlist td:last-child .journal-icon2 { width: var(--icon-m); height: var(--icon-m); background-size: var(--icon-m); }
+
+/* ---- users list: empty state (the top margin is an inline style of the view) ---- */
+#users-userlist > .text-center[style*="margin-top:50px"] {
+	margin-top: 0 !important; /* beats the inline margin-top:50px of the view */
+	padding: 40px 20px;
+	border: 1px solid var(--line);
+	border-radius: 16px;
+	background: var(--surface);
+	color: var(--ink-soft);
+}
+#users-userlist > .text-center .dp96 { color: var(--ink-faint); line-height: 1; }
+#users-userlist > .text-center p { margin: 8px 0 0; font: 500 16px/1.4 var(--font-display); color: var(--ink-soft); }
+
+/* ---- user form: add, edit, profile ---- */
+#user-add-edit-form .form-label { font-size: 14px; color: var(--ink); }
+#user-add-edit-form .mb-3 { margin-bottom: 18px !important; }
+/* the password preview is a read-only control: tile surface, text centred on the line */
+#user-add-edit-form #passemoji {
+	display: flex;
+	align-items: center;
+	min-height: 46px;
+	background-color: var(--tile);
+	color: var(--ink);
+	font-size: 16px;
+}
+/* the classrooms row has an inline margin-top:-15px that pulls its label onto the 2FA checkbox above */
+#user-add-edit-form [style*="margin-top: -15px"] { margin-top: 0 !important; /* beats the inline margin-top:-15px of the view */ }
+#editUser-twoFactor { margin: 0 0 18px; }
+#editUser-twoFactor .form-check { display: flex; align-items: center; gap: 10px; min-height: var(--target); padding-left: 0; margin: 0; }
+#editUser-twoFactor .form-check .form-check-input { float: none; margin: 0; }
+#editUser-twoFactor .form-check-label { font-size: 15px; }
+#user-add-edit-form .form-control[readonly] { color: var(--ink-soft); }
+#user-add-edit-form .btn.float-end { margin-left: 8px; }
+
+/* ---- two-factor setup page (twoFactor.ejs) ---- */
+.tfa-box h4 { font-size: 1.05rem; line-height: 1.5; color: var(--ink); }
+.tfa-box hr { border-color: var(--line); margin: 16px 0; }
+.tfa-box label[for="tokenentry"] { display: block; margin: 0 0 6px; font: 500 14px/1.3 var(--font-display); color: var(--ink-soft); }
+.tfa-box .form-control { margin-bottom: 20px; }

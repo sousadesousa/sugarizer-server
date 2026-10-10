@@ -44,3 +44,23 @@
 	width: auto !important; /* beats the inline width:auto, kept for clarity */
 	margin: 0 !important; /* beats the inline margin-left 8px */
 }
+
+/* ---- classroom list: touch targets ---- */
+/* the row actions (view students, edit, delete) are 24px icons: 44px hit area, centred in the 60px row */
+#classroom-cards-parent td:last-child > a {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-width: var(--target);
+	min-height: var(--target);
+	border-radius: var(--radius-s);
+	color: var(--ink-soft);
+}
+#classroom-cards-parent td:last-child > a:hover { background: var(--tile); }
+/* the column sort buttons of the header */
+#classroom-cards-parent thead button {
+	display: inline-flex;
+	align-items: center;
+	min-height: var(--target);
+	padding: 0 4px;
+}
