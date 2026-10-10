@@ -63,3 +63,7 @@
 }
 .dashboard-table .color { margin: 0; line-height: 0; }
 .dashboard-table .color .xo-icon { float: none; display: block; }
+/* five columns must fit a half-width card at 1280px: tighter inner gutters, 20px at the card edges */
+.dashboard-table > :not(caption) > * > * { padding-left: 10px; padding-right: 10px; }
+.dashboard-table > :not(caption) > * > *:first-child { padding-left: 20px; }
+.dashboard-table > :not(caption) > * > *:last-child { padding-right: 16px; }

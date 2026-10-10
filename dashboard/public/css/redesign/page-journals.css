@@ -1,1 +1,173 @@
-/* Redesign of the pages: journals. Only rules for this page group; shared look is in shell.css and components.css. */
+/* Redesign of the pages: activities (sortable list) and journals. Only rules for this page group; shared look is in shell.css and components.css.
+   The spacing of ol.simple_with_animation (its margins and paddings, and those of its li and .card) is set in main.css and is not changed here. */
+
+/* ---- activities: column titles above the list ---- */
+#activities-list-parent .card-plain .row > div {
+	font: 500 12px/1.2 var(--font-display);
+	letter-spacing: .06em;
+	text-transform: uppercase;
+	color: var(--ink-soft);
+}
+
+/* ---- activities: search bar (the inline style says align-items: baseline) ---- */
+#activities-searchbox { align-items: center !important; }
+#activities-searchbox .search_query { height: 46px; }
+
+/* ---- activities: one row per activity, 60px high, content centred vertically ---- */
+ol.simple_with_animation .card { min-height: 60px; }
+ol.simple_with_animation .card-body {
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+}
+ol.simple_with_animation .card-body > .row { align-items: center; }
+ol.simple_with_animation .card-body > .row > div {
+	font: 400 15px/1.3 var(--font-body);
+	color: var(--ink);
+}
+ol.simple_with_animation .card-body .search_textbox {
+	font: 500 16px/1.3 var(--font-display);
+	color: var(--ink);
+}
+ol.simple_with_animation .card-body > .row > .col-md-4 {
+	font-size: 14px;
+	color: var(--ink-soft);
+	word-break: break-all;
+}
+/* the activity icon: 36px instead of 30px (inline size and margin of the image beaten) */
+ol.simple_with_animation .card-body .col-md-1.text-center img {
+	width: 36px !important; /* beats style="width: 30px;height: 30px" */
+	height: 36px !important; /* beats style="...height: 30px..." */
+	margin: 0 !important; /* beats style="...margin: 5px" */
+}
+ol.simple_with_animation img[alt="drag"] { cursor: grab; }
+
+/* favourite star: 44px touch target, the star itself 30px */
+ol.simple_with_animation .favoriteBox input[type=checkbox] {
+	width: var(--target);
+	height: var(--target);
+	margin: 0 auto;
+	border-radius: var(--radius-m);
+	background-size: 30px 30px;
+}
+ol.simple_with_animation .favoriteBox input[type=checkbox]:focus-visible {
+	outline: 3px solid var(--focus);
+	outline-offset: 2px;
+}
+
+/* launch link: 44px touch target */
+ol.simple_with_animation .card-body a {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: var(--target);
+	height: var(--target);
+	border-radius: var(--radius-m);
+	color: var(--ink-soft);
+}
+ol.simple_with_animation .card-body a:hover,
+ol.simple_with_animation .card-body a:focus-visible {
+	background: var(--tile);
+	color: var(--ink);
+}
+
+/* ---- journals: search bar (user select, Shared Journal, buttons) ---- */
+/* the Shared Journal check box sits on the same line as the 46px select */
+#journal-search-card .journal-check {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	min-height: 46px;
+	padding: 0 0 8px; /* beats main.css padding-left: 30px */
+}
+#journal-search-card .journal-check input {
+	flex: 0 0 auto;
+	margin: 0; /* beats main.css margin-top: 10px */
+}
+#journal-search-card .journal-check .form-check-label { margin: 0; cursor: pointer; }
+
+/* the buttons of the right column stay on one line: upload, download, delete, Show Results */
+#journal-search-card .search-row > .col-lg-4.text-end {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: flex-end;
+	gap: 8px;
+}
+#journal-search-card .search-row > .col-lg-4.text-end > .btn,
+#journal-search-card .upload-btn-wrapper > a.btn { margin: 0; }
+#journal-search-card .upload-btn-wrapper {
+	display: block;
+	margin: 0;
+}
+#journal-search-card .upload-btn-wrapper > a.btn {
+	width: var(--target);
+	height: var(--target);
+	padding: 0;
+	align-items: center;
+	justify-content: center;
+}
+#journal-search-card .upload-btn-wrapper > a.btn > i { font-size: var(--icon-m) !important; }
+#journal-uploadJournal { order: 1; }
+#journal-downloadMultiple { order: 2; }
+#journal-deleteMultiple { order: 3; }
+#journal-search-card .search-row > .col-lg-4.text-end > .btn[type="submit"] { order: 4; }
+
+/* ---- journals: empty states (no user chosen, no entries) ---- */
+.container-fluid > .row > .col-12 > .text-center > .material-icons.dp96 {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 120px; /* beats main.css .material-icons.dp96 line-height */
+	height: 120px;
+	border-radius: 50%;
+	background: var(--tile);
+	color: var(--ink-soft);
+	font-size: 64px;
+	line-height: 1;
+}
+.container-fluid > .row > .col-12 > .text-center > p {
+	margin: 16px 0 0;
+	font: 400 16px/1.5 var(--font-body);
+	color: var(--ink-soft);
+}
+
+/* ---- journals: entries card ---- */
+#journal-cards-parent .card-header {
+	align-items: center;
+	font: 500 14px/1.3 var(--font-display);
+	color: var(--ink-soft);
+}
+#journal-cards-parent .card-header .text-center { color: var(--ink); }
+#journal-cards-parent .page-button {
+	display: inline-flex;
+	align-items: center;
+	min-height: var(--target);
+	padding: 0 10px;
+	border-radius: var(--radius-m);
+	font: 500 14px/1 var(--font-display);
+	color: var(--ink-soft);
+}
+#journal-cards-parent .page-button:hover,
+#journal-cards-parent .page-button:focus-visible {
+	background: var(--tile);
+	color: var(--ink);
+}
+#journal-cards-parent .table > tbody > tr { height: 60px; }
+#journal-cards-parent .table > tbody > tr > td { color: var(--ink); }
+/* launch, download, delete: 44px touch targets */
+#journal-cards-parent td a[id^="journal-activity-"] {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: var(--target);
+	height: var(--target);
+	margin-right: 4px;
+	border-radius: var(--radius-m);
+	color: var(--ink-soft);
+}
+#journal-cards-parent td a[id^="journal-activity-"]:hover,
+#journal-cards-parent td a[id^="journal-activity-"]:focus-visible {
+	background: var(--tile);
+	color: var(--ink);
+}

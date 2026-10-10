@@ -1,1 +1,168 @@
-/* Redesign of the pages: assignments. Only rules for this page group; shared look is in shell.css and components.css. */
+/* Redesign of the pages: assignments (list, form, deliveries, comment). Only rules for this page group; shared look is in shell.css and components.css. */
+
+/* ---- toolbar (list and deliveries): the buttons sit centred on the 46px search and status fields ---- */
+#assignment-serach-row .search-row .btn,
+#deliveries-serach-row .search-row .btn {
+	margin: 13px 4px 0;
+}
+
+/* ---- results bar above the table ---- */
+#assignment-cards-parent .card-header .text-center,
+#deliveries-cards-parent .card-header .text-center {
+	font: 400 14px/1.4 var(--font-body);
+	color: var(--ink-soft);
+}
+#assignment-cards-parent .page-button,
+#deliveries-cards-parent .page-button {
+	display: inline-flex;
+	align-items: center;
+	min-height: var(--target);
+	font: 500 14px/1 var(--font-display);
+	color: var(--accent);
+	text-decoration: none;
+}
+#assignment-cards-parent .page-button:hover,
+#deliveries-cards-parent .page-button:hover {
+	text-decoration: underline;
+}
+
+/* ---- empty state ---- */
+#assignment-cards-parent > .text-center .material-icons,
+#deliveries-cards-parent > .text-center .material-icons {
+	color: var(--ink-faint);
+}
+#assignment-cards-parent > .text-center p,
+#deliveries-cards-parent > .text-center p {
+	font: 400 16px/1.4 var(--font-body);
+	color: var(--ink-soft);
+}
+
+/* ---- table: tighter cells so the action column fits, header names on one line, status marked with a dot ----
+   the rows hold a <script> element before the name cell, so the status is the 6th child and the date the 7th */
+#assignment-cards-parent .table > :not(caption) > * > *,
+#deliveries-cards-parent .table > :not(caption) > * > * {
+	padding-left: 12px;
+	padding-right: 12px;
+}
+#assignment-cards-parent tbody td:nth-child(7),
+#deliveries-cards-parent tbody td:nth-child(7) {
+	white-space: nowrap;
+}
+#deliveries-cards-parent thead th,
+#assignment-cards-parent thead th {
+	white-space: nowrap;
+}
+#assignment-cards-parent tbody td:nth-child(6),
+#deliveries-cards-parent tbody td:nth-child(6) {
+	white-space: nowrap;
+	font: 500 14px/1.3 var(--font-display);
+	color: var(--ink);
+}
+#assignment-cards-parent tbody td:nth-child(6)::before,
+#deliveries-cards-parent tbody td:nth-child(6)::before {
+	content: "";
+	display: inline-block;
+	width: 8px;
+	height: 8px;
+	margin: 0 8px 2px 0;
+	border-radius: 50%;
+	background: var(--accent);
+}
+#assignment-cards-parent tbody td:last-child,
+#deliveries-cards-parent tbody td:last-child {
+	white-space: nowrap;
+}
+
+/* ---- row actions: each one a 44px target, the icons drawn at one size ---- */
+#assignment-cards-parent tbody td:last-child > a,
+#deliveries-cards-parent tbody td:last-child > a {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	vertical-align: middle;
+	width: var(--target);
+	height: var(--target);
+	margin: 0;
+	border-radius: var(--radius-s);
+	color: var(--ink-soft);
+	text-decoration: none;
+}
+#assignment-cards-parent tbody td:last-child > a:hover,
+#assignment-cards-parent tbody td:last-child > a:focus-visible,
+#deliveries-cards-parent tbody td:last-child > a:hover,
+#deliveries-cards-parent tbody td:last-child > a:focus-visible {
+	background: var(--tile);
+}
+#assignment-cards-parent tbody td:last-child .material-icons,
+#deliveries-cards-parent tbody td:last-child .material-icons {
+	font-size: var(--icon-m);
+	line-height: 1;
+}
+/* legacy icon discs: drop their own offsets so they centre in the 44px target */
+#assignment-cards-parent tbody td:last-child > a > div,
+#deliveries-cards-parent tbody td:last-child > a > div {
+	position: static;
+	top: auto;
+	display: block;
+	width: var(--icon-m);
+	height: var(--icon-m);
+	background-size: var(--icon-m);
+}
+/* disabled actions (inline style not-allowed): the edit and delete icons carry an inline color #ddd, beaten here */
+#assignment-cards-parent tbody td:last-child > a[style*="not-allowed"] > i {
+	color: var(--ink-faint) !important;
+}
+
+/* ---- form: the activity row (the view has no .row around it), the due date row ---- */
+#assignment-add-edit-form > .col-lg-2,
+#assignment-add-edit-form > .col-lg-6,
+#assignment-add-edit-form > .col-lg-7 {
+	float: left;
+	padding: 0 12px 0 0;
+}
+#assignment-add-edit-form > .col-lg-2 { width: 16.6667%; }
+#assignment-add-edit-form > .col-lg-6 { width: 50%; }
+#assignment-add-edit-form > .col-lg-7 { width: 58.3333%; }
+#assignment-add-edit-form > .row { clear: both; }
+@media (max-width: 991.98px) {
+	#assignment-add-edit-form > .col-lg-2,
+	#assignment-add-edit-form > .col-lg-6,
+	#assignment-add-edit-form > .col-lg-7 {
+		float: none;
+		width: auto;
+		padding: 0;
+	}
+}
+
+#remove-activity {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: var(--target);
+	height: var(--target);
+	border-radius: var(--radius-s);
+	font-size: var(--icon-m);
+	line-height: 1;
+	color: var(--ink-soft);
+	text-decoration: none;
+}
+#remove-activity:hover,
+#remove-activity:focus-visible {
+	background: var(--tile);
+}
+
+#editAssignment-duedate label {
+	margin: 0;
+	font: 500 13px/1.2 var(--font-display);
+	color: var(--ink-soft);
+}
+#editAssignment-duedate > .col-lg-3:first-child > .mb-3 {
+	display: flex;
+	align-items: center;
+	min-height: 46px;
+}
+/* the two stamp fields are invisible today (visibility hidden) and only hold the computed numbers; they took up space under the date and time */
+#dueDatestamp,
+#dueTimestamp {
+	display: none;
+}
