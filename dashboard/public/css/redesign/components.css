@@ -1,0 +1,185 @@
+/* Redesign of the dashboard: cards, buttons, fields, tables, modal, toasts. See shell.css. */
+
+/* ---- cards ---- */
+.card {
+	--bs-card-border-radius: 16px;
+	margin: 0 0 20px;
+	border: 1px solid var(--line);
+	border-radius: 16px;
+	background: var(--surface);
+	color: var(--ink);
+	box-shadow: none;
+}
+.card .category { color: var(--ink-soft); }
+.card .card-body { padding: 20px; }
+.card .card-header {
+	margin: 0;
+	padding: 20px 20px 0;
+	border: 0;
+	border-radius: 16px 16px 0 0;
+	background: transparent;
+	color: var(--ink);
+	box-shadow: none;
+}
+.card .card-header[data-background-color="black"] { background: transparent; }
+.card .card-header a { color: var(--ink); }
+.card .card-footer {
+	margin: 0 20px 4px;
+	padding: 12px 0;
+	border-top: 1px solid var(--line);
+}
+.card .card-footer .stats { font-size: 13px; color: var(--ink-soft); }
+.card-stats .card-header { padding: 20px 0 0 20px; }
+.card-plain { background: transparent; border: 0; }
+.card .custom-icon { background-size: 44px; width: 44px; height: 44px; }
+
+/* ---- buttons: secondary by default, primary for submit and add ---- */
+.btn {
+	--bs-btn-padding-x: 18px;
+	--bs-btn-padding-y: 0;
+	--bs-btn-font-size: 14px;
+	--bs-btn-font-weight: 500;
+	--bs-btn-color: var(--ink);
+	--bs-btn-bg: var(--surface);
+	--bs-btn-border-width: 1px;
+	--bs-btn-border-color: var(--line-strong);
+	--bs-btn-border-radius: var(--radius-m);
+	--bs-btn-hover-color: var(--ink);
+	--bs-btn-hover-bg: var(--tile);
+	--bs-btn-hover-border-color: var(--line-strong);
+	--bs-btn-active-color: var(--ink);
+	--bs-btn-active-bg: var(--control);
+	--bs-btn-active-border-color: var(--line-strong);
+	--bs-btn-disabled-color: var(--ink-faint);
+	--bs-btn-disabled-bg: var(--surface);
+	--bs-btn-disabled-border-color: var(--line);
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 8px;
+	min-height: var(--target);
+	margin: 4px;
+	font-family: var(--font-display);
+	text-transform: none;
+	box-shadow: none;
+}
+.btn:hover, .btn:focus { box-shadow: none; }
+.btn-round { border-radius: var(--radius-m); }
+button.btn[type="submit"], a.btn[id*="add" i], .btn.btn-primary {
+	--bs-btn-color: var(--on-ink);
+	--bs-btn-bg: var(--ink);
+	--bs-btn-border-color: var(--ink);
+	--bs-btn-hover-color: var(--on-ink);
+	--bs-btn-hover-bg: color-mix(in srgb, var(--ink) 86%, white);
+	--bs-btn-hover-border-color: color-mix(in srgb, var(--ink) 86%, white);
+	--bs-btn-active-color: var(--on-ink);
+	--bs-btn-active-bg: color-mix(in srgb, var(--ink) 78%, white);
+	--bs-btn-active-border-color: color-mix(in srgb, var(--ink) 78%, white);
+}
+.btn-just-icon {
+	width: 44px;
+	height: 44px;
+	padding: 0;
+	border-radius: var(--radius-m);
+	line-height: 1;
+}
+.btn-just-icon .material-icons { line-height: 1; }
+.btn-white { --bs-btn-bg: var(--surface); --bs-btn-color: var(--ink-soft); --bs-btn-hover-color: var(--ink); }
+.search-row .btn { height: auto !important; min-height: var(--target); margin: 4px; font-weight: 500; }
+.btn-close { opacity: .6; }
+
+/* ---- fields ---- */
+.form-control, .form-select {
+	height: 46px;
+	padding: 0 14px;
+	border: 1px solid var(--line-strong);
+	border-radius: var(--radius-m);
+	background-color: var(--surface);
+	background-image: none;
+	box-shadow: none;
+	font: 400 16px/1.4 var(--font-body);
+	color: var(--ink);
+}
+.form-select {
+	padding-right: 36px;
+	background-image: var(--bs-form-select-bg-img);
+	background-size: 16px 12px;
+	background-repeat: no-repeat;
+	background-position: right 14px center;
+}
+textarea.form-control { height: auto; min-height: 96px; padding: 12px 14px; }
+.form-control:focus, .form-select:focus {
+	border-color: var(--focus);
+	background-color: var(--surface);
+	background-image: none;
+	box-shadow: 0 0 0 3px color-mix(in srgb, var(--focus) 18%, transparent);
+	color: var(--ink);
+}
+.form-select:focus { background-image: var(--bs-form-select-bg-img); }
+.form-control::placeholder { color: var(--ink-faint); }
+.form-control:disabled, .form-control[readonly], .form-select:disabled { background-color: var(--tile); }
+.form-control.is-invalid, .form-control.is-invalid:focus {
+	border-color: var(--bad);
+	background-image: none;
+	box-shadow: none;
+	padding-right: 14px;
+}
+.form-label { margin: 0 0 6px; font: 500 13px/1.2 var(--font-display); color: var(--ink-soft); }
+.search-notfound { color: var(--bad); font-size: 13px; line-height: 1.3; }
+.search-field { margin: 12px 0 0; padding-bottom: 8px; }
+.form-check-input {
+	--bs-form-check-bg: var(--surface);
+	width: 22px;
+	height: 22px;
+	border: 1.5px solid var(--line-strong);
+	border-radius: 6px;
+	box-shadow: none;
+}
+.form-check-input[type="radio"] { border-radius: 50%; }
+.form-check-input:checked, .form-check-input:indeterminate { background-color: var(--ink); border-color: var(--ink); }
+.form-check-input:focus { border-color: var(--focus); box-shadow: 0 0 0 3px color-mix(in srgb, var(--focus) 18%, transparent); }
+.form-check-label { color: var(--ink); font-size: 15px; }
+
+/* ---- tables ---- */
+.table {
+	--bs-table-border-color: var(--line);
+	--bs-table-hover-bg: var(--tile);
+	margin-bottom: 0;
+}
+.table > :not(caption) > * > * { padding: 14px 20px; vertical-align: middle; font-size: 15px; }
+.table > thead > tr > th {
+	padding-top: 12px;
+	padding-bottom: 12px;
+	border-bottom: 1px solid var(--line);
+	font: 500 12px var(--font-display);
+	letter-spacing: .06em;
+	text-transform: uppercase;
+	color: var(--ink-soft);
+}
+.table > tbody > tr > td { border-bottom: 1px solid var(--tile); }
+.table th button { color: inherit; font: inherit; letter-spacing: inherit; text-transform: inherit; }
+
+/* ---- modal (QR code) ---- */
+.modal-content {
+	border: 1px solid var(--line);
+	border-radius: 16px;
+	background: var(--surface);
+	box-shadow: var(--shadow-pop);
+}
+
+/* ---- toasts ---- */
+.toast.notify {
+	--bs-toast-border-width: 1px;
+	--bs-toast-border-radius: var(--radius-l);
+	--bs-toast-font-size: 15px;
+	min-width: 280px;
+	border-color: var(--line);
+	background: var(--surface);
+	color: var(--ink);
+	font-family: var(--font-body);
+	box-shadow: var(--shadow-pop);
+}
+.toast.notify-success { background-color: var(--ok-tint); border-color: var(--ok); color: var(--ok); }
+.toast.notify-danger { background-color: var(--bad-tint); border-color: var(--bad); color: var(--bad); }
+.toast.notify-warning { background-color: var(--warn-tint); border-color: var(--warn); color: var(--warn); }
+.toast.notify-info { background-color: var(--info-tint); border-color: var(--accent); color: var(--accent); }
