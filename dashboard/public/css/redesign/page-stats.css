@@ -10,7 +10,6 @@
 }
 
 /* the rows keep the padding and margins of ol.simple_with_animation (see main.css): only the inside of the card is set */
-#listCharts-chartList .card { border-color: var(--line); }
 #listCharts-chartList .card-body > .row { min-height: 60px; align-items: center; }
 #listCharts-chartList ol > li::marker {
 	font: 500 13px/1 var(--font-display);
