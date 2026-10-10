@@ -13,8 +13,10 @@
 #activities-searchbox { align-items: center !important; }
 #activities-searchbox .search_query { height: 46px; }
 
-/* ---- activities: one row per activity, 60px high, content centred vertically ---- */
-ol.simple_with_animation .card { min-height: 60px; }
+/* ---- activities: one row per activity, 56px high, content centred vertically ---- */
+/* 56px, not 60: from 74px per item upwards the dragged item can no longer be dropped at the last place (the plugin keeps
+   it inside its list and its centre does not pass the centre of the last item). 54 to 59px work. */
+ol.simple_with_animation .card { min-height: 56px; }
 ol.simple_with_animation .card-body {
 	display: flex;
 	flex-direction: column;
@@ -179,3 +181,4 @@ ol.simple_with_animation .card-body a:focus-visible {
 	background: var(--tile);
 	color: var(--ink);
 }
+

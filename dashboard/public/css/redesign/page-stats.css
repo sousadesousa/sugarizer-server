@@ -9,8 +9,8 @@
 	color: var(--ink-soft);
 }
 
-/* the rows keep the padding and margins of ol.simple_with_animation (see main.css): only the inside of the card is set */
-#listCharts-chartList .card-body > .row { min-height: 60px; align-items: center; }
+/* the rows keep the padding and margins of ol.simple_with_animation (see main.css): only the inside of the card is set. The row is 50px, not 60: tall items (74px and more per li) cannot be dropped at the last place, see page-journals.css */
+#listCharts-chartList .card-body > .row { min-height: 50px; align-items: center; }
 #listCharts-chartList ol > li::marker {
 	font: 500 13px/1 var(--font-display);
 	color: var(--ink-soft);

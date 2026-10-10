@@ -191,7 +191,7 @@ for (const role of ['admin', 'teacher']) {
 					await expect(page.locator('html')).toHaveAttribute('lang', 'en', { timeout: 15000 });
 				});
 
-				test('the text of the toasts and of the card headers has a contrast of 4.5:1', async ({ page }) => {
+				test('the text of the toasts, the active menu item and the round button icons has a contrast of 4.5:1', async ({ page }) => {
 					await page.goto('/dashboard');
 					await settle(page);
 					const ratio = (page_) => page_.evaluate(() => {
@@ -200,9 +200,19 @@ for (const role of ['admin', 'teacher']) {
 							return 0.2126 * v[0] + 0.7152 * v[1] + 0.0722 * v[2];
 						};
 						const worst = [];
+						// the background an element is seen on: its own, or the one of the nearest ancestor that has one
+						const backgroundOf = (el) => {
+							for (let node = el; node; node = node.parentElement) {
+								const c = getComputedStyle(node).backgroundColor;
+								if (!/rgba\(.*,\s*0\)$/.test(c) && c != 'transparent') {
+									return c;
+								}
+							}
+							return 'rgb(255, 255, 255)';
+						};
 						const add = (el) => {
 							const st = getComputedStyle(el);
-							const a = lum(st.color), b = lum(st.backgroundColor);
+							const a = lum(st.color), b = lum(backgroundOf(el));
 							worst.push((Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05));
 						};
 						document.querySelectorAll('.card-header[data-background-color="black"]').forEach(add);
@@ -220,7 +230,6 @@ for (const role of ['admin', 'teacher']) {
 						['success', 'danger', 'warning', 'info'].forEach((type) => {
 							const el = document.createElement('div');
 							el.className = 'toast notify notify-' + type;
-							el.style.color = '#fff';
 							document.body.appendChild(el);
 							add(el);
 							el.remove();
@@ -229,9 +238,9 @@ for (const role of ['admin', 'teacher']) {
 					});
 					const result = await ratio(page);
 					expect(result.text).toBeGreaterThanOrEqual(4.5);
-					// white glyph on the grey button, as on master (2.85:1, not the 1.57:1 of the grey text-muted glyph)
-					expect(result.iconColor, 'icon of a round button').toBe('rgb(255, 255, 255)');
-					expect(result.iconRatio).toBeGreaterThanOrEqual(2.8);
+					// the glyph takes the colour of the button text (dark ink on the light button of the redesign), not the
+					// grey of text-muted (1.57:1 on the old grey button)
+					expect(result.iconRatio, 'icon of a round button ' + result.iconColor).toBeGreaterThanOrEqual(4.5);
 				});
 
 				test('QR modal opens from the sidebar', async ({ page }) => {
