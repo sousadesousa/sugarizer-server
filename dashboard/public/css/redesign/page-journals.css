@@ -107,7 +107,7 @@ ol.simple_with_animation .card-body a:focus-visible {
 	align-items: center;
 	justify-content: center;
 }
-#journal-search-card .upload-btn-wrapper > a.btn > i { font-size: var(--icon-m) !important; }
+#journal-search-card .upload-btn-wrapper > a.btn > i { font-size: var(--icon-m) !important; } /* beats main.css .upload-btn-wrapper a > i (25px !important) */
 #journal-uploadJournal { order: 1; }
 #journal-downloadMultiple { order: 2; }
 #journal-deleteMultiple { order: 3; }

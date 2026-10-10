@@ -207,3 +207,18 @@ a:hover, a:focus { color: var(--ink); }
 	box-shadow: none;
 }
 .dropdown-menu .dropdown-item.active { background-color: var(--control); color: var(--ink); }
+
+/* login and second-factor pages on small screens: main.css makes the selector a borderless 34px pill; keep ours */
+@media (max-width: 991.98px) {
+	body > .navbar-absolute:has(#languageSelection) { padding: 12px 16px; }
+	body > .navbar-absolute #languageSelection {
+		width: auto;
+		min-width: 190px;
+		height: 40px;
+		margin: 0;
+		padding: 0 36px 0 14px;
+		border: 1px solid var(--line-strong);
+		background-image: var(--bs-form-select-bg-img);
+		line-height: 38px;
+	}
+}

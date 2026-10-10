@@ -64,3 +64,41 @@
 	min-height: var(--target);
 	padding: 0 4px;
 }
+
+/* ---- classroom list: search toolbar ----
+   One row on desktop: search on the left, Delete / Add / Show Results on the right (row-reverse keeps the DOM order
+   that the floats gave: the first button is the rightmost). The empty spacer column takes the free space.
+   Floats are ignored inside a flex row, so the float-end utility of the buttons does not matter here. */
+#classroom-serach-row .search-row {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 12px;
+	margin: 0;
+	padding: 20px;
+}
+#classroom-serach-row .search-row > div { width: auto; max-width: none; padding: 0; margin: 0; }
+#classroom-serach-row .search-row > div:first-child { flex: 0 1 360px; min-width: 0; max-width: 100%; }
+#classroom-serach-row .search-row > div:nth-child(2) { flex: 1 1 0; min-width: 0; }
+#classroom-serach-row .search-row > div:last-child {
+	flex: 0 1 auto;
+	display: flex;
+	flex-direction: row-reverse;
+	flex-wrap: wrap;
+	justify-content: flex-start;
+	align-items: center;
+	gap: 12px;
+	max-width: 100%;
+}
+#classroom-serach-row .search-field,
+#classroom-serach-row .search-field input { width: 100%; }
+#classroom-serach-row .upload-btn-wrapper { margin: 0; }
+@media (max-width: 991.98px) {
+	/* phone: search on its own line, the buttons below it, right-aligned */
+	#classroom-serach-row .search-row > div:first-child,
+	#classroom-serach-row .search-row > div:last-child { flex: 1 1 100%; max-width: 100%; }
+	#classroom-serach-row .search-row > div:nth-child(2) { flex: 0 0 0; min-width: 0; }
+}
+
+/* the actions of a row stay on one line; the row keeps its 60px height */
+#classroom-cards-parent td:last-child { white-space: nowrap; }
